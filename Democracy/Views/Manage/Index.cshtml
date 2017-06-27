@@ -1,0 +1,218 @@
+﻿@using Democracy.Services.Contracts.ViewModels
+@model Democracy.Models.IndexViewModel
+@{
+    ViewBag.Title = "Manage";
+}
+
+<h2>My Profile</h2>
+
+@Styles.Render("~/Content/upload")
+@Scripts.Render("~/bundles/upload")
+
+
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">My profile image upload</h4>
+            </div>
+            <div class="modal-body">
+                <fieldset class="">
+                    <div class="">
+                        <h2 class="">Add/Update Profile Image</h2>
+                        <p>Add or update your profile image</p>
+                    </div>
+                    <div class="">
+                        <img src="@Model.Picture" id="Preview" class="img-responsive">
+                        @{ Html.RenderPartial("_ImageUploader", new UploaderConfig { JavascriptCallbackMethod = "UpdatePreview", Multi = false }); }
+                    </div>
+                </fieldset>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+@using (Html.BeginForm("UpdateUser", "Manage"))
+{
+    <div class="row">
+        <div class="col-md-2">
+            <img src="@Model.Picture" id="profileImage" class="img-responsive">
+            @Html.HiddenFor(model => model.Picture)
+            <a href="#" class="btn btn-success center-block" role="button" data-toggle="modal" data-target="#myModal" style="padding-top:5px;">Upload picture</a>
+
+        </div>
+        <div class="col-md-10">
+
+            
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new {@class = "text-danger"})
+            <input type="hidden" name="Picture" id="Picture" value=""/>
+            <div class="row">
+                @Html.LabelFor(m => m.ScreenName, new {@class = "col-md-3 control-label"})
+                <div class="col-md-9">
+                    @Html.TextBoxFor(m => m.ScreenName, new {@class = "form-control"})
+                    @Html.ValidationMessageFor(m => m.ScreenName, "", new {@class = "text-danger"})
+                </div>
+            </div>
+            <div class="row">
+                @Html.LabelFor(m => m.Email, new {@class = "col-md-3 control-label"})
+                <div class="col-md-9">
+                    @Html.DisplayFor(m => m.Email, new {@class = "form-control"})
+                </div>
+            </div>
+            <div class="row">
+                @Html.LabelFor(m => m.FirstName, new {@class = "col-md-3 control-label"})
+                <div class="col-md-9">
+                    @Html.DisplayFor(m => m.FirstName, new {@class = "form-control"})
+                </div>
+            </div>
+            <div class="row">
+                @Html.LabelFor(m => m.LastName, new {@class = "col-md-3 control-label"})
+                <div class="col-md-9">
+                    @Html.DisplayFor(m => m.LastName, new {@class = "form-control"})
+                </div>
+            </div>
+            <div class="row">
+                @Html.LabelFor(m => m.Constituency, new {@class = "col-md-3 control-label"})
+                <div class="col-md-9">
+                    @Html.DisplayFor(m => m.Constituency, new {@class = "form-control"})
+                </div>
+            </div>
+            <div class="row">
+                @Html.LabelFor(m => m.PostCode, new {@class = "col-md-3 control-label"})
+                <div class="col-md-9">
+                    @Html.DisplayFor(m => m.PostCode, new {@class = "form-control"})
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3 control-label">
+                    <strong>Password</strong>
+                </div>
+                <div class="col-md-9">
+                    @if (Model.HasPassword)
+                    {
+                        @Html.ActionLink("Change your password", "ChangePassword")
+                    }
+                    else
+                    {
+                        @Html.ActionLink("Create", "SetPassword")
+                    }
+                </div>
+            </div>
+            <div class="row">
+                @Html.LabelFor(m => m.TimesVoted, new {@class = "col-md-3 control-label"})
+                <div class="col-md-9">
+                    @Html.DisplayFor(m => m.TimesVoted, new {@class = "form-control"})
+                </div>
+            </div>
+            <div class="row">
+                @Html.LabelFor(m => m.DebateComments, new {@class = "col-md-3 control-label"})
+                <div class="col-md-9">
+                    @Html.DisplayFor(m => m.DebateComments, new {@class = "form-control"})
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 col-md-offset-2">
+            <input type="submit" class="btn btn-default" id="btnSubmit" value="Save Changes" />
+        </div>
+    </div>
+}
+    @*<div>
+        
+        <hr />
+
+        <dl class="dl-horizontal">
+            <dt>Password:</dt>
+            <dd>
+                [
+                @if (Model.HasPassword)
+                {
+                    @Html.ActionLink("Change your password", "ChangePassword")
+                }
+                else
+                {
+                    @Html.ActionLink("Create", "SetPassword")
+                }
+                ]
+            </dd>
+            @*<dt>External Logins:</dt>
+            <dd>
+                @Model.Logins.Count [
+                @Html.ActionLink("Manage", "ManageLogins") ]
+            </dd>*@
+            @*
+                Phone Numbers can used as a second factor of verification in a two-factor authentication system.
+
+                 See <a href="http://go.microsoft.com/fwlink/?LinkId=313242">this article</a>
+                    for details on setting up this ASP.NET application to support two-factor authentication using SMS.
+
+                 Uncomment the following block after you have set up two-factor authentication
+            *@
+            @*
+                <dt>Phone Number:</dt>
+                <dd>
+                    @(Model.PhoneNumber ?? "None") [
+                    @if (Model.PhoneNumber != null)
+                    {
+                        @Html.ActionLink("Change", "AddPhoneNumber")
+                        @: &nbsp;|&nbsp;
+                        @Html.ActionLink("Remove", "RemovePhoneNumber")
+                    }
+                    else
+                    {
+                        @Html.ActionLink("Add", "AddPhoneNumber")
+                    }
+                    ]
+                </dd>
+            *@
+            @*<dt>Two-Factor Authentication:</dt>
+            <dd>
+                <p>
+                    There are no two-factor authentication providers configured. See <a href="http://go.microsoft.com/fwlink/?LinkId=313242">this article</a>
+                    for details on setting up this ASP.NET application to support two-factor authentication.
+                </p>*@
+                @*@if (Model.TwoFactor)
+            {
+
+                <form method="post" action="/Manage/DisableTwoFactorAuthentication">
+                    Enabled
+                    <input type="submit" value="Disable" class="btn btn-link" />
+                </form>
+            }
+            else
+            {
+
+                <form method="post" action="/Manage/EnableTwoFactorAuthentication">
+                    Disabled
+                    <input type="submit" value="Enable" class="btn btn-link" />
+                </form>
+            }
+    </dd>
+        </dl>
+    </div>*@
+@section scripts{
+    <script type="text/javascript">
+        function UpdatePreview(value) {
+            $('#Preview').attr("src", value);
+            
+        }
+    </script>
+<script>
+    $('#myModal').on('hidden.bs.modal', function (e) {
+        var preview = $('#Preview').attr("src");
+        $('#profileImage').attr('src', preview);
+        var elm = $('#Picture');
+        elm.val(preview);
+        $('#Picture').attr('value', preview);
+    });
+</script>
+
+}

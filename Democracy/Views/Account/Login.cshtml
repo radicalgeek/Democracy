@@ -1,0 +1,69 @@
+﻿@using Democracy.Models
+@model LoginViewModel
+@{
+    ViewBag.Title = "Log in";
+}
+
+<div class="row row-centered">
+    <div class="col-md-7 col-centered">
+        @Html.Partial("_logo")
+        @*<p>
+            <strong>
+                Our current democratic system is antiquated, corrupt and un-representative.
+                It’s the 21st century and we have the technology to do better. Now you don’t
+                need an MP to represent you, you can vote for yourself. Welcome to Democracy
+            </strong>
+        </p>*@
+    </div>
+</div>
+
+<div class="row row-centered">
+    <div class="col-md-7 col-centered">
+        <div class="alert alert-danger" role="alert">This application is still a prototype. Please report any issues you find. Check your junk folder for missing emails, and use a modern browser. NOT THE DEFAULT ANDROID BROWSER</div>
+        <section id="loginForm">
+            @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Email, new { @class = "col-md-4 control-label" })
+                    <div class="col-md-8">
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Password, new { @class = "col-md-4 control-label" })
+                    <div class="col-md-8">
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-centered col-md-offset-4 col-md-8">
+                        @Html.CheckBoxFor(m => m.RememberMe)
+                        @Html.LabelFor(m => m.RememberMe)
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-offset-4 col-md-8">
+                        <input type="submit" value="Log in" class="btn btn-primary" />
+                    </div>
+                </div>
+                <p>
+                    <div class="col-centered col-md-offset-4 col-md-8">
+                        @Html.ActionLink("Not yet registered?", "Register", "Account")
+                    </div>
+                </p>
+                <p>
+                    <div class="col-centered col-md-offset-4 col-md-8">
+                        @Html.ActionLink("Forgot your password?", "ForgotPassword", "Account")
+                    </div>
+                </p>
+            }
+        </section>
+    </div>
+</div>
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

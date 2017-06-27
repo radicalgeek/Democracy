@@ -1,0 +1,138 @@
+﻿@model Democracy.Services.Contracts.ViewModels.UploaderConfig
+@{
+    var uploadId = Guid.NewGuid();
+    var filelistId = Guid.NewGuid();
+    var btnId = Guid.NewGuid();
+    var maxFiles = 0;
+
+}
+
+<div class="row fileupload-buttonbar">
+    <div class="well">
+
+        @if (Model.Multi)
+        {
+            <i class="icon-plus"></i><span>&nbsp;&nbsp;Add files...</span>
+            <input type="file" id="@uploadId" name="fileupload" accept="image/*" multiple="multiple">
+            { maxFiles = 5; }
+        }
+        else
+        {
+            <i class="icon-plus"></i><span>&nbsp;&nbsp;Add file...</span>
+            <input type="file" id="@uploadId" name="fileupload" accept="image/*">
+            { maxFiles = 1; }
+        }
+
+        <div class="clearfix">
+        </div>
+        <br />
+        <div class="@uploadId">
+            <br />
+        </div>
+        <div class="progress">
+            <div class="progress-bar progress-bar-success @filelistId" id="overallbar" style="width: 0%">
+            </div>
+        </div>
+        @if (Model.Multi)
+        {
+            <div class="well uploads hide" id="@filelistId">
+            </div>
+        }
+        <div class="col-md-2 col-md-offset-10">
+            <button id="@btnId" class="btn btn-success pull-right" type="button">
+                Upload
+            </button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>
+
+
+
+
+<script type="text/javascript">
+    function sleep(miliseconds) {
+        var currentTime = new Date().getTime();
+
+        while (currentTime + miliseconds >= new Date().getTime()) {
+        }
+    }
+
+    $(document).ready(function(){
+
+        $(function () {
+            $('#@uploadId').fileupload({
+                dataType: "json",
+                url: "/Upload/UploadFile/",
+                limitConcurrentUploads: 1,
+                sequentialUploads: true,
+                @if (!Model.Multi)
+                {
+                    <text>maxNumberOfFiles: 1,</text>
+                }
+                progressInterval: 100,
+                add: function (e, data) {
+                    $('#@filelistId').removeClass('hide');
+                    data.context = $('<div />').text(data.files[0].name).appendTo('#@filelistId');
+                    $('</div><div class="progress"><div class="progress-bar" style="width:0%"></div></div>').appendTo(data.context);
+                    @if (!Model.Multi)
+                    {
+                       <text>
+                            $('.@uploadId').text("");
+                            $('<div />').text(data.files[0].name).appendTo('.@uploadId');
+                            $('#@btnId').click(function () {
+
+                                data.submit();
+                            });
+                        </text>
+
+
+                    }
+                    else
+                    {
+                        <text>
+                            $('#@btnId').click(function () {
+
+                                //$('.l-image-preview').empty();
+                                //$('#ProductImages').val("");
+                                if (data.context.is(":visible"))
+                                data.submit();
+                            });
+                        </text>
+
+                    }
+
+                },
+                done: function (e, data) {
+
+                    data.context.text(data.files[0].name + ' ... Completed');
+                    var result = jQuery.parseJSON(data.result);
+                    $('</div><div class="progress"><div class="progress-bar" style="width:100%"></div></div>').appendTo(data.context);
+                    var fn = '@Model.JavascriptCallbackMethod';
+                    sleep(1000);
+                    window[fn](result.imgPath);
+                    data.context.remove();
+                    data.files = [];
+                    //setTimeout(window[fn](result.imgPath), 100000);
+
+                },
+                        progressall: function (e, data) {
+                            var progress = parseInt(data.loaded / data.total * 100, 10);
+                            $('.@filelistId').css('width', progress + '%');
+                        },
+                    progress: function (e, data) {
+                        var progress = parseInt(data.loaded / data.total * 100, 10);
+                        data.context.find('.progress-bar').css('width', progress + '%');
+                    },
+                    fail: function (event, data) {
+                        if (data.files[0].error) {
+                            alert(data.files[0].error);
+                        }
+                        alert(data.jqXHR.responseText);
+                    }
+                });
+        });
+    });
+</script>
+
+

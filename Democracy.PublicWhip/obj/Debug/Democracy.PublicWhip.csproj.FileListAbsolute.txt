@@ -1,0 +1,13 @@
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\bin\Debug\Democracy.PublicWhip.dll
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\bin\Debug\Democracy.PublicWhip.pdb
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\bin\Debug\Democracy.Data.dll
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\bin\Debug\Microsoft.AspNet.Identity.EntityFramework.dll
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\bin\Debug\Microsoft.AspNet.Identity.Core.dll
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\bin\Debug\EntityFramework.dll
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\bin\Debug\Democracy.Data.pdb
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\bin\Debug\Microsoft.AspNet.Identity.EntityFramework.xml
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\bin\Debug\Microsoft.AspNet.Identity.Core.xml
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\bin\Debug\EntityFramework.xml
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\obj\Debug\Democracy.PublicWhip.csprojResolveAssemblyReference.cache
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\obj\Debug\Democracy.PublicWhip.dll
+G:\repos\Democracy\Code\Main\Democracy.PublicWhip\obj\Debug\Democracy.PublicWhip.pdb

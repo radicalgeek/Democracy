@@ -1,0 +1,16 @@
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\Democracy.Services.Contracts.dll.config
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\Democracy.Services.Contracts.dll
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\Democracy.Services.Contracts.pdb
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\Democracy.Data.dll
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\EntityFramework.dll
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\EntityFramework.SqlServer.dll
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\Microsoft.AspNet.Identity.Core.dll
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\Microsoft.AspNet.Identity.EntityFramework.dll
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\Democracy.Data.pdb
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\EntityFramework.xml
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\EntityFramework.SqlServer.xml
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\Microsoft.AspNet.Identity.Core.xml
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\bin\Debug\Microsoft.AspNet.Identity.EntityFramework.xml
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\obj\Debug\Democracy.Services.Contracts.csprojResolveAssemblyReference.cache
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\obj\Debug\Democracy.Services.Contracts.dll
+G:\repos\Democracy\Code\Main\Democracy.Services.Contracts\obj\Debug\Democracy.Services.Contracts.pdb

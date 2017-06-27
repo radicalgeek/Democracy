@@ -1,0 +1,510 @@
+﻿@model Democracy.Services.Contracts.ViewModels.PoliticalStanceViewModel
+@{
+    ViewBag.Title = "VoteOnStance";
+    var verticalValue = 100 - Model.VerticalAvarage;
+}
+@section Scripts{
+    <script>
+    $(function () {
+        $("#slider-vertical").slider({
+            orientation: "vertical",
+            range: "min",
+            min: 0,
+            max: 100,
+            value: 50,
+            slide: function (event, ui) {
+                var horizontalLowerBound = 141;
+                var verticalLowerBound = 276;
+                var range = 360;
+                var currentHorizontalValue = $("#slider-horizontal").slider("value");
+                var horizontalGraphTarget = (currentHorizontalValue / 100) * range - horizontalLowerBound;
+                var targetVerticalGraphValue = ((100 - ui.value) / 100) * range - verticalLowerBound;
+                $("#point").attr("transform", "translate(" + horizontalGraphTarget + "," + targetVerticalGraphValue + ")");
+            }
+        }).height($('#verticalSliderContainer').height() );
+    });
+
+    $(function () {
+        $("#slider-horizontal").slider({
+            orientation: "horizontal",
+            range: "min",
+            min: 0,
+            max: 100,
+            value: 50,
+            slide: function (event, ui) {
+                var verticalLowerBound = 276;
+                var horizontalLowerBound = 141;
+                var range = 360;
+                var currentVerticalValue = $("#slider-vertical").slider("value");
+                var targetVerticalGraphValue = ((100 - currentVerticalValue) / 100) * range - verticalLowerBound;
+                var targetHorizontalGraphValue = (ui.value / 100) * range - horizontalLowerBound;
+                $("#point").attr("transform", "translate(" + targetHorizontalGraphValue + "," + targetVerticalGraphValue + ")");
+            }
+        });
+    });
+
+    $(function() {
+        $('#submitButton').click(function (event) {
+            event.preventDefault();
+            var currentHorizontalValue = $("#slider-horizontal").slider("value");
+            var currentVerticalValue = $("#slider-vertical").slider("value");
+
+            postFunction('/Bills/SetPoliticalStance', 'post', {
+                VerticalAvarage: currentVerticalValue, 
+                HorizontalAvarage: currentHorizontalValue, 
+                BillId: @Model.BillId
+            });
+        });
+    });
+
+    $(function() {
+        var horizontalStoredValue = @Model.HorizontalAvarage;
+        var verticalStoredValue = @Model.VerticalAvarage;
+
+        var horizontalLowerBound = 141;
+        var verticalLowerBound = 276;
+
+        var horizontalAdjustedValue = horizontalStoredValue + horizontalLowerBound;
+        var verticalAdjustedValue = verticalStoredValue + verticalLowerBound;
+
+        var targetHorizontalValue = (horizontalAdjustedValue / 360) * 100;
+        var targetVerticalValue = 100 -((verticalAdjustedValue / 360) * 100);
+
+
+        $( "#slider-horizontal" ).slider( "value", targetHorizontalValue);
+        $( "#slider-vertical" ).slider( "value", targetVerticalValue );
+    });
+
+    function postFunction(action, method, input) {
+        'use strict';
+        var form;
+        form = $('<form />', {
+            action: action,
+            method: method,
+            style: 'display: none;'
+        });
+        if (typeof input !== 'undefined' && input !== null) {
+            $.each(input, function (name, value) {
+                $('<input />', {
+                    type: 'hidden',
+                    name: name,
+                    value: value
+                }).appendTo(form);
+            });
+        }
+        form.appendTo('body').submit();
+    }
+    
+
+    </script>
+}
+
+<h2>Political Stance</h2>
+<div class="panel panel-default">
+    <div class="panel-heading">@Html.DisplayFor(model => model.Title)</div>
+    <div class="panel-body">
+        @if (Model.AlreadySet){
+            <div class="alert alert-danger" role="alert">
+                <strong>You have already set the stance for this bill</strong>
+            </div>
+        }
+        <div class="row equalheights" style="">
+            <div class="col-md-5">
+                <h4>Vertical Axis - Authoritarian/Libertarian</h4>
+                <p>
+                    <strong>Authoritarian</strong>. If you feel that this bill is taking decision making power away from people and giving more to the state,
+                    the move the slider towards authoritarian. The more extreem you feel this power shift is
+                    the more you should move the slider.
+                </p>
+                <p>
+                    <strong>Libertarian</strong>. If you feel that this bill is taking decision making power away from the state and more to the people,
+                    then move the slider towards libertarian.  The more extreem you feel this power shift is
+                    the more you should move the slider.
+                </p>
+                <h4>Horizontal Axis - Left/Right</h4>
+                <p>
+                    <strong>Left/Socialist</strong>. If you feel this bill is taking ownership away from private entities and giving it to the state,
+                    then move the slider towards the left. The more extreem you feel this ownership shift is
+                    the more you should move the slider.
+
+                </p>
+                <p>
+                    <strong>Right/Capitalist</strong>. If you feel this bill is taking ownership away from the state and giving it to private entities,
+                    then move the slider towards the right. The more extreem you feel this ownership shift is
+                    the more you should move the slider.
+                </p>
+                @if (Model.AlreadySet)
+                {
+                    <a id="submitButton" href="#" role="button" class="btn btn-primary disabled">Set Political Stance</a>
+
+                }
+                else
+                {
+                    <a id="submitButton" href="#" role="button" class="btn btn-primary">Set Political Stance</a>
+                }
+
+            </div>
+            <div class="col-md-1 col-xs-2 " style="height:100%;bottom:0;top:0;">
+                <div id="slider-vertical" style="height:10em"></div>
+            </div>
+            <div class="col-md-6 col-xs-10">
+                <div style="width:100%; position:relative; padding-bottom: 92%;">
+                    <svg xmlns:dc="http://purl.org/dc/elements/1.1/"
+                         xmlns:cc="http://creativecommons.org/ns#"
+                         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                         xmlns:svg="http://www.w3.org/2000/svg"
+                         xmlns="http://www.w3.org/2000/svg"
+                         xmlns:xlink="http://www.w3.org/1999/xlink"
+                         id="svg2"
+                         viewBox="0 0 450 450"
+                         preserveAspectRatio="xMidYMin slice"
+                         style="position:absolute; width: 100%;  height: 1px; overflow:visible">
+                        <defs id="defs5" />
+                        <g transform="translate(16.1268,7.20645)"
+                           id="g9589">
+                            <g transform="matrix(1.0006063,0,0,1.001387,-36.451321,-7.7364663)"
+                               id="g3221"
+                               style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:none">
+                                <path d="M -27.75,-107.1875 L -27.75,72.8125 L -27.75,73.3125 L -27.75,253.3125 L 152.75,253.3125 L 333.03125,253.3125 L 333.03125,72.8125 L 333.03125,-106.96875 L 152.75,-106.96875 L 152.75,-107.1875 L -27.75,-107.1875 z"
+                                      transform="translate(87.76494,127.18358)"
+                                      id="rect3223"
+                                      style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                            </g>
+                            <path d="M 42.09981,12.788492 L 42.09981,372.78748"
+                                  id="path3163"
+                                  style="fill:#d3d7cf;fill-opacity:1;fill-rule:evenodd;stroke:#d3d7cf;stroke-width:0.999632;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                            <use transform="translate(18,-2.5e-8)"
+                                 id="use9429"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(36,-2.5e-8)"
+                                 id="use9431"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(54,-2.5e-8)"
+                                 id="use9433"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(72,-2.5e-8)"
+                                 id="use9435"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(90,-2.5e-8)"
+                                 id="use9437"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(108,-2.5e-8)"
+                                 id="use9439"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(126,-2.5e-8)"
+                                 id="use9441"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(144,-2.5e-8)"
+                                 id="use9443"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(180,-2.5e-8)"
+                                 id="use9445"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(198,-2.5e-8)"
+                                 id="use9447"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(216,-2.5e-8)"
+                                 id="use9449"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(234,-2.5e-8)"
+                                 id="use9451"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(252,-2.5e-8)"
+                                 id="use9453"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(270,-2.5e-8)"
+                                 id="use9455"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(288,-2.5e-8)"
+                                 id="use9457"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(306,-2.5e-8)"
+                                 id="use9459"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(324,-2.5e-8)"
+                                 id="use9461"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="matrix(0,1,-1,0,396.887,-11.3125)"
+                                 id="use9473"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#path3163" />
+                            <use transform="translate(4.74121e-7,18)"
+                                 id="use9475"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,36)"
+                                 id="use9477"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,54)"
+                                 id="use9479"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,72)"
+                                 id="use9481"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,90)"
+                                 id="use9483"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,108)"
+                                 id="use9485"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,126)"
+                                 id="use9487"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,144)"
+                                 id="use9489"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,180)"
+                                 id="use9491"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,198)"
+                                 id="use9493"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,216)"
+                                 id="use9495"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,234)"
+                                 id="use9497"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,252)"
+                                 id="use9499"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,270)"
+                                 id="use9501"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,288)"
+                                 id="use9503"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,306)"
+                                 id="use9505"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <use transform="translate(4.74121e-7,324)"
+                                 id="use9507"
+                                 x="0"
+                                 y="0"
+                                 width="480"
+                                 height="400"
+                                 xlink:href="#use9473" />
+                            <text x="138.10001"
+                                  y="8.7871103"
+                                  id="text9511"
+                                  xml:space="preserve"
+                                  style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"><tspan x="138.10001"
+                                                                                                                                                                                                                                                                                                                                      y="8.7871103"
+                                                                                                                                                                                                                                                                                                                                      id="tspan9513" /></text>
+                            <text x="204.545"
+                                  y="9.1171904"
+                                  id="text9515"
+                                  xml:space="preserve"
+                                  style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Georgia"><tspan x="204.545"
+                                                                                                                                                                                                                                                                                                                          y="9.1171904"
+                                                                                                                                                                                                                                                                                                                          id="tspan9517"
+                                                                                                                                                                                                                                                                                                                          style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Bitstream Vera Sans">Authoritarian</tspan></text>
+                            <text x="10.3184"
+                                  y="197.286"
+                                  id="text9519"
+                                  xml:space="preserve"
+                                  style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Georgia"><tspan x="10.3184"
+                                                                                                                                                                                                                                                                                                                          y="197.286"
+                                                                                                                                                                                                                                                                                                                          id="tspan9521"
+                                                                                                                                                                                                                                                                                                                          style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Bitstream Vera Sans">Left</tspan></text>
+                            <text x="402.23099"
+                                  y="196.091"
+                                  id="text9523"
+                                  xml:space="preserve"
+                                  style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Georgia"><tspan x="402.23099"
+                                                                                                                                                                                                                                                                                                                          y="196.091"
+                                                                                                                                                                                                                                                                                                                          id="tspan9525"
+                                                                                                                                                                                                                                                                                                                          style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Bitstream Vera Sans">Right</tspan></text>
+                            <text x="204.545"
+                                  y="385.41699"
+                                  id="text9527"
+                                  xml:space="preserve"
+                                  style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Georgia"><tspan x="204.545"
+                                                                                                                                                                                                                                                                                                                          y="385.41699"
+                                                                                                                                                                                                                                                                                                                          id="tspan9529"
+                                                                                                                                                                                                                                                                                                                          style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Bitstream Vera Sans">Libertarian</tspan></text>
+                            <g transform="translate(-36.4,-7.71289)"
+                               id="g2385"
+                               style="opacity:0.75">
+                                <rect width="180"
+                                      height="180"
+                                      x="60"
+                                      y="201"
+                                      id="rect2406"
+                                      style="opacity:1;fill:#9aed97;fill-opacity:1;stroke:none;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                                <rect width="180"
+                                      height="180"
+                                      x="241"
+                                      y="201"
+                                      id="rect3178"
+                                      style="opacity:1;fill:#c09aea;fill-opacity:1;stroke:none;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                                <rect width="180"
+                                      height="180"
+                                      x="241"
+                                      y="20"
+                                      id="rect3180"
+                                      style="opacity:1;fill:#42aaff;fill-opacity:1;stroke:none;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                                <rect width="180"
+                                      height="180"
+                                      x="60"
+                                      y="20"
+                                      id="rect3182"
+                                      style="opacity:1;fill:#ff7575;fill-opacity:1;stroke:none;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                                <path d="M 240.50069,20.500991 L 240.50069,380.50099"
+                                      id="path3184"
+                                      style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.99900001;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                                <path d="M 420.50035,200.5 L 60.499654,200.5"
+                                      id="path9533"
+                                      style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.999654px;stroke-linecap:square;stroke-linejoin:miter;stroke-opacity:1" />
+                            </g>
+                            <path id="point" d="M 172.44566,289.38199 C 172.44566,293.55572 169.06218,296.93919 164.88845,296.93919 C 160.71473,296.93919 157.33125,293.55572 157.33125,289.38199 C 157.33125,285.20826 160.71473,281.82478 164.88845,281.82478 C 169.06218,281.82478 172.44566,285.20826 172.44566,289.38199 z"
+                                  transform="translate(@Model.HorizontalAvarage,@Model.VerticalAvarage)"
+                                  id="path9509"
+                                  style="opacity:0.75;fill:#ff0000;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.99900001;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                        </g>
+                    </svg>
+                </div>
+
+                <div id="slider-horizontal" style="width:80%; margin-left: 9%; margin-right: 11%;"></div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+

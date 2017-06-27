@@ -1,0 +1,32 @@
+﻿@model IEnumerable<Democracy.Services.Contracts.ViewModels.BillViewModel>
+
+@{
+    ViewBag.Title = "Bills";
+}
+
+<h2>National Bills</h2>
+<p>
+    Browse through the bills currently progressing through parliment and vote on the issues that matter to you
+</p>
+<div class="list-group">
+    @foreach (var bill in Model)
+    {
+        <a href="@Url.Action("Details", "Bills", new { id = bill.Id })" class="list-group-item">
+            @if (bill.IsNew)
+            {
+                <span class="label label-primary">New!</span>
+            }
+            @if (bill.IsUpdated)
+            {
+                <span class="label label-warning">Updated!</span>
+            }
+            <h3 class="list-group-item-heading">
+                @Html.DisplayFor(modelItem => bill.Title)
+            </h3>
+            @Html.LabelFor(modelItem => bill.House) : @Html.DisplayFor(modelItem => bill.House)<br/>
+            @Html.LabelFor(modelItem => bill.Stage) : @Html.DisplayFor(modelItem => bill.Stage)<br />
+            @Html.LabelFor(modelItem => bill.UpdatedDate) : @Html.DisplayFor(modelItem => bill.UpdatedDate)
+        </a>
+    }
+</div>
+

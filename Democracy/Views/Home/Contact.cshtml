@@ -1,0 +1,52 @@
+﻿@model Democracy.Services.Contracts.ViewModels.ContactFormViewModel
+@{
+    ViewBag.Title = "Tell us what you think";
+}
+
+<div class="row row-centered">
+    <div class="col-md-7 col-centered">
+        <h2 class="page-header">Feedback</h2>
+        <p>
+            This site is an ever evolving project, and nothing is more important to its evolution than your feedback. This is your democracy, make sure you tell us how you would like it to work.
+            Please feel free to contact us for any reason.
+        </p>
+        <div class="panel panel-default">
+
+            <div class="panel-body">
+                @using (Html.BeginForm("Contact", "Home", FormMethod.Post, new { @class = "panel mbf" }))
+                {
+                    <div class="form-group" >
+                        @Html.LabelFor(m => m.Name, new { @class = "col-md-2 control-label" })
+                        <div class="col-md-10">
+                            @Html.TextBoxFor(m => m.Name, new { @class = "form-control", style = "max-width:600px;width:100%" })
+                            @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <br />
+                    <div class="form-group" style="padding-top: 10px;">
+                        @Html.LabelFor(m => m.Email, new { @class = "col-md-2 control-label" })
+                        <div class="col-md-10">
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", style = "max-width:600px;width:100%" })
+                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <br />
+                    <div class="form-group" style="padding-top: 10px;">
+                        @Html.LabelFor(m => m.Message, new { @class = "col-md-2 control-label" })
+                        <div class="col-md-10">
+                            @Html.TextAreaFor(m => m.Message, new { @class = "form-control", rows = 7, style = "max-width:600px;width:100%" })
+                            @Html.ValidationMessageFor(m => m.Message, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="form-group" >
+                        <div class="col-md-offset-2 col-md-10" style="padding-top: 10px;">
+                            <input value="Send" id="id" class="btn btn-primary" type="submit" />
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+

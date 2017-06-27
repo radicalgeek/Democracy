@@ -1,0 +1,102 @@
+﻿@using Democracy.Models
+@model LoginViewModel
+@{
+    ViewBag.Title = "Democracy";
+}
+<div class="row row-centered">
+    <div class="col-md-7 col-centered">
+        @*@Html.Partial("_logo")*@
+        <p>
+            The average constituency in the UK has a population of 72,400 people. How can one elected representative
+            represent the diverse views and interests of all of these people? They can't.
+            It’s time to represent yourself. There has been no major change in UK democracy since women got 
+            the vote almost 100 years ago. It is long past due a shake-up. We have the technology now to do 
+            better. It’s time for 21st century digital direct democracy. 
+        </p>
+    </div>
+</div>
+
+<div class="row row-centered">
+    <div class="col-md-7 col-centered">
+        <section id="loginForm">
+            @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Email, new { @class = "col-md-4 control-label" })
+                    <div class="col-md-8">
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Password, new { @class = "col-md-4 control-label" })
+                    <div class="col-md-8">
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-centered col-md-offset-4 col-md-8">
+                        @Html.CheckBoxFor(m => m.RememberMe)
+                        @Html.LabelFor(m => m.RememberMe)
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-offset-4 col-md-8">
+                        <input type="submit" value="Log in" class="btn btn-primary" />
+                    </div>
+                </div>
+                <p>
+                    <div class="col-centered col-md-offset-4 col-md-8">
+                        @Html.ActionLink("Not yet registered?", "Register","Account")
+                    </div>
+                </p>
+                <p>
+                    <div class="col-centered col-md-offset-4 col-md-8">
+                        @Html.ActionLink("Forgot your password?", "ForgotPassword", "Account")
+                    </div>
+                </p>
+            }
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+@*<div class="row">
+    <div class="col-md-4">
+        <h2>A revolution in UK polotics</h2>
+        <p>
+            The average constituency in the UK has a population of 72,400 people. How can one elected representative 
+            represent the diverse views and interests of all of these people? They can't. It.
+        </p>
+        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
+    </div>
+    <div class="col-md-4">
+        <h2>Are you represented?</h2>
+        <p>
+            By enabling the entire population to vote on the same issues our MPs do, we can see just how representative our
+            democracy is. Compare your votes to the votes cast by other people in your constituancy, your MP, parliment 
+            or the population as a whole. Show your elected representatives exactly what your opinions are on any subject debated in
+            parliment. 
+        </p>
+        <p>
+            <a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a>
+        </p>
+    </div>
+    <div class="col-md-4">
+        <h2>Cut through the media bias</h2>
+        <p>
+            In the UK, like it or not, many of us base our understanding, knowledge and opinions on what the media tell us. 
+            The media claims to hold polotics to account. But the truth is that each media outlet has it's own interests and agenda 
+            at heart, that colour the news they give us. This app allows you to see the political position of each media outlet, easily 
+            see opposing views, and draw your own informed conclusions. 
+        </p>
+        <p>
+            <a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a>
+        </p>
+    </div>
+</div>*@

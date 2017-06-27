@@ -1,0 +1,488 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ActionMailerNext</name>
+    </assembly>
+    <members>
+        <member name="T:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes">
+            <summary>
+                Mailer for Mandrill.
+            </summary>
+        </member>
+        <member name="T:ActionMailerNext.Interfaces.IMailAttributes">
+            <summary>
+                All mailers should implement this interface.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.From">
+            <summary>
+                A string representation of who this mail should be from.  Could be
+                your name and email address or just an email address by itself.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.Subject">
+            <summary>
+                The subject line of the email.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.Priority">
+            <summary>
+                The Priority of the email.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.To">
+            <summary>
+                A collection of addresses this email should be sent to.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.Cc">
+            <summary>
+                A collection of addresses that should be CC'ed.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.Bcc">
+            <summary>
+                A collection of addresses that should be BCC'ed.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.ReplyTo">
+            <summary>
+                A collection of addresses that should be listed in Reply-To header.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.Headers">
+            <summary>
+                Any custom headers (name and value) that should be placed on the message.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.MessageEncoding">
+            <summary>
+                Gets or sets the default message encoding when delivering mail.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.Attachments">
+            <summary>
+                Any attachments you wish to add.  The key of this collection is what
+                the file should be named.  The value is should represent the actual content
+                of the file.
+            </summary>
+            <example>
+                Attachments["picture.jpg"] = File.ReadAllBytes(@"C:\picture.jpg");
+            </example>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IMailAttributes.AlternateViews">
+            <summary>
+                Any view you wish to add.  The key of this collection is what
+                the view should be named.
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.#ctor">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.GenerateProspectiveMailMessage">
+            <summary>
+                Creates a EmailMessage for the given IMailAttributes instance.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.From">
+            <summary>
+                A string representation of who this mail should be from.  Could be
+                your name and email address or just an email address by itself.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.Subject">
+            <summary>
+                The subject line of the email.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.Priority">
+            <summary>
+                The Priority of the email.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.To">
+            <summary>
+                A collection of addresses this email should be sent to.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.Cc">
+            <summary>
+                A collection of addresses that should be CC'ed.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.Bcc">
+            <summary>
+                A collection of addresses that should be BCC'ed.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.ReplyTo">
+            <summary>
+                A collection of addresses that should be listed in Reply-To header.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.Headers">
+            <summary>
+                Any custom headers (name and value) that should be placed on the message.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.MessageEncoding">
+            <summary>
+                Gets or sets the default message encoding when delivering mail.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.Attachments">
+            <summary>
+                Any attachments you wish to add.  The key of this collection is what
+                the file should be named.  The value is should represent the actual content
+                of the file.
+            </summary>
+            <example>
+                Attachments["picture.jpg"] = File.ReadAllBytes(@"C:\picture.jpg");
+            </example>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.Mandrill.MandrillMailAttributes.AlternateViews">
+            <summary>
+                Any view you wish to add.  The key of this collection is what
+                the view should be named.
+            </summary>
+        </member>
+        <member name="T:ActionMailerNext.Implementations.Mandrill.MandrillMailSender">
+            <summary>
+                Implements IMailSender by using Mandrill.MandrillApi
+            </summary>
+        </member>
+        <member name="T:ActionMailerNext.Interfaces.IMailSender">
+            <summary>
+                An object used to deliver SMTPMailMessage.
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Interfaces.IMailSender.Send(ActionMailerNext.Interfaces.IMailAttributes)">
+            <summary>
+                Sends IMailAttributes synchronously.
+            </summary>
+            <param name="mailAttributes">The SMTPMailMessage message you wish to send.</param>
+        </member>
+        <member name="M:ActionMailerNext.Interfaces.IMailSender.SendAsync(ActionMailerNext.Interfaces.IMailAttributes)">
+            <summary>
+                Sends IMailAttributes asynchronously using tasks.
+            </summary>
+            <param name="mailAttributes">The SMTPMailMessage message you wish to send.</param>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.Mandrill.MandrillMailSender.#ctor">
+            <summary>
+                Creates a new SMTPMailMessage sender based on Mandrill.MandrillApi
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.Mandrill.MandrillMailSender.#ctor(System.String)">
+            <summary>
+                Creates a new MandrillApi based onMandrill.MandrillApi
+            </summary>
+            <param name="apiKey"></param>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.Mandrill.MandrillMailSender.Send(ActionMailerNext.Interfaces.IMailAttributes)">
+            <summary>
+                Sends MandrillMessage synchronously.
+            </summary>
+            <param name="mailAttributes">The IMailAttributes you wish to send.</param>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.Mandrill.MandrillMailSender.SendAsync(ActionMailerNext.Interfaces.IMailAttributes)">
+            <summary>
+                Sends MandrillMessage asynchronously using tasks.
+            </summary>
+            <param name="mailAttributes">The IMailAttributes message you wish to send.</param>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.Mandrill.MandrillMailSender.Dispose">
+            <summary>
+                Destroys the underlying SmtpClient.
+            </summary>
+        </member>
+        <member name="T:ActionMailerNext.Utils.AlternativeViewCollection">
+            <summary>
+                A collection of attachments.  This is basically a glorified Dictionary.
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Utils.AlternativeViewCollection.#ctor">
+            <summary>
+                Constructs an empty AlternativeViewCollection object.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Utils.AlternativeViewCollection.Inline">
+            <summary>
+                Any attachments added to this collection will be treated
+                as inline attachments within the mail message.
+            </summary>
+        </member>
+        <member name="T:ActionMailerNext.Utils.AttachmentCollection">
+            <summary>
+                A collection of attachments.  This is basically a glorified Dictionary.
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Utils.AttachmentCollection.#ctor">
+            <summary>
+                Constructs an empty AttachmentCollection object.
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Utils.AttachmentCollection.ModifyAttachmentProperties(System.String,System.Byte[],System.Boolean)">
+            <summary>
+            </summary>
+            <param name="fileName"></param>
+            <param name="fileBytes"></param>
+            <param name="inline"></param>
+            <returns></returns>
+        </member>
+        <member name="P:ActionMailerNext.Utils.AttachmentCollection.Inline">
+            <summary>
+                Any attachments added to this collection will be treated
+                as inline attachments within the mail message.
+            </summary>
+        </member>
+        <member name="T:ActionMailerNext.DeliveryHelper">
+            <summary>
+                Some helpers used to deliver mail.  Reduces the need to repeat code.
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.DeliveryHelper.#ctor(ActionMailerNext.Interfaces.IMailSender,ActionMailerNext.Interfaces.IMailInterceptor)">
+            <summary>
+                Creates a new delivery helper to be used for sending messages.
+            </summary>
+            <param name="sender">The sender to use when delivering mail.</param>
+            <param name="interceptor">The interceptor to report with while delivering mail.</param>
+        </member>
+        <member name="M:ActionMailerNext.DeliveryHelper.Deliver(ActionMailerNext.Interfaces.IMailAttributes)">
+            <summary>
+                Sends the given email
+            </summary>
+            <param name="mail">The mail message to send.</param>
+        </member>
+        <member name="M:ActionMailerNext.DeliveryHelper.DeliverAsync(ActionMailerNext.Interfaces.IMailAttributes)">
+            <summary>
+                Sends async the given email
+            </summary>
+            <param name="mail">The mail message to send.</param>
+        </member>
+        <member name="T:ActionMailerNext.Interfaces.IEmailResult">
+            <summary>
+                Interface for email results. Allows to send the message synchonously or asynchonously
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Interfaces.IEmailResult.Deliver">
+            <summary>
+                Sends your message.  This call will block while the message is being sent. (not recommended)
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Interfaces.IEmailResult.DeliverAsync">
+            <summary>
+                Sends your message asynchronously.  This method does not block.  If you need to know
+                when the message has been sent, then override the OnMailSent method in MailerBase which
+                will not fire until the asyonchronous send operation is complete.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IEmailResult.Mail">
+            <summary>
+                The underlying IMailAttributes object that was passed to this object's constructor.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IEmailResult.MailSender">
+            <summary>
+                The IMailSender instance that is used to deliver mail.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Interfaces.IEmailResult.MessageEncoding">
+            <summary>
+                The default encoding used to send a message.
+            </summary>
+        </member>
+        <member name="T:ActionMailerNext.Utils.NoViewsFoundException">
+            <summary>
+                Thrown when ActionMailer cannot locate any views for a given EmailResult
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Utils.NoViewsFoundException.#ctor">
+            <summary>
+                Thrown when ActionMailer cannot locate any views for a given EmailResult
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Utils.NoViewsFoundException.#ctor(System.String)">
+            <summary>
+                Thrown when ActionMailer cannot locate any views for a given EmailResult
+            </summary>
+            <param name="message">The message to include in the exception.</param>
+        </member>
+        <member name="M:ActionMailerNext.Utils.NoViewsFoundException.#ctor(System.String,System.Exception)">
+            <summary>
+                Thrown when ActionMailer cannot locate any views for a given EmailResult
+            </summary>
+            <param name="message">The message to include in the exception.</param>
+            <param name="innerException">An inner exception which contributed to (or caused) this exception.</param>
+        </member>
+        <member name="T:ActionMailerNext.Interfaces.IMailInterceptor">
+            <summary>
+                A simple interface that allows for reading or manipulating mail
+                messages before and after transfer.
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Interfaces.IMailInterceptor.OnMailSending(ActionMailerNext.MailSendingContext)">
+            <summary>
+                This method is called before each mail is sent
+            </summary>
+            <param name="context">
+                A simple context containing the mail
+                and a boolean value that can be toggled to prevent this
+                mail from being sent.
+            </param>
+        </member>
+        <member name="M:ActionMailerNext.Interfaces.IMailInterceptor.OnMailSent(ActionMailerNext.Interfaces.IMailAttributes)">
+            <summary>
+                This method is called after each mail is sent.
+            </summary>
+            <param name="mail">The mail that was sent.</param>
+        </member>
+        <member name="T:ActionMailerNext.MailSendingContext">
+            <summary>
+                A special context object used by the OnMailSending() method
+                to allow you to inspect the underlying MailMessage before it
+                is sent, or prevent it from being sent altogether.
+            </summary>
+        </member>
+        <member name="F:ActionMailerNext.MailSendingContext.Mail">
+            <summary>
+                The generated mail message that is being sent.
+            </summary>
+        </member>
+        <member name="F:ActionMailerNext.MailSendingContext.Cancel">
+            <summary>
+                A special flag that you can toggle to prevent this mail
+                from being sent.
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.MailSendingContext.#ctor(ActionMailerNext.Interfaces.IMailAttributes)">
+            <summary>
+                Returns a populated context to be used for the OnMailSending()
+                method in MailerBase.
+            </summary>
+            <param name="mail">The message you wish to wrap within this context.</param>
+        </member>
+        <member name="T:ActionMailerNext.Utils.MimeTypes">
+            <summary>
+                Just a handy class for finding mime types.
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Utils.MimeTypes.ResolveByExtension(System.String)">
+            <summary>
+                Resolves a mime type based on the given file extension.  The extension is case-insensitive.
+                Shamelessly stolen from: http://stackoverflow.com/questions/1029740/get-a-mime-from-an-extention/3393525#3393525
+            </summary>
+            <param name="extension">The file extension to search for.</param>
+            <returns>The proper mime type for the supplied extension.</returns>
+        </member>
+        <member name="T:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes">
+            <summary>
+                Mailer for SMTP
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.#ctor">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.GenerateProspectiveMailMessage">
+            <summary>
+                Creates a MailMessage for the current SmtpMailAttribute instance.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.From">
+            <summary>
+                A string representation of who this mail should be from.  Could be
+                your name and email address or just an email address by itself.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.Subject">
+            <summary>
+                The subject line of the email.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.Priority">
+            <summary>
+                The Priority of the email.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.To">
+            <summary>
+                A collection of addresses this email should be sent to.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.Cc">
+            <summary>
+                A collection of addresses that should be CC'ed.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.Bcc">
+            <summary>
+                A collection of addresses that should be BCC'ed.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.ReplyTo">
+            <summary>
+                A collection of addresses that should be listed in Reply-To header.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.Headers">
+            <summary>
+                Any custom headers (name and value) that should be placed on the message.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.MessageEncoding">
+            <summary>
+                Gets or sets the default message encoding when delivering mail.
+            </summary>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.Attachments">
+            <summary>
+                Any attachments you wish to add.  The key of this collection is what
+                the file should be named.  The value is should represent the binary bytes
+                of the file.
+            </summary>
+            <example>
+                Attachments["picture.jpg"] = File.ReadAllBytes(@"C:\picture.jpg");
+            </example>
+        </member>
+        <member name="P:ActionMailerNext.Implementations.SMTP.SmtpMailAttributes.AlternateViews">
+            <summary>
+                Any view you wish to add.
+            </summary>
+        </member>
+        <member name="T:ActionMailerNext.Implementations.SMTP.SmtpMailSender">
+            <summary>
+                Implements IMailSender by using System.Net.Mail.SmtpClient.
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.SMTP.SmtpMailSender.#ctor">
+            <summary>
+                Creates a new SMTPMailMessage sender based on System.Net.Mail.SmtpClient
+            </summary>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.SMTP.SmtpMailSender.#ctor(System.Net.Mail.SmtpClient)">
+            <summary>
+                Creates a new SMTPMailMessage sender based on System.Net.Mail.SmtpClient
+            </summary>
+            <param name="client">The underlying SmtpClient instance to use.</param>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.SMTP.SmtpMailSender.Send(ActionMailerNext.Interfaces.IMailAttributes)">
+            <summary>
+                Sends SMTPMailMessage synchronously.
+            </summary>
+            <param name="mailAttributes">The SmtpMailAttributes you wish to send.</param>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.SMTP.SmtpMailSender.SendAsync(ActionMailerNext.Interfaces.IMailAttributes)">
+            <summary>
+                Sends SMTPMailMessage asynchronously using tasks.
+            </summary>
+            <param name="mailAttributes">The IMailAttributes message you wish to send.</param>
+        </member>
+        <member name="M:ActionMailerNext.Implementations.SMTP.SmtpMailSender.Dispose">
+            <summary>
+                Destroys the underlying SmtpClient.
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,484 @@
+﻿@using Democracy.Services.Contracts.ViewModels
+@model Democracy.Bills.StatisticsViewModel
+@{
+    ViewBag.Title = "Your Democracy";
+}
+<script>
+    function init(evt){
+        if ( window.svgDocument == null )
+        {
+            svgDocument = evt.target.ownerDocument;
+        }
+        tooltip = svgDocument.getElementById('tooltip');
+        tooltip_bg = svgDocument.getElementById('tooltip_bg');
+    }
+    function ShowTooltip(evt) {
+        tooltip.setAttributeNS(null,"x",evt.clientX-8);
+        tooltip.setAttributeNS(null,"y",evt.clientY-5);
+        tooltip.firstChild.data = evt.target.getAttributeNS(null,"name");
+        tooltip.setAttributeNS(null, "visibility", "visible");
+        tooltip_bg.setAttributeNS(null, "x", evt.client + 16);
+        tooltip_bg.setAttributeNS(null, "y", evt.clientY + 16);
+        tooltip_bg.setAttributeNS(null, "visibility", "visible");
+    }
+    function HideTooltip()
+    {
+        tooltip.setAttributeNS(null, "visibility", "hidden");
+        tooltip_bg.setAttributeNS(null, "visibility", "hidden");
+    }
+</script>
+<style type="text/css">
+    .tooltip_bg {
+        fill: white;
+        stroke: black;
+        stroke-width: 1;
+        opacity: 0.85;
+    }
+
+    .AL {
+        fill: #ff7575;
+    }
+
+    .AR {
+        fill: #42aaff;
+    }
+
+    .LL {
+        fill: #9aed97;
+    }
+
+    .LR {
+        fill: #c09aea;
+    }
+
+    .nutural {
+        fill: #c0c0c0;
+    }
+</style>
+
+    <style type="text/css">
+        .labour {
+            fill: #c0c0c0;
+        }
+        /* Labour Party */
+        .tory {
+            fill: #c0c0c0;
+        }
+        /* Conservative Party */
+        .libdem {
+            fill: #c0c0c0;
+        }
+        /* Liberal Democrat Party */
+        .snp {
+            fill: #c0c0c0;
+        }
+        /* Scottish National Party */
+        .pc {
+            fill: #c0c0c0;
+        }
+        /* Plaid Cymru */
+        .sf {
+            fill: #c0c0c0;
+        }
+        /* Sinn Fein */
+        .sdlp {
+            fill: #c0c0c0;
+        }
+        /* Social Democratic and Labour Party */
+        .uup {
+            fill: #c0c0c0;
+        }
+        /* Ulster Unionist Party */
+        .dup {
+            fill: #c0c0c0;
+        }
+        /* Democratic Unionist Party */
+        .alliance {
+            fill: #c0c0c0;
+        }
+        /* Alliance Party */
+        .respect {
+            fill: #c0c0c0;
+        }
+        /* Respect Party (George Galloway) */
+        .green {
+            fill: #c0c0c0;
+        }
+        /* Green Party */
+        .ind {
+            fill: #C0C0C0;
+        }
+        /* independent */
+        .undeclared {
+            fill: #c0c0c0;
+        }
+
+        .seat {
+            stroke: black;
+            stroke-width: 0.5;
+        }
+
+        .countyboundary {
+            stroke: black;
+            stroke-width: 1;
+            fill: none;
+        }
+
+        .insetbox {
+            fill: none;
+            stroke: black;
+            stroke-width: 3;
+        }
+
+        .dashedbox {
+            fill: none;
+            stroke: black;
+            stroke-width: 1.5;
+            stroke-dasharray: 3,7;
+        }
+
+        text {
+            font-size: 18px;
+            color: black;
+            fill: black;
+            stroke: none;
+            font-family: &quot;
+            Bitstream Vera Sans&quot;
+            ;
+        }
+
+        tspan {
+            font-size: 14px;
+        }
+    </style>
+    @section scripts{
+        <script src="http://code.highcharts.com/highcharts.js"></script>
+        <script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+
+        <script>
+
+
+
+    $(document).ready(function() {
+
+        // Build the chart
+        $('#representativeChart').highcharts({
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false
+            },
+            title: {
+                text: 'Public will represented'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.4f}%</b>',
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: true
+                }
+            },
+            series: [
+            {
+                type: 'pie',
+                name: 'Public will represented',
+                data: [
+                    { name: 'Public heard', y: @Model.OverAllRepresentationPercentage, color: '#3c763d' },
+                    { name: 'Public not heard', y: 100 - @Model.OverAllRepresentationPercentage, color: '#a94442' }
+                ]
+            }
+            ]
+        });
+    });
+
+    $(document).ready(function() {
+
+        // Build the chart
+        $('#peopleRepresentativeChart').highcharts({
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false
+            },
+            title: {
+                text: 'Voters on this site'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.4f}%</b>',
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: true
+                }
+            },
+            series: [
+            {
+                type: 'pie',
+                name: 'Voters using site',
+                data: [
+                    { name: 'Signed up', y: @Model.OverAllSiteRepresentative, color: '#3c763d' },
+                    { name: 'Not signed up', y: 100 - @Model.OverAllSiteRepresentative, color: '#a94442' }
+                ]
+            }
+            ]
+        });
+    });
+
+    $(function() {
+        $('#stanceChart').highcharts({
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Total votes by political stance'
+            },
+            xAxis: {
+                categories: ['Authoritarian Left Votes', 'Authoritarian Right Votes', 'Libertarian Left Votes', 'Libertarian Right Votes']
+            },
+            credits: {
+                enabled: false
+            },
+            series: [
+            {
+                name: 'Public Votes For',
+                data: [@Model.NationalAuthoriterianLeftVotesFor, @Model.NationalAuthoriterianRightVotesFor, @Model.NationalLibeterianLeftVotesFor, @Model.NationalLibeterianRightVotesFor]
+            }, {
+                name: 'Public Votes Against',
+                data: [-@Model.NationalAuthoriterianLeftVotesAgainst, -@Model.NationalAuthoriterianRightVotesAgainst, -@Model.NationalLibeterianLeftVotesAgainst, -@Model.NationalLibeterianRightVotesAgainst]
+            }, {
+                name: 'MPs Votes For',
+                data: [@Model.MpAuthoriterianLeftVotesFor, @Model.MpAuthoriterianRightVotesFor, @Model.MpLibeterianLeftVotesFor, @Model.MpLibeterianRightVotesFor]
+            }, {
+                name: 'MPs Votes Against',
+                data: [-@Model.MpAuthoriterianLeftVotesAgainst, -@Model.MpAuthoriterianRightVotesAgainst, -@Model.MpLibeterianLeftVotesAgainst, -@Model.MpLibeterianRightVotesAgainst]
+            }
+            ]
+        });
+    });
+
+    function UpdateSearchResults(results) {
+
+        $("#mapModal").html(results);
+        $("#mapContainer").html(results);
+
+        var data = @Html.Raw(Model.VotesByContituency);
+
+                $.each(data, function(key, value) {
+                    var name = value.Name.replace('(', '').replace(')', '').replace(',', '_').replace(',', '_').replace(',', '_').replace(' ', '_').replace(' ', '_').replace(' ', '_').replace(' ', '_');
+                    var stance = 'nutural';
+                    var highCount = 0;
+
+                    if (value.AuthoriterianLeftVotesFor > value.AuthoriterianRightVotesFor) {
+                        stance = 'AL';
+                        highCount = value.AuthoriterianLeftVotesFor;
+                    }
+                    if (value.AuthoriterianLeftVotesFor < value.AuthoriterianRightVotesFor) {
+                        stance = 'AR';
+                        highCount = value.AuthoriterianRightVotesFor;
+                    }
+                    if (value.LibeterianLeftVotesFor > value.LibeterianRightVotesFor && value.LibeterianLeftVotesFor > highCount) {
+                        stance = 'LL';
+                        highCount = value.LibeterianLeftVotesFor;
+                    }
+                    if (value.LibeterianLeftVotesFor < value.LibeterianRightVotesFor && value.LibeterianRightVotesFor > highCount) {
+                        stance = 'LR';
+                        highCount = value.LibeterianRightVotesFor;
+                    }
+                    var element = $('path#' + name);
+                    element.attr('class', stance + " seat");
+                    element.attr('name', value.Name);
+                    element.attr('onmousemove', 'ShowTooltip(evt)');
+                    element.attr('onmouseout', 'HideTooltip()');
+
+                });
+    }
+
+    $(document).ready(function() {
+
+        $.ajax({
+            url: '/Home/StatsMap',
+            type: 'GET',
+            dataType: 'text/xml'
+        }).success(function (result) {
+            UpdateSearchResults(result);
+        }).error(function (xhr, status) {
+            if (status == "parsererror"){
+                UpdateSearchResults(xhr.responseText);
+            }
+            //alert(xhr.responseText);
+            //alert(xhr.error);
+            //alert(status);
+            //$("#mapContainer").html(xhr.responseText);
+        });
+
+    });
+
+        </script>
+    }
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Political Direction</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="mapModal" style="width:100%; position:relative; padding-bottom: 98%; overflow:hidden;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h2>Your Democracy</h2>
+<p>
+    Welcome to Democracy! This page gives you an overview of the political direction of the country, and
+    and how representative our democracy is. 
+</p>
+<p>
+    <a href="@Url.Action("Index", "Bills")" class="btn btn-primary" role="button">Start voting now</a>
+</p>
+    
+    <div class="panel panel-default">
+        <div class="panel-heading">Statistics</div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <h3>UK Political Direction</h3>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div id="mapContainer" style="width:100%; position:relative; padding-bottom: 98%; overflow:hidden;">
+
+                                <img src="~/Content/Images/ajax-loader.gif" class="center-block" style="padding-top:30px;" />
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row row-centered" style="padding-top: 10px;padding-bottom: 10px;">
+                        <div class="col-md-2 col-md-offset-4">
+                            <a href="#" class="btn btn-success" role="button" data-toggle="modal" data-target="#myModal">More details</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 col-xs-12">
+                            <h4 class="media-heading">Public Direction</h4>
+                            <div style="width:100%; position:relative; padding-bottom: 92%;">
+                                @{Html.RenderPartial("_compass", new compassViewModel { HorizontalValue = Model.TotalHorizontalAvarage, VerticalValue = Model.TotalVerticalAvarage });}
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xs-12">
+                            <h4 class="media-heading">MP Direction</h4>
+                            <div style="width:100%; position:relative; padding-bottom: 92%;">
+                                @{Html.RenderPartial("_compass", new compassViewModel { HorizontalValue = Model.TotalMpHorizontalAvarage, VerticalValue = Model.TotalMpVerticalAvarage });}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h3>Trending Bills</h3>
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    @foreach (var bill in Model.TrendingBills)
+                                    {
+                                        <a href="@Url.Action("Details", "Bills", new { id = bill.Id })" class="list-group-item">
+                                            <h4 class="list-group-item-heading">
+                                                @Html.DisplayFor(modelItem => bill.Title)
+                                                @if (bill.IsNew)
+                                                {
+                                                    <span class="label label-primary">New!</span>
+                                                }
+                                                @if (bill.IsUpdated)
+                                                {
+                                                    <span class="label label-warning">Updated!</span>
+                                                }
+                                            </h4>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <h3>How Representative are our MPs?</h3>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div id="stanceChart"></div>
+                                </div>
+                                <div class="col-md-4 col-xs-12">
+                                    <div id="representativeChart"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 col-xs-4"></div>
+                                <div class="col-md-4 col-xs-4"></div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <h3>How Representative is this Site?</h3>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <p>
+                                        Number of registered UK voters:<strong>@Model.TotalVoters</strong>
+                                    </p>
+                                    <p>
+                                        Number of registered voters using this site:<strong>@Model.TotalVerifiedVoters (@Model.OverAllSiteRepresentative.ToString("0.000000")%)</strong>
+                                    </p>
+                                    <p>
+                                        Number of non-voters using this site:<strong>@Model.TotalUnVerifiedVoters</strong>
+                                    </p>
+                                    <div class="panel panel-default">
+                                        <div class="panel-body">
+                                            <h4>Make the site more representative!</h4>
+                                            <p>
+                                                There is only one way to make this site more representative of the public will, and that is to
+                                                tell all your freinds and family and get them to sign up too! The more people signed up, the more this site reflects the will of the people.
+                                            </p>
+                                            <p>Lets see if we can make this site more representative than our MPs are!</p>
+                                            <span class='st_sharethis_large' displaytext='ShareThis'></span>
+                                            <span class='st_facebook_large' displaytext='Facebook'></span>
+                                            <span class='st_twitter_large' displaytext='Tweet'></span>
+                                            <span class='st_linkedin_large' displaytext='LinkedIn'></span>
+                                            <span class='st_pinterest_large' displaytext='Pinterest'></span>
+                                            <span class='st_email_large' displaytext='Email'></span>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+
+                                <div class="col-md-4 col-xs-12">
+                                    <div id="peopleRepresentativeChart"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 col-xs-4"></div>
+                                <div class="col-md-4 col-xs-4"></div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

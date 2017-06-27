@@ -1,0 +1,31 @@
+﻿@model Democracy.Services.Contracts.ViewModels.ParliamentaryDebatesViewModel
+
+@{
+    ViewBag.Title = Model.Title + "Parliamentary Debates";
+}
+
+<h2>@Html.DisplayFor(model => model.Title) Parliamentary Debates</h2>
+@foreach (var post in Model.dabates)
+{
+    if (post.Speaker != null)
+    {
+        <div class="media">
+            <div class="media-left media-top">
+                <img class="media-object" src="@post.Speaker.ImageUrl" alt="@post.Speaker.Name">
+                
+                @post.Date
+            </div>
+            <div class="media-body">
+                <h4 class="media-heading">
+                    @post.Speaker.Name 
+                    @if (post.Speaker.Constituency != null)
+                    {
+                        <text>(@post.Speaker.Constituency.Name) </text>
+                    }
+                    
+                </h4>
+                @Html.Raw(post.Body)
+            </div>
+        </div>
+    }
+}

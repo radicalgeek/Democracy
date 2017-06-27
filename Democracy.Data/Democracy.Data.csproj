@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2F8A1F99-8B19-435A-B7A0-DBAC72D125B4}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Democracy.Data</RootNamespace>
+    <AssemblyName>Democracy.Data</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Stage|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Stage\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.Core">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.Core.2.2.0\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Identity.EntityFramework">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.EntityFramework.2.2.0\lib\net45\Microsoft.AspNet.Identity.EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DataContext.cs" />
+    <Compile Include="DataModels\BillCommentDataModel.cs" />
+    <Compile Include="DataModels\BillDataModel.cs" />
+    <Compile Include="DataModels\BillStanceDateModel.cs" />
+    <Compile Include="DataModels\ConstituencyDataModel.cs" />
+    <Compile Include="DataModels\DebateDataModel.cs" />
+    <Compile Include="DataModels\MPDataModel.cs" />
+    <Compile Include="DataModels\MpVoteRecord.cs" />
+    <Compile Include="DataModels\OfficeDataModel.cs" />
+    <Compile Include="DataModels\OpinionDataModel.cs" />
+    <Compile Include="DataModels\ParticipationRecord.cs" />
+    <Compile Include="DataModels\PartyDataModel.cs" />
+    <Compile Include="DataModels\PeoplesDebatPostDataModel.cs" />
+    <Compile Include="DataModels\IdentityModels.cs" />
+    <Compile Include="DataModels\VoteDateModel.cs" />
+    <Compile Include="DataModels\VoteType.cs" />
+    <Compile Include="Interfaces\IDatabaseRepository.cs" />
+    <Compile Include="Migrations\201504050735324_initial.cs" />
+    <Compile Include="Migrations\201504050735324_initial.Designer.cs">
+      <DependentUpon>201504050735324_initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504051713371_Second.cs" />
+    <Compile Include="Migrations\201504051713371_Second.Designer.cs">
+      <DependentUpon>201504051713371_Second.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504081731040_third.cs" />
+    <Compile Include="Migrations\201504081731040_third.Designer.cs">
+      <DependentUpon>201504081731040_third.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504111015370_accountUpdate.cs" />
+    <Compile Include="Migrations\201504111015370_accountUpdate.Designer.cs">
+      <DependentUpon>201504111015370_accountUpdate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504120950542_again.cs" />
+    <Compile Include="Migrations\201504120950542_again.Designer.cs">
+      <DependentUpon>201504120950542_again.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504140631270_constituencystorageonuserupdate.cs" />
+    <Compile Include="Migrations\201504140631270_constituencystorageonuserupdate.Designer.cs">
+      <DependentUpon>201504140631270_constituencystorageonuserupdate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504151948091_voteconstituencyfix.cs" />
+    <Compile Include="Migrations\201504151948091_voteconstituencyfix.Designer.cs">
+      <DependentUpon>201504151948091_voteconstituencyfix.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504161642237_billStance.cs" />
+    <Compile Include="Migrations\201504161642237_billStance.Designer.cs">
+      <DependentUpon>201504161642237_billStance.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504182208079_statistics.cs" />
+    <Compile Include="Migrations\201504182208079_statistics.Designer.cs">
+      <DependentUpon>201504182208079_statistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504201319576_indexing.cs" />
+    <Compile Include="Migrations\201504201319576_indexing.Designer.cs">
+      <DependentUpon>201504201319576_indexing.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504201906147_addingFKs.cs" />
+    <Compile Include="Migrations\201504201906147_addingFKs.Designer.cs">
+      <DependentUpon>201504201906147_addingFKs.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201504262054402_screenname.cs" />
+    <Compile Include="Migrations\201504262054402_screenname.Designer.cs">
+      <DependentUpon>201504262054402_screenname.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="PartyConverter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repositories\DatabaseRepository.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201504050735324_initial.resx">
+      <DependentUpon>201504050735324_initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504051713371_Second.resx">
+      <DependentUpon>201504051713371_Second.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504081731040_third.resx">
+      <DependentUpon>201504081731040_third.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504111015370_accountUpdate.resx">
+      <DependentUpon>201504111015370_accountUpdate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504120950542_again.resx">
+      <DependentUpon>201504120950542_again.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504140631270_constituencystorageonuserupdate.resx">
+      <DependentUpon>201504140631270_constituencystorageonuserupdate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504151948091_voteconstituencyfix.resx">
+      <DependentUpon>201504151948091_voteconstituencyfix.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504161642237_billStance.resx">
+      <DependentUpon>201504161642237_billStance.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504182208079_statistics.resx">
+      <DependentUpon>201504182208079_statistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504201319576_indexing.resx">
+      <DependentUpon>201504201319576_indexing.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504201906147_addingFKs.resx">
+      <DependentUpon>201504201906147_addingFKs.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201504262054402_screenname.resx">
+      <DependentUpon>201504262054402_screenname.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

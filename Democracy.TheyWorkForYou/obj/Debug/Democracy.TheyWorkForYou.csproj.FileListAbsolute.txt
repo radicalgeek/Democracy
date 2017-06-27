@@ -1,0 +1,5 @@
+G:\repos\Democracy\Code\Main\Democracy.TheyWorkForYou\bin\Debug\Democracy.TheyWorkForYouAPI.dll
+G:\repos\Democracy\Code\Main\Democracy.TheyWorkForYou\bin\Debug\Democracy.TheyWorkForYouAPI.pdb
+G:\repos\Democracy\Code\Main\Democracy.TheyWorkForYou\obj\Debug\Democracy.TheyWorkForYou.csprojResolveAssemblyReference.cache
+G:\repos\Democracy\Code\Main\Democracy.TheyWorkForYou\obj\Debug\Democracy.TheyWorkForYouAPI.dll
+G:\repos\Democracy\Code\Main\Democracy.TheyWorkForYou\obj\Debug\Democracy.TheyWorkForYouAPI.pdb
