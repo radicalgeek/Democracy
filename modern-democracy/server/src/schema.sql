@@ -96,6 +96,17 @@ create table if not exists users (
   created_at timestamptz not null default now()
 );
 
+-- Account fields (added after the anonymous-session prototype). Anonymous/demo
+-- rows keep email null; registered accounts get email+password and a
+-- verification tier: 0 = anonymous, 1 = registered (postcode-resolved
+-- constituency), 2 = identity-verified (simulated provider for now).
+alter table users add column if not exists email text;
+alter table users add column if not exists password_hash text;
+alter table users add column if not exists postcode text;
+alter table users add column if not exists verification_tier integer not null default 0;
+alter table users add column if not exists verified_at timestamptz;
+create unique index if not exists users_email_idx on users (lower(email)) where email is not null;
+
 create table if not exists credential_issuances (
   id bigserial primary key,
   user_id bigint not null references users(id),

@@ -4,12 +4,18 @@ import { analyzeAndStore } from "./services/ai.js";
 import {
   billAggregates,
   castBallot,
-  createSession,
   issueCredential,
   runCheckpoint,
   userFromToken,
   verifyReceipt
 } from "./services/integrity.js";
+import {
+  loginUser,
+  lookupPostcode,
+  publicUserFromToken,
+  registerUser,
+  verifyIdentity
+} from "./services/auth.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 
@@ -156,20 +162,79 @@ export async function registerRoutes(app: FastifyInstance) {
     return { constituencies };
   });
 
-  app.post("/api/session", async (request) => {
-    const body = (request.body ?? {}) as { displayName?: string; constituencyId?: number };
-    const session = await createSession(
-      sql,
-      body.displayName?.slice(0, 60) || "Citizen",
-      body.constituencyId ?? null
-    );
-    return { token: session.token };
+  app.get("/api/postcode/:postcode", async (request, reply) => {
+    const postcode = (request.params as { postcode: string }).postcode;
+    const result = await lookupPostcode(sql, postcode);
+    if ("error" in result) return reply.code(404).send(result);
+    return result;
+  });
+
+  app.post("/api/auth/register", async (request, reply) => {
+    const body = (request.body ?? {}) as {
+      email?: string;
+      password?: string;
+      displayName?: string;
+      postcode?: string;
+    };
+    if (!body.email || !body.password || !body.displayName || !body.postcode) {
+      return reply.code(400).send({ error: "email, password, displayName, and postcode required" });
+    }
+    const result = await registerUser(sql, {
+      email: body.email,
+      password: body.password,
+      displayName: body.displayName,
+      postcode: body.postcode
+    });
+    if ("error" in result) return reply.code(400).send(result);
+    return result;
+  });
+
+  app.post("/api/auth/login", async (request, reply) => {
+    const body = (request.body ?? {}) as { email?: string; password?: string };
+    if (!body.email || !body.password) {
+      return reply.code(400).send({ error: "email and password required" });
+    }
+    const result = await loginUser(sql, { email: body.email, password: body.password });
+    if ("error" in result) return reply.code(401).send(result);
+    return result;
+  });
+
+  app.get("/api/auth/me", async (request, reply) => {
+    const user = await publicUserFromToken(sql, bearer(request.headers as Record<string, unknown>));
+    if (!user) return reply.code(401).send({ error: "not signed in" });
+    return { user };
+  });
+
+  app.post("/api/auth/verify", async (request, reply) => {
+    const user = await publicUserFromToken(sql, bearer(request.headers as Record<string, unknown>));
+    if (!user) return reply.code(401).send({ error: "not signed in" });
+    const body = (request.body ?? {}) as {
+      fullName?: string;
+      dateOfBirth?: string;
+      addressLine1?: string;
+      postcode?: string;
+    };
+    if (!body.fullName || !body.dateOfBirth || !body.addressLine1 || !body.postcode) {
+      return reply.code(400).send({ error: "fullName, dateOfBirth, addressLine1, and postcode required" });
+    }
+    const result = await verifyIdentity(sql, user.id, {
+      fullName: body.fullName,
+      dateOfBirth: body.dateOfBirth,
+      addressLine1: body.addressLine1,
+      postcode: body.postcode
+    });
+    if (!result.verified) return reply.code(422).send(result);
+    return result;
   });
 
   app.post("/api/bills/:id/credential", async (request, reply) => {
     const billId = Number((request.params as { id: string }).id);
     const user = await userFromToken(sql, bearer(request.headers as Record<string, unknown>));
-    if (!user) return reply.code(401).send({ error: "session token required" });
+    if (!user) return reply.code(401).send({ error: "account required" });
+    const account = await publicUserFromToken(sql, bearer(request.headers as Record<string, unknown>));
+    if (!account?.email) {
+      return reply.code(403).send({ error: "sign up with a postcode to cast a civic vote" });
+    }
 
     const result = await issueCredential(sql, user.id as number, billId, user.constituency_id as number | null);
     if ("error" in result) return reply.code(409).send({ error: result.error });

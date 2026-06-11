@@ -14,6 +14,8 @@ type VotePanelProps = {
   onVote: (vote: VoteChoice) => void;
   liveBillId?: number | null;
   constituencyId?: number | null;
+  signedIn?: boolean;
+  onRequireAccount?: () => void;
 };
 
 export function VotePanel({
@@ -21,7 +23,9 @@ export function VotePanel({
   selectedVote,
   onVote,
   liveBillId,
-  constituencyId
+  constituencyId,
+  signedIn = true,
+  onRequireAccount
 }: VotePanelProps) {
   const [casting, setCasting] = useState(false);
   const [receipt, setReceipt] = useState<string | null>(null);
@@ -35,6 +39,10 @@ export function VotePanel({
   }, [liveBillId]);
 
   async function handleVote(choice: VoteChoice) {
+    if (!signedIn) {
+      onRequireAccount?.();
+      return;
+    }
     onVote(choice);
     if (!liveBillId) return;
 
@@ -60,9 +68,11 @@ export function VotePanel({
         <div>
           <h3>Cast civic vote</h3>
           <p>
-            {liveBillId
-              ? "Anonymous credential, private receipt, public aggregate — live."
-              : "Anonymous credential, private receipt, public aggregate."}
+            {!signedIn
+              ? "Create an account to cast a vote in your constituency."
+              : liveBillId
+                ? "Anonymous credential, private receipt, public aggregate — live."
+                : "Anonymous credential, private receipt, public aggregate."}
           </p>
         </div>
       </div>

@@ -15,9 +15,11 @@ import {
   UserRoundCheck,
   Vote
 } from "lucide-react";
+import { AuthScreen, type AuthMode } from "./components/AuthScreen";
 import { Compass } from "./components/Compass";
 import { ConstituencyMap } from "./components/ConstituencyMap";
 import { DebatePanel } from "./components/DebatePanel";
+import { Landing } from "./components/Landing";
 import { IntegrationBanner } from "./components/IntegrationBanner";
 import { NewsLens } from "./components/NewsLens";
 import { PetitionsPanel } from "./components/PetitionsPanel";
@@ -33,9 +35,12 @@ import { checkMembersApi, fetchLiveBills, liveBillToDemoTitle } from "./lib/parl
 import { fetchLivePetitions } from "./lib/petitions";
 import {
   checkBackend,
+  clearSession,
+  currentUser,
   fetchBackendBills,
   fetchBillDetail,
   fetchMapBindings,
+  type AccountUser,
   type BackendBill,
   type BackendBillDetail,
   type MapBindings
@@ -70,6 +75,10 @@ function percent(value: number, total: number) {
 }
 
 export function App() {
+  const [user, setUser] = useState<AccountUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authMode, setAuthMode] = useState<AuthMode | null>(null);
+  const [exploring, setExploring] = useState(false);
   const [selectedTab, setSelectedTab] = useState<Tab>("workspace");
   const [mapMode, setMapMode] = useState<MapMode>("vote");
   const [selectedConstituency, setSelectedConstituency] = useState(sampleBill.constituencies[0].id);
@@ -101,6 +110,31 @@ export function App() {
       message: "Not checked yet."
     }
   ]);
+
+  useEffect(() => {
+    let mounted = true;
+    currentUser().then((account) => {
+      if (!mounted) return;
+      setUser(account);
+      setAuthChecked(true);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  function handleAuthed(account: AccountUser) {
+    const cameFromSignup = authMode === "signup";
+    setUser(account);
+    setAuthMode(cameFromSignup ? "verify" : authMode === "verify" ? "verify" : null);
+  }
+
+  function handleSignOut() {
+    clearSession();
+    setUser(null);
+    setExploring(false);
+    setAuthMode(null);
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -262,6 +296,32 @@ export function App() {
     (mp) => mp.constituencyId === selectedMetric.id
   );
 
+  if (!authChecked) {
+    return <div className="auth-loading">Loading…</div>;
+  }
+
+  if (authMode) {
+    return (
+      <AuthScreen
+        mode={authMode}
+        user={user}
+        onAuthed={handleAuthed}
+        onSwitchMode={setAuthMode}
+        onBack={() => setAuthMode(null)}
+      />
+    );
+  }
+
+  if (!user && !exploring) {
+    return (
+      <Landing
+        onCreateAccount={() => setAuthMode("signup")}
+        onSignIn={() => setAuthMode("login")}
+        onExplore={() => setExploring(true)}
+      />
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -301,10 +361,26 @@ export function App() {
             <span>Live civic data</span>
             <strong>{new Date().toLocaleDateString()}</strong>
           </div>
-          <button className="profile-button">
-            <UserRoundCheck size={18} />
-            North Vale
-          </button>
+          {user ? (
+            <div className="account-area">
+              <button className="profile-button" onClick={() => setSelectedTab("voice")}>
+                <UserRoundCheck size={18} />
+                <span className="account-name">
+                  {user.displayName}
+                  {user.verificationTier === 2 && <em className="verified-chip">Verified</em>}
+                </span>
+                <span className="account-constituency">{user.constituencyName ?? "No constituency"}</span>
+              </button>
+              <button className="signout-button" onClick={handleSignOut}>
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <button className="profile-button" onClick={() => setAuthMode("signup")}>
+              <UserRoundCheck size={18} />
+              Create account
+            </button>
+          )}
         </header>
 
         <IntegrationBanner statuses={[...statuses, backendStatus]} liveBills={liveBills} />
@@ -333,6 +409,8 @@ export function App() {
               onVote={setSelectedVote}
               liveBillId={liveBillId}
               constituencyId={selectedSeatConstituencyId}
+              signedIn={user != null}
+              onRequireAccount={() => setAuthMode("signup")}
             />
           </section>
         )}
@@ -507,6 +585,8 @@ export function App() {
             posts={bill.debate}
             liveBillId={liveBillId}
             constituencyId={selectedSeatConstituencyId}
+            signedIn={user != null}
+            onRequireAccount={() => setAuthMode("signup")}
           />
         )}
         {selectedTab === "news" && <NewsLens items={bill.news} />}
@@ -586,14 +666,41 @@ export function App() {
             </div>
             <div className="voice-grid">
               <div className="panel">
+                <h3>Your account</h3>
+                {user ? (
+                  <>
+                    <p>
+                      <strong>{user.displayName}</strong>
+                      {user.verificationTier === 2 && <em className="verified-chip">Verified</em>}
+                    </p>
+                    <p className="muted">{user.email}</p>
+                    <p>
+                      Constituency: <strong>{user.constituencyName ?? "not set"}</strong>
+                    </p>
+                    {user.verificationTier < 2 && (
+                      <>
+                        <p className="muted">
+                          Verify your identity to give your votes full weight in the count.
+                        </p>
+                        <button className="primary" onClick={() => setAuthMode("verify")}>
+                          Verify identity
+                        </button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="muted">You're exploring without an account.</p>
+                    <button className="primary" onClick={() => setAuthMode("signup")}>
+                      Create account
+                    </button>
+                  </>
+                )}
+              </div>
+              <div className="panel">
                 <h3>Private vote receipt</h3>
                 <p className="hash">{bill.integrity.merkleRoot}</p>
                 <p>Receipt proves inclusion without proving your vote choice to another person.</p>
-              </div>
-              <div className="panel">
-                <h3>Debate standing</h3>
-                <div className="standing-score">Trusted</div>
-                <p>0 public temporary bans · 12 constructive contributions · 3 cited arguments.</p>
               </div>
               <div className="panel">
                 <h3>Privacy controls</h3>

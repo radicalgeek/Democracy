@@ -156,15 +156,93 @@ export function fetchDebate(billId: number) {
 
 const SESSION_KEY = "democracy.sessionToken";
 
-export async function ensureSession(constituencyId: number | null): Promise<string> {
-  const existing = localStorage.getItem(SESSION_KEY);
-  if (existing) return existing;
-  const session = await postJson<{ token: string }>("/api/session", {
-    displayName: "Citizen",
-    constituencyId
+export type AccountUser = {
+  id: number;
+  displayName: string;
+  email: string | null;
+  constituencyId: number | null;
+  constituencyName: string | null;
+  verificationTier: number;
+  verifiedAt: string | null;
+};
+
+export function storedToken() {
+  return localStorage.getItem(SESSION_KEY);
+}
+
+export function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+export async function registerAccount(input: {
+  email: string;
+  password: string;
+  displayName: string;
+  postcode: string;
+}) {
+  const result = await postJson<{ token: string; user: AccountUser }>("/api/auth/register", input);
+  localStorage.setItem(SESSION_KEY, result.token);
+  return result.user;
+}
+
+export async function loginAccount(input: { email: string; password: string }) {
+  const result = await postJson<{ token: string; user: AccountUser }>("/api/auth/login", input);
+  localStorage.setItem(SESSION_KEY, result.token);
+  return result.user;
+}
+
+export async function currentUser(): Promise<AccountUser | null> {
+  const token = storedToken();
+  if (!token) return null;
+  try {
+    const result = await getJsonAuthed<{ user: AccountUser }>("/api/auth/me", token);
+    return result.user;
+  } catch {
+    clearSession();
+    return null;
+  }
+}
+
+export async function submitIdentityCheck(input: {
+  fullName: string;
+  dateOfBirth: string;
+  addressLine1: string;
+  postcode: string;
+}) {
+  const token = storedToken();
+  if (!token) throw new Error("not signed in");
+  return postJson<{ verified: boolean; reason?: string; user?: AccountUser }>(
+    "/api/auth/verify",
+    input,
+    token
+  );
+}
+
+export async function lookupPostcode(postcode: string) {
+  const response = await fetch(`${API_BASE}/api/postcode/${encodeURIComponent(postcode)}`, {
+    headers: { accept: "application/json" }
   });
-  localStorage.setItem(SESSION_KEY, session.token);
-  return session.token;
+  const payload = (await response.json()) as {
+    constituencyId?: number;
+    constituencyName?: string;
+    error?: string;
+  };
+  if (!response.ok) return { error: payload.error ?? "lookup failed" };
+  return payload as { constituencyId: number; constituencyName: string };
+}
+
+async function getJsonAuthed<T>(path: string, token: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: { accept: "application/json", authorization: `Bearer ${token}` }
+  });
+  if (!response.ok) throw new Error(`${path} returned ${response.status}`);
+  return (await response.json()) as T;
+}
+
+async function ensureSession(): Promise<string> {
+  const existing = storedToken();
+  if (!existing) throw new Error("sign-in-required");
+  return existing;
 }
 
 export type CastResult =
@@ -177,7 +255,7 @@ export async function castVote(
   constituencyId: number | null
 ): Promise<CastResult> {
   try {
-    const token = await ensureSession(constituencyId);
+    const token = await ensureSession();
     const credential = await postJson<{ credential: string }>(
       `/api/bills/${billId}/credential`,
       {},
@@ -228,10 +306,9 @@ export type DebatePostResult =
 export async function submitDebatePost(
   billId: number,
   body: string,
-  stance: VoteChoice | null,
-  constituencyId: number | null
+  stance: VoteChoice | null
 ): Promise<DebatePostResult> {
-  const token = await ensureSession(constituencyId);
+  const token = await ensureSession();
   const response = await fetch(`${API_BASE}/api/bills/${billId}/debate`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${token}` },

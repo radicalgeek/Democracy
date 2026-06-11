@@ -11,6 +11,8 @@ type DebatePanelProps = {
   posts: DebatePost[];
   liveBillId?: number | null;
   constituencyId?: number | null;
+  signedIn?: boolean;
+  onRequireAccount?: () => void;
 };
 
 type ModerationKey = DebatePost["moderation"] | BackendDebatePost["moderation_state"];
@@ -24,7 +26,13 @@ function moderationLabel(moderation: ModerationKey) {
   return ["Restricted", <Ban size={15} key="icon" />] as const;
 }
 
-export function DebatePanel({ posts, liveBillId, constituencyId }: DebatePanelProps) {
+export function DebatePanel({
+  posts,
+  liveBillId,
+  constituencyId,
+  signedIn = true,
+  onRequireAccount
+}: DebatePanelProps) {
   const [livePosts, setLivePosts] = useState<BackendDebatePost[] | null>(null);
   const [draft, setDraft] = useState("");
   const [stance, setStance] = useState<VoteChoice | null>(null);
@@ -51,7 +59,7 @@ export function DebatePanel({ posts, liveBillId, constituencyId }: DebatePanelPr
     setSubmitting(true);
     setFeedback(null);
     try {
-      const result = await submitDebatePost(liveBillId, draft.trim(), stance, constituencyId ?? null);
+      const result = await submitDebatePost(liveBillId, draft.trim(), stance);
       if (result.status === "banned") {
         setFeedback(
           `You are temporarily banned (ban #${result.banNumber}) until ${new Date(result.endsAt).toLocaleString()}. Bans escalate exponentially.`
@@ -85,7 +93,16 @@ export function DebatePanel({ posts, liveBillId, constituencyId }: DebatePanelPr
         </div>
       </div>
 
-      {liveBillId != null && (
+      {liveBillId != null && !signedIn && (
+        <div className="debate-composer panel">
+          <p className="muted">Join the debate — create an account to post your argument.</p>
+          <button className="composer-submit" onClick={() => onRequireAccount?.()}>
+            Create account
+          </button>
+        </div>
+      )}
+
+      {liveBillId != null && signedIn && (
         <div className="debate-composer panel">
           <textarea
             value={draft}
