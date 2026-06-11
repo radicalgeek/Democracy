@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: democracy-db
+  namespace: democracy
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: synology-iscsi-storage
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  namespace: democracy
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: democracy-db
+  template:
+    metadata:
+      labels:
+        app: democracy-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_USER
+              value: democracy
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: democracy-db
+                  key: password
+            - name: POSTGRES_DB
+              value: democracy
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "democracy"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: democracy-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: democracy
+spec:
+  selector:
+    app: democracy-db
+  ports:
+    - port: 5432
+      targetPort: 5432

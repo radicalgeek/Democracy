@@ -1,0 +1,2602 @@
+[
+ {
+  "svgId": "South_East_Cornwall",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "St_Austell_and_Newquay",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Camborne_and_Redruth",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Truro_and_Falmouth",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_Cornwall",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "St_Ives",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Plymouth_Moor_View",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Newton_Abbot",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Exeter",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Central_Devon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Tiverton_and_Honiton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_Devon",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Totnes",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Torbay",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Torridge_and_West_Devon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "East_Devon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Plymouth_Sutton_and_Devonport",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_West_Devon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Yeovil",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Taunton_Deane",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Bridgwater_and_West_Somerset",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Somerton_and_Frome",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Wells",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "West_Dorset",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bournemouth_East",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Poole",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bournemouth_West",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Mid_Dorset_and_North_Poole",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Christchurch",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_Dorset",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_Dorset",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Weston-super-Mare",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_Somerset",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bristol_West",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Bristol_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bristol_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "North_East_Somerset",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Filton_and_Bradley_Stoke",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Kingswood",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Thornbury_and_Yate",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Bath",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Bristol_North_West",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Salisbury",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Devizes",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_Swindon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_Swindon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_West_Wiltshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Chippenham",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "North_Wiltshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Cheltenham",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Tewkesbury",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Forest_of_Dean",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Stroud",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Gloucester",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "The_Cotswolds",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Aldershot",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_East_Hampshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_West_Hampshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Basingstoke",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Havant",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Portsmouth_South",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "New_Forest_East",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "New_Forest_West",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Winchester",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Southampton__Itchen",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Southampton__Test",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Eastleigh",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Gosport",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Portsmouth_North",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Fareham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Meon_Valley",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "East_Hampshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Romsey_and_Southampton_North",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Isle_of_Wight",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bognor_Regis_and_Littlehampton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Worthing_West",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "East_Worthing_and_Shoreham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Arundel_and_South_Downs",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Mid_Sussex",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Horsham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Crawley",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Chichester",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Hove",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Brighton__Kemptown",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Brighton__Pavilion",
+  "legacyParty": "green"
+ },
+ {
+  "svgId": "Eastbourne",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Lewes",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Hastings_and_Rye",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bexhill_and_Battle",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Wealden",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "West_Suffolk",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_Suffolk",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bury_St_Edmunds",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Ipswich",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Suffolk_Coastal",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Central_Suffolk_and_North_Ipswich",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Waveney",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Broadland",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_Norfolk",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "South_Norfolk",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_West_Norfolk",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Mid_Norfolk",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Norwich_South",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Norwich_North",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Great_Yarmouth",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_West_Norfolk",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Boston_and_Skegness",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Louth_and_Horncastle",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Grantham_and_Stamford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Sleaford_and_North_Hykeham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Lincoln",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Gainsborough",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_Holland_and_the_Deepings",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Great_Grimsby",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Cleethorpes",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Scunthorpe",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Kingston_upon_Hull_West_and_Hessle",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Kingston_upon_Hull_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Kingston_upon_Hull_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Haltemprice_and_Howden",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Beverley_and_Holderness",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "East_Yorkshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Brigg_and_Goole",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "York_Outer",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Selby_and_Ainsty",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Harrogate_and_Knaresborough",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Skipton_and_Ripon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Thirsk_and_Malton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Richmond_Yorks",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Scarborough_and_Whitby",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "York_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Stockton_South",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Middlesbrough_South_and_East_Cleveland",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Middlesbrough",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Redcar",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Stockton_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Hartlepool",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bishop_Auckland",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Darlington",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Sedgefield",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Easington",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "North_Durham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "City_of_Durham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "North_West_Durham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Newcastle_upon_Tyne_East_and_Wallsend",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Houghton_and_Sunderland_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Washington_and_Sunderland_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Sunderland_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Gateshead",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Blaydon",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Jarrow",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "South_Shields",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "North_Tyneside",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Tynemouth",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Newcastle_upon_Tyne_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Newcastle_upon_Tyne_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Blyth_Valley",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Hexham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Wansbeck",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Berwick-upon-Tweed",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Copeland",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Workington",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Penrith_and_the_Border",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Carlisle",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Westmorland_and_Lonsdale",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Barrow_and_Furness",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Burnley",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Pendle",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "West_Lancashire",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "South_Ribble",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Chorley",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Rossendale_and_Darwen",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Blackburn",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Hyndburn",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Ribble_Valley",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Blackpool_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Blackpool_North_and_Cleveleys",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Preston",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Fylde",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Wyre_and_Preston_North",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Lancaster_and_Fleetwood",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Morecambe_and_Lunesdale",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Garston_and_Halewood",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Liverpool_Wavertree",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Liverpool_Riverside",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Liverpool_West_Derby",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Liverpool_Walton",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Knowsley",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "St_Helens_South_and_Whiston",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "St_Helens_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bootle",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Sefton_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Southport",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Wirral_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Birkenhead",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Wallasey",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Wirral_West",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Leigh",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Makerfield",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Wigan",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bolton_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bolton_North_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bolton_South_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bury_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bury_North",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Heywood_and_Middleton",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Rochdale",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Oldham_West_and_Royton",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Oldham_East_and_Saddleworth",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Salford_and_Eccles",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Worsley_and_Eccles_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Manchester_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Blackley_and_Broughton",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Ashton-under-Lyne",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Stalybridge_and_Hyde",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Stretford_and_Urmston",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Manchester_Withington",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Manchester_Gorton",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Denton_and_Reddish",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Wythenshawe_and_Sale_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Altrincham_and_Sale_West",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Cheadle",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Stockport",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Hazel_Grove",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Halton",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Crewe_and_Nantwich",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Eddisbury",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "City_of_Chester",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Ellesmere_Port_and_Neston",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Weaver_Vale",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Congleton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Macclesfield",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Tatton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Warrington_South",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Warrington_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Colne_Valley",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Huddersfield",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Dewsbury",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Batley_and_Spen",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Halifax",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Calder_Valley",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bradford_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bradford_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bradford_East",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Shipley",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Keighley",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Leeds_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Pudsey",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Leeds_North_West",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Hemsworth",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Normanton__Pontefract_and_Castleford",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Wakefield",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Morley_and_Outwood",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Leeds_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Leeds_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Leeds_North_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Elmet_and_Rothwell",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Sheffield__Heeley",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Sheffield_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Sheffield_South_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Sheffield__Brightside_and_Hillsborough",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Sheffield__Hallam",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Penistone_and_Stocksbridge",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Rother_Valley",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Rotherham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Wentworth_and_Dearne",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Barnsley_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Barnsley_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Doncaster_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Don_Valley",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Doncaster_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "East_Surrey",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Epsom_and_Ewell",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Reigate",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_West_Surrey",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Guildford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Mole_Valley",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Esher_and_Walton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Woking",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Surrey_Heath",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Runnymede_and_Weybridge",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Spelthorne",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Newbury",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Slough",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bracknell",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Wokingham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Windsor",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Reading_West",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Reading_East",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Maidenhead",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Henley",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Wantage",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Oxford_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Oxford_West_and_Abingdon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Witney",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Banbury",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Beaconsfield",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Wycombe",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Chesham_and_Amersham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Aylesbury",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Buckingham",
+  "legacyParty": "ind"
+ },
+ {
+  "svgId": "Milton_Keynes_South",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Milton_Keynes_North",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Sittingbourne_and_Sheppey",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Gillingham_and_Rainham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Rochester_and_Strood",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Sevenoaks",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Gravesham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Dartford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Tonbridge_and_Malling",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Chatham_and_Aylesford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Tunbridge_Wells",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Maidstone_and_the_Weald",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Faversham_and_Mid_Kent",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Ashford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Canterbury",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_Thanet",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Folkestone_and_Hythe",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Dover",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_Thanet",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Saffron_Walden",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Colchester",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Clacton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Harwich_and_North_Essex",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Braintree",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Epping_Forest",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Thurrock",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Southend_West",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Castle_Point",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_Basildon_and_East_Thurrock",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Rochford_and_Southend_East",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Rayleigh_and_Wickford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Basildon_and_Billericay",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Brentwood_and_Ongar",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Harlow",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Chelmsford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Maldon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Witham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Finchley_and_Golders_Green",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Hendon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Chipping_Barnet",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Ilford_North",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Edmonton",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Enfield__Southgate",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Enfield_North",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Hayes_and_Harlington",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Uxbridge_and_South_Ruislip",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Harrow_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Ruislip__Northwood_and_Pinner",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Harrow_East",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Hampstead_and_Kilburn",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Holborn_and_St._Pancras",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Brent_Central",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Brent_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Hammersmith",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Barking",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Dagenham_and_Rainham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Romford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Hornchurch_and_Upminster",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "West_Ham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "East_Ham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Poplar_and_Limehouse",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bethnal_Green_and_Bow",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Cities_of_London_and_Westminster",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Westminster_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Chelsea_and_Fulham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Kensington",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Twickenham",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Kingston_and_Surbiton",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Richmond_Park",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Orpington",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Beckenham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bromley_and_Chislehurst",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Lewisham_West_and_Penge",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Lewisham_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Lewisham__Deptford",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Croydon_South",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Croydon_Central",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Croydon_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Sutton_and_Cheam",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Carshalton_and_Wallington",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Mitcham_and_Morden",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Wimbledon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Putney",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Tooting",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Battersea",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Dulwich_and_West_Norwood",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Streatham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Vauxhall",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Camberwell_and_Peckham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bermondsey_and_Old_Southwark",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Old_Bexley_and_Sidcup",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bexleyheath_and_Crayford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Eltham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Greenwich_and_Woolwich",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Erith_and_Thamesmead",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Feltham_and_Heston",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Brentford_and_Isleworth",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Ilford_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Leyton_and_Wanstead",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Walthamstow",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Chingford_and_Woodford_Green",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Tottenham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Hornsey_and_Wood_Green",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Islington_South_and_Finsbury",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Islington_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Ealing_Central_and_Acton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Ealing__Southall",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Ealing_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Hackney_South_and_Shoreditch",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Hackney_North_and_Stoke_Newington",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Huntingdon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Cambridge",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "South_Cambridgeshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_East_Cambridgeshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Peterborough",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_West_Cambridgeshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_East_Cambridgeshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "St_Albans",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Hemel_Hempstead",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_West_Hertfordshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Watford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Hertsmere",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Broxbourne",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Hertford_and_Stortford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Welwyn_Hatfield",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Stevenage",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Hitchin_and_Harpenden",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_East_Hertfordshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Luton_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Luton_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "South_West_Bedfordshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bedford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Mid_Bedfordshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_East_Bedfordshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bolsover",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Chesterfield",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "North_East_Derbyshire",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "South_Derbyshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Erewash",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Derby_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Derby_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Mid_Derbyshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Amber_Valley",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Derbyshire_Dales",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "High_Peak",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Broxtowe",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Ashfield",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Mansfield",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Nottingham_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Nottingham_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Nottingham_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Gedling",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Sherwood",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Rushcliffe",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Newark",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bassetlaw",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Charnwood",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Loughborough",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Harborough",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_Leicestershire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Leicester_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Leicester_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Leicester_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Bosworth",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_West_Leicestershire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Rutland_and_Melton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Northampton_South",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Northampton_North",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Wellingborough",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Kettering",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Corby",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "South_Northamptonshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Daventry",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Hereford_and_South_Herefordshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_Herefordshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Ludlow",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Shrewsbury_and_Atcham",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Telford",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "The_Wrekin",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_Shropshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Stoke-on-Trent_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "South_Staffordshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Cannock_Chase",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Stafford",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Stone",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Tamworth",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Lichfield",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Burton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Newcastle-under-Lyme",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Stoke-on-Trent_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Stoke-on-Trent_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Staffordshire_Moorlands",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bromsgrove",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "West_Worcestershire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Redditch",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Worcester",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Mid_Worcestershire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Wyre_Forest",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Stratford-on-Avon",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Warwick_and_Leamington",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Kenilworth_and_Southam",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Rugby",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Nuneaton",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "North_Warwickshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Coventry_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Coventry_North_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Coventry_North_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Solihull",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Meriden",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Birmingham__Northfield",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Birmingham__Selly_Oak",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Birmingham__Hall_Green",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Birmingham__Edgbaston",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Birmingham__Yardley",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Birmingham__Hodge_Hill",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Birmingham__Ladywood",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Birmingham__Erdington",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Birmingham__Perry_Barr",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Sutton_Coldfield",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Halesowen_and_Rowley_Regis",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Warley",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "West_Bromwich_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "West_Bromwich_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Stourbridge",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Dudley_South",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Dudley_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Wolverhampton_South_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Wolverhampton_South_West",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Wolverhampton_North_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Walsall_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Walsall_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Aldridge-Brownhills",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Argyll_and_Bute",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Inverness__Nairn__Badenoch_and_Strathspey",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Dumfries_and_Galloway",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Dumfriesshire__Clydesdale_and_Tweeddale",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Berwickshire__Roxburgh_and_Selkirk",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Dunfermline_and_West_Fife",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Kirkcaldy_and_Cowdenbeath",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Glenrothes",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "North_East_Fife",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Ochil_and_South_Perthshire",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Ayr__Carrick_and_Cumnock",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "West_Dunbartonshire",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Central_Ayrshire",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "East_Lothian",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Midlothian",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "North_Ayrshire_and_Arran",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Kilmarnock_and_Loudoun",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Inverclyde",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Linlithgow_and_East_Falkirk",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Edinburgh_South_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Edinburgh_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Edinburgh_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Edinburgh_North_and_Leith",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Edinburgh_West",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Livingston",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Paisley_and_Renfrewshire_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "East_Kilbride__Strathaven_and_Lesmahagow",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Paisley_and_Renfrewshire_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "East_Renfrewshire",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Lanark_and_Hamilton_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Motherwell_and_Wishaw",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Airdrie_and_Shotts",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Rutherglen_and_Hamilton_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Glasgow_North_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Glasgow_South_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Glasgow_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Glasgow_Central",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Glasgow_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Glasgow_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Glasgow_North_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Coatbridge__Chryston_and_Bellshill",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "East_Dunbartonshire",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Cumbernauld__Kilsyth_and_Kirkintilloch_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Falkirk",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Stirling",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Perth_and_North_Perthshire",
+  "legacyParty": "snp"
+ },
+ {
+  "svgId": "Dundee_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Dundee_East",
+  "legacyParty": "snp"
+ },
+ {
+  "svgId": "Angus",
+  "legacyParty": "snp"
+ },
+ {
+  "svgId": "Aberdeen_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Aberdeen_North",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "West_Aberdeenshire_and_Kincardine",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Gordon",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Banff_and_Buchan",
+  "legacyParty": "snp"
+ },
+ {
+  "svgId": "Moray",
+  "legacyParty": "snp"
+ },
+ {
+  "svgId": "Ross__Skye_and_Lochaber",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Caithness__Sutherland_and_Easter_Ross",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Orkney_and_Shetland",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Na_h-Eileanan_an_Iar",
+  "legacyParty": "snp"
+ },
+ {
+  "svgId": "Preseli_Pembrokeshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Arfon",
+  "legacyParty": "pc"
+ },
+ {
+  "svgId": "Dwyfor_Meirionnydd",
+  "legacyParty": "pc"
+ },
+ {
+  "svgId": "Ceredigion",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Carmarthen_West_and_South_Pembrokeshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Llanelli",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Carmarthen_East_and_Dinefwr",
+  "legacyParty": "pc"
+ },
+ {
+  "svgId": "Aberconwy",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Aberavon",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Swansea_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Swansea_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Gower",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Neath",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Vale_of_Glamorgan",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Cardiff_South_and_Penarth",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Cardiff_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Cardiff_Central",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Cardiff_North",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Bridgend",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Ogmore",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Rhondda",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Pontypridd",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Newport_West",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Newport_East",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Cynon_Valley",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Blaenau_Gwent",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Caerphilly",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Islwyn",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Torfaen",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Merthyr_Tydfil_and_Rhymney",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Monmouth",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Brecon_and_Radnorshire",
+  "legacyParty": "libdem"
+ },
+ {
+  "svgId": "Montgomeryshire",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Clwyd_South",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Clwyd_West",
+  "legacyParty": "tory"
+ },
+ {
+  "svgId": "Vale_of_Clwyd",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Delyn",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Wrexham",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Alyn_and_Deeside",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Ynys_Mon",
+  "legacyParty": "labour"
+ },
+ {
+  "svgId": "Newry_and_Armagh",
+  "legacyParty": "sf"
+ },
+ {
+  "svgId": "West_Tyrone",
+  "legacyParty": "sf"
+ },
+ {
+  "svgId": "Mid_Ulster",
+  "legacyParty": "sf"
+ },
+ {
+  "svgId": "Foyle",
+  "legacyParty": "sdlp"
+ },
+ {
+  "svgId": "East_Londonderry",
+  "legacyParty": "dup"
+ },
+ {
+  "svgId": "Upper_Bann",
+  "legacyParty": "dup"
+ },
+ {
+  "svgId": "South_Down",
+  "legacyParty": "sdlp"
+ },
+ {
+  "svgId": "Lagan_Valley",
+  "legacyParty": "dup"
+ },
+ {
+  "svgId": "Strangford",
+  "legacyParty": "dup"
+ },
+ {
+  "svgId": "North_Down",
+  "legacyParty": "ind"
+ },
+ {
+  "svgId": "East_Antrim",
+  "legacyParty": "dup"
+ },
+ {
+  "svgId": "South_Antrim",
+  "legacyParty": "dup"
+ },
+ {
+  "svgId": "North_Antrim",
+  "legacyParty": "dup"
+ },
+ {
+  "svgId": "Fermanagh_and_South_Tyrone",
+  "legacyParty": "sf"
+ },
+ {
+  "svgId": "Belfast_South",
+  "legacyParty": "sdlp"
+ },
+ {
+  "svgId": "Belfast_West",
+  "legacyParty": "sf"
+ },
+ {
+  "svgId": "Belfast_East",
+  "legacyParty": "alliance"
+ },
+ {
+  "svgId": "Belfast_North",
+  "legacyParty": "dup"
+ }
+]
