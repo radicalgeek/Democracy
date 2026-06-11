@@ -34,6 +34,8 @@ type PetitionsPanelProps = {
   livePetitions: PetitionLive[];
   signedIn?: boolean;
   onRequireAccount?: () => void;
+  openPetitionId?: number | null;
+  onOpenPetition?: (id: number | null) => void;
 };
 
 function percent(value: number, total: number) {
@@ -56,12 +58,18 @@ export function PetitionsPanel({
   petitions: samplePetitions,
   livePetitions,
   signedIn = false,
-  onRequireAccount
+  onRequireAccount,
+  openPetitionId = null,
+  onOpenPetition
 }: PetitionsPanelProps) {
   const [backendPetitions, setBackendPetitions] = useState<BackendPetition[] | null>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [internalId, setInternalId] = useState<number | null>(null);
   const [detail, setDetail] = useState<PetitionDetailPayload | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // Controlled from the app's hash routing when provided.
+  const selectedId = onOpenPetition ? openPetitionId : internalId;
+  const setSelectedId = onOpenPetition ?? setInternalId;
 
   useEffect(() => {
     let mounted = true;
@@ -69,7 +77,6 @@ export function PetitionsPanel({
       .then((payload) => {
         if (!mounted) return;
         setBackendPetitions(payload.petitions);
-        if (payload.petitions.length > 0) setSelectedId(payload.petitions[0].id);
       })
       .catch(() => mounted && setBackendPetitions(null));
     return () => {
@@ -118,59 +125,65 @@ export function PetitionsPanel({
     );
   }
 
+  if (selectedId != null) {
+    return (
+      <>
+        <button className="ghost back-link" onClick={() => setSelectedId(null)}>
+          ← All petitions
+        </button>
+        {loadingDetail && (
+          <section className="workspace-section mp-loading">
+            <Loader2 size={18} className="spin" /> Loading petition…
+          </section>
+        )}
+        {detail && !loadingDetail && (
+          <PetitionDetail
+            detail={detail}
+            signedIn={signedIn}
+            onRequireAccount={onRequireAccount}
+            onChanged={() => loadDetail(detail.petition.id)}
+          />
+        )}
+      </>
+    );
+  }
+
   return (
-    <>
-      <section className="workspace-section">
-        <div className="section-heading">
-          <ScrollText size={20} />
-          <div>
-            <h2>Petitions</h2>
-            <p>
-              Every open petition from petition.parliament.uk — debate it, cast a civic vote (for or
-              against, not just support), and sign the official petition.
-            </p>
-          </div>
+    <section className="workspace-section">
+      <div className="section-heading">
+        <ScrollText size={20} />
+        <div>
+          <h2>Petitions</h2>
+          <p>
+            Every open petition from petition.parliament.uk — debate it, cast a civic vote (for or
+            against, not just support), and sign the official petition.
+          </p>
         </div>
-        <div className="bills-grid petition-list-scroll">
-          {backendPetitions.map((petition) => (
-            <article
-              className={petition.id === selectedId ? "bill-row clickable selected" : "bill-row clickable"}
-              key={petition.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => setSelectedId(petition.id)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") setSelectedId(petition.id);
-              }}
-            >
-              <div>
-                <strong>{petition.action}</strong>
-                <span>
-                  {petition.signature_count.toLocaleString()} signatures ·{" "}
-                  {petition.for_count + petition.against_count + petition.abstain_count} civic votes ·{" "}
-                  {petition.debate_count} debate posts
-                </span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {loadingDetail && (
-        <section className="workspace-section mp-loading">
-          <Loader2 size={18} className="spin" /> Loading petition…
-        </section>
-      )}
-
-      {detail && !loadingDetail && (
-        <PetitionDetail
-          detail={detail}
-          signedIn={signedIn}
-          onRequireAccount={onRequireAccount}
-          onChanged={() => loadDetail(detail.petition.id)}
-        />
-      )}
-    </>
+      </div>
+      <div className="bills-grid">
+        {backendPetitions.map((petition) => (
+          <article
+            className="bill-row clickable"
+            key={petition.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => setSelectedId(petition.id)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") setSelectedId(petition.id);
+            }}
+          >
+            <div>
+              <strong>{petition.action}</strong>
+              <span>
+                {petition.signature_count.toLocaleString()} signatures ·{" "}
+                {petition.for_count + petition.against_count + petition.abstain_count} civic votes ·{" "}
+                {petition.debate_count} debate posts
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 

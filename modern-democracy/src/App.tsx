@@ -7,8 +7,6 @@ import {
   Gavel,
   Landmark,
   Map,
-  MessageSquare,
-  Newspaper,
   ScrollText,
   Search,
   Shield,
@@ -16,17 +14,14 @@ import {
   Vote
 } from "lucide-react";
 import { AuthScreen, type AuthMode } from "./components/AuthScreen";
-import { Compass } from "./components/Compass";
+import { BillView } from "./components/BillView";
 import { ConstituencyMap } from "./components/ConstituencyMap";
-import { DebatePanel } from "./components/DebatePanel";
 import { Landing } from "./components/Landing";
 import { MyMP } from "./components/MyMP";
 import { IntegrationBanner } from "./components/IntegrationBanner";
-import { NewsLens } from "./components/NewsLens";
 import { ONBOARDED_KEY, Onboarding } from "./components/Onboarding";
 import { PetitionsPanel } from "./components/PetitionsPanel";
 import { RepresentativesPanel } from "./components/RepresentativesPanel";
-import { VotePanel } from "./components/VotePanel";
 import { sampleBill, samplePetitions } from "./data/sampleData";
 import type {
   IntegrationStatus,
@@ -40,7 +35,6 @@ import {
   checkBackend,
   clearSession,
   currentUser,
-  mapBackendNews,
   fetchBackendBills,
   fetchBillDetail,
   fetchMapBindings,
@@ -52,26 +46,22 @@ import {
 
 type Tab =
   | "bills"
-  | "workspace"
   | "mymp"
   | "petitions"
-  | "debate"
-  | "news"
   | "map"
   | "representatives"
   | "voice"
   | "transparency";
 type MapMode = "vote" | "alignment" | "compass" | "debate";
 
+const TABS: Tab[] = ["bills", "mymp", "petitions", "map", "representatives", "voice", "transparency"];
+
 const navItems: Array<[string, Tab, typeof FileText]> = [
   ["Bills", "bills", FileText],
-  ["Vote", "workspace", Vote],
   ["My MP", "mymp", Landmark],
   ["Petitions", "petitions", ScrollText],
-  ["Debate", "debate", MessageSquare],
-  ["News Lens", "news", Newspaper],
   ["Map", "map", Map],
-  ["Representatives", "representatives", Landmark],
+  ["Representatives", "representatives", Vote],
   ["My Voice", "voice", Fingerprint],
   ["Transparency", "transparency", Shield]
 ] as const;
@@ -86,7 +76,9 @@ export function App() {
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [exploring, setExploring] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<Tab>("workspace");
+  const [selectedTab, setSelectedTab] = useState<Tab>("bills");
+  const [billOpen, setBillOpen] = useState(false);
+  const [openPetitionId, setOpenPetitionId] = useState<number | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("vote");
   const [selectedConstituency, setSelectedConstituency] = useState(sampleBill.constituencies[0].id);
   const [selectedVote, setSelectedVote] = useState<VoteChoice | null>(null);
@@ -230,11 +222,61 @@ export function App() {
   async function openBackendBill(billId: number) {
     try {
       setBillDetail(await fetchBillDetail(billId));
-      setSelectedTab("workspace");
+      setSelectedTab("bills");
+      setBillOpen(true);
     } catch {
       // keep current bill if the detail fetch fails
     }
   }
+
+  // Hash routing: #/bills, #/bills/4140, #/petitions/123, #/my-mp, ... so the
+  // back button and shared links work. State is the source of truth; the hash
+  // mirrors it, and external hash changes (back/forward, pasted links) are
+  // parsed back into state.
+  const applyingHash = useRef(false);
+  useEffect(() => {
+    function applyHash() {
+      const parts = window.location.hash.replace(/^#\/?/, "").split("/");
+      const head = parts[0] || "bills";
+      const tab = (head === "my-mp" ? "mymp" : head) as Tab;
+      if (!TABS.includes(tab)) return;
+      applyingHash.current = true;
+      setSelectedTab(tab);
+      if (tab === "bills") {
+        const billId = Number(parts[1]);
+        if (Number.isFinite(billId) && billId > 0) {
+          fetchBillDetail(billId)
+            .then((detail) => {
+              setBillDetail(detail);
+              setBillOpen(true);
+            })
+            .catch(() => setBillOpen(false));
+        } else {
+          setBillOpen(false);
+        }
+      }
+      if (tab === "petitions") {
+        const petitionId = Number(parts[1]);
+        setOpenPetitionId(Number.isFinite(petitionId) && petitionId > 0 ? petitionId : null);
+      }
+      setTimeout(() => {
+        applyingHash.current = false;
+      }, 0);
+    }
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, []);
+
+  useEffect(() => {
+    if (applyingHash.current) return;
+    let hash = `#/${selectedTab === "mymp" ? "my-mp" : selectedTab}`;
+    if (selectedTab === "bills" && billOpen && billDetail) hash += `/${billDetail.bill.id}`;
+    if (selectedTab === "petitions" && openPetitionId) hash += `/${openPetitionId}`;
+    if (window.location.hash !== hash) {
+      window.history.pushState(null, "", hash);
+    }
+  }, [selectedTab, billOpen, billDetail, openPetitionId]);
 
   const bill = useMemo(() => {
     if (!billDetail) {
@@ -313,16 +355,7 @@ export function App() {
     return bySeat;
   }, [billDetail]);
 
-  const selectedSeatConstituencyId =
-    mapBindings?.bySvgId[selectedConstituency]?.constituency_id ?? null;
-
   const totalPublic = bill.publicVote.for + bill.publicVote.against + bill.publicVote.abstain;
-  const selectedMetric =
-    bill.constituencies.find((constituency) => constituency.id === selectedConstituency) ??
-    bill.constituencies[0];
-  const representative = bill.representatives.find(
-    (mp) => mp.constituencyId === selectedMetric.id
-  );
 
   if (!authChecked) {
     return <div className="auth-loading">Loading…</div>;
@@ -420,60 +453,26 @@ export function App() {
 
         <IntegrationBanner statuses={[...statuses, backendStatus]} liveBills={liveBills} />
 
-        {selectedTab !== "petitions" && (
-          <section className="hero-workspace">
-            <div className="bill-copy">
-              <div className="status-row">
-                <span>{bill.house}</span>
-                <span>{bill.stage}</span>
-                <span>{bill.status}</span>
-              </div>
-              <h1>{bill.title}</h1>
-              <p>{bill.summary}</p>
-              <div className="citation-row">
-                {bill.citations.map((citation) => (
-                  <a key={citation.url} href={citation.url} target="_blank" rel="noreferrer">
-                    {citation.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-            <VotePanel
-              integrity={bill.integrity}
-              selectedVote={selectedVote}
-              onVote={setSelectedVote}
-              liveBillId={liveBillId}
-              constituencyId={selectedSeatConstituencyId}
-              signedIn={user != null}
-              onRequireAccount={() => setAuthMode("signup")}
-            />
-          </section>
+        {selectedTab === "bills" && billOpen && (
+          <BillView
+            bill={bill}
+            billDetail={billDetail}
+            liveBillId={liveBillId}
+            selectedVote={selectedVote}
+            onVote={setSelectedVote}
+            mapMode={mapMode}
+            setMapMode={setMapMode}
+            selectedConstituency={selectedConstituency}
+            setSelectedConstituency={setSelectedConstituency}
+            mapBindings={mapBindings}
+            billAggregatesBySeat={billAggregatesBySeat}
+            signedIn={user != null}
+            onRequireAccount={() => setAuthMode("signup")}
+            onBack={() => setBillOpen(false)}
+          />
         )}
 
-        <div className="tab-row">
-          {[
-            ["bills", "Bills"],
-            ["workspace", "Bill workspace"],
-            ["mymp", "My MP"],
-            ["petitions", "Petitions"],
-            ["debate", "Debate"],
-            ["news", "News Lens"],
-            ["map", "Map"],
-            ["representatives", "Representatives"],
-            ["voice", "My Voice"],
-            ["transparency", "Transparency"]
-          ].map(([key, label]) => (
-            <button
-              key={key}
-              className={selectedTab === key ? "selected" : ""}
-              onClick={() => setSelectedTab(key as Tab)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {selectedTab === "bills" && (
+        {selectedTab === "bills" && !billOpen && (
           <section className="workspace-section">
             <div className="section-heading">
               <FileText size={20} />
@@ -487,9 +486,9 @@ export function App() {
                 className="bill-row clickable selected"
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelectedTab("workspace")}
+                onClick={() => setBillOpen(true)}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") setSelectedTab("workspace");
+                  if (event.key === "Enter" || event.key === " ") setBillOpen(true);
                 }}
               >
                 <div>
@@ -547,85 +546,12 @@ export function App() {
                         <strong>{title}</strong>
                         <span>Sample pending live import · AI summary queued</span>
                       </div>
-                      <button onClick={() => setSelectedTab("workspace")}>Preview</button>
+                      <button onClick={() => setBillOpen(true)}>Preview</button>
                     </article>
                   )
                 )}
             </div>
           </section>
-        )}
-
-        {selectedTab === "workspace" && (
-          <div className="workspace-grid">
-            <section className="panel map-panel">
-              <div className="map-controls">
-                <div>
-                  <h2>Public will map</h2>
-                  <p>SVG constituency layer coloured by live civic vote sample.</p>
-                </div>
-                <div className="segmented">
-                  {(["vote", "alignment", "compass", "debate"] as MapMode[]).map((mode) => (
-                    <button
-                      key={mode}
-                      className={mapMode === mode ? "selected" : ""}
-                      onClick={() => setMapMode(mode)}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <ConstituencyMap
-                constituencies={bill.constituencies}
-                mode={mapMode}
-                selectedId={selectedConstituency}
-                onSelect={setSelectedConstituency}
-                bindings={mapBindings}
-                aggregates={billAggregatesBySeat}
-              />
-            </section>
-
-            <aside className="inspector">
-              <section className="panel">
-                <h3>{selectedMetric.name}</h3>
-                <div className="metric-stack">
-                  <div>
-                    <span>For</span>
-                    <strong>
-                      {percent(selectedMetric.publicVote.for, selectedMetric.publicVote.turnout)}%
-                    </strong>
-                  </div>
-                  <div>
-                    <span>Against</span>
-                    <strong>
-                      {percent(selectedMetric.publicVote.against, selectedMetric.publicVote.turnout)}%
-                    </strong>
-                  </div>
-                  <div>
-                    <span>MP voted</span>
-                    <strong>{representative?.recentVote ?? selectedMetric.mpVote}</strong>
-                  </div>
-                </div>
-              </section>
-
-              <section className="panel">
-                <h3>Political direction</h3>
-                <Compass point={bill.compass} />
-                <p className="muted">{bill.compass.rationale}</p>
-              </section>
-
-              <section className="panel">
-                <h3>Representative gap</h3>
-                <div className="alignment-meter">
-                  <div style={{ width: `${representative?.alignment ?? 44}%` }} />
-                </div>
-                <p>
-                  {representative?.name ?? "Local MP"} alignment:{" "}
-                  <strong>{representative?.alignment ?? 44}%</strong>
-                </p>
-              </section>
-            </aside>
-          </div>
         )}
 
         {selectedTab === "mymp" && (
@@ -637,22 +563,8 @@ export function App() {
             livePetitions={livePetitions}
             signedIn={user != null}
             onRequireAccount={() => setAuthMode("signup")}
-          />
-        )}
-        {selectedTab === "debate" && (
-          <DebatePanel
-            posts={bill.debate}
-            liveBillId={liveBillId}
-            constituencyId={selectedSeatConstituencyId}
-            signedIn={user != null}
-            onRequireAccount={() => setAuthMode("signup")}
-          />
-        )}
-        {selectedTab === "news" && (
-          <NewsLens
-            items={
-              billDetail?.news?.length ? billDetail.news.map(mapBackendNews) : bill.news
-            }
+            openPetitionId={openPetitionId}
+            onOpenPetition={setOpenPetitionId}
           />
         )}
         {selectedTab === "map" && (
