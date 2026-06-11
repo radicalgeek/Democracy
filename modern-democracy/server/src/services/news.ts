@@ -149,7 +149,19 @@ export async function importNews(sql: Sql) {
       }
     }
 
-    const scored = await scoreNewNewsItems(sql, newItemIds);
+    // Score the backlog, not just this sweep's new items — earlier batches can
+    // fail partially (the LLM occasionally returns an incomplete array).
+    const unscored = await sql`
+      select distinct n.id from news_items n
+      where (exists (select 1 from news_bill_links l where l.news_item_id = n.id)
+          or exists (select 1 from news_petition_links l where l.news_item_id = n.id))
+        and not exists (
+          select 1 from ai_analyses a
+          where a.subject_type = 'news_item' and a.kind = 'compass' and a.subject_id = n.id::text
+        )
+      limit 32
+    `;
+    const scored = await scoreNewNewsItems(sql, unscored.map((row) => row.id as number));
 
     await sql`
       update data_import_runs set status = 'succeeded', finished_at = now(),
