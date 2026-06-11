@@ -30,6 +30,7 @@ import {
   partySummaries,
   representativeDetail
 } from "./services/representatives.js";
+import { ballotMajorities, constituencyLeans, mediaCompass } from "./services/insights.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 
@@ -208,6 +209,20 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get("/api/constituencies/:id/elections", async (request) => {
     const constituencyId = Number((request.params as { id: string }).id);
     return { elections: await constituencyElections(sql, constituencyId) };
+  });
+
+  app.get("/api/insights/media", async () => {
+    return mediaCompass(sql);
+  });
+
+  app.get("/api/insights/ballots", async (request) => {
+    const raw = (request.query as { constituencyId?: string }).constituencyId;
+    const constituencyId = raw ? Number(raw) : null;
+    return ballotMajorities(sql, Number.isFinite(constituencyId) ? constituencyId : null);
+  });
+
+  app.get("/api/insights/leans", async () => {
+    return constituencyLeans(sql);
   });
 
   app.get("/api/petitions", async () => {

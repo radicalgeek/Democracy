@@ -5,26 +5,41 @@ import {
   Compass as CompassIcon,
   FileText,
   Landmark,
+  MapPinned,
+  Newspaper,
   ScrollText,
+  Scale,
   ShieldCheck,
   UserRound,
   Vote
 } from "lucide-react";
 import { Compass } from "./Compass";
+import { CompassCompare } from "./CompassCompare";
+import { LocalAreaMap } from "./LocalAreaMap";
+import { MediaLandscape } from "./MediaLandscape";
 import { storedMyCompass } from "./Onboarding";
 import {
+  fetchBallotMajorities,
+  fetchConstituencyLeans,
   fetchConstituencyProfile,
+  fetchMediaCompass,
   fetchPetitions,
   storedChoice,
   type AccountUser,
   type BackendBill,
   type BackendPetition,
-  type ConstituencyProfile
+  type BallotMajority,
+  type CompassComparison,
+  type ConstituencyLean,
+  type ConstituencyProfile,
+  type MapBindings,
+  type MediaCompassPayload
 } from "../lib/api";
 
 type DashboardProps = {
   user: AccountUser | null;
   backendBills: BackendBill[];
+  mapBindings: MapBindings | null;
   onOpenBill: (billId: number) => void;
   onOpenPetition: (petitionId: number) => void;
   onGoToTab: (tab: string) => void;
@@ -36,6 +51,7 @@ type DashboardProps = {
 export function Dashboard({
   user,
   backendBills,
+  mapBindings,
   onOpenBill,
   onOpenPetition,
   onGoToTab,
@@ -43,8 +59,13 @@ export function Dashboard({
   onVerify,
   onStartTour
 }: DashboardProps) {
-  const [profile, setProfile] = useState<ConstituencyProfile | null>(null);
+  const [profile, setProfile] = useState<
+    (ConstituencyProfile & { compass: CompassComparison }) | null
+  >(null);
   const [petitions, setPetitions] = useState<BackendPetition[]>([]);
+  const [media, setMedia] = useState<MediaCompassPayload | null>(null);
+  const [majorities, setMajorities] = useState<BallotMajority[]>([]);
+  const [leans, setLeans] = useState<Record<number, ConstituencyLean> | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -56,10 +77,26 @@ export function Dashboard({
     fetchPetitions()
       .then((payload) => mounted && setPetitions(payload.petitions.slice(0, 4)))
       .catch(() => mounted && setPetitions([]));
+    if (user) {
+      fetchMediaCompass()
+        .then((payload) => mounted && setMedia(payload))
+        .catch(() => mounted && setMedia(null));
+      fetchBallotMajorities(user.constituencyId)
+        .then((payload) => mounted && setMajorities(payload.majorities))
+        .catch(() => mounted && setMajorities([]));
+      fetchConstituencyLeans()
+        .then((payload) => {
+          if (!mounted) return;
+          const byId: Record<number, ConstituencyLean> = {};
+          for (const lean of payload.leans) byId[lean.constituencyId] = lean;
+          setLeans(byId);
+        })
+        .catch(() => mounted && setLeans(null));
+    }
     return () => {
       mounted = false;
     };
-  }, [user?.constituencyId]);
+  }, [user, user?.constituencyId]);
 
   const myCompass = storedMyCompass();
 
@@ -85,6 +122,68 @@ export function Dashboard({
   const votableBills = backendBills
     .filter((bill) => storedChoice(bill.id) == null)
     .slice(0, 4);
+
+  // Your stored choices (device-only) against the published civic majorities,
+  // constituency and national, bill by bill.
+  const youVs = useMemo(() => {
+    type Row = {
+      billId: number;
+      billTitle: string;
+      mine: "for" | "against";
+      localMajority: "for" | "against" | null;
+      nationalMajority: "for" | "against" | null;
+    };
+    const rows: Row[] = [];
+    const tally = {
+      local: { compared: 0, matched: 0 },
+      national: { compared: 0, matched: 0 }
+    };
+    for (const majority of majorities) {
+      const mine = storedChoice(majority.billId);
+      if (mine !== "for" && mine !== "against") continue;
+      const callMajority = (slice: { for: number; against: number } | null) =>
+        slice && slice.for !== slice.against ? (slice.for > slice.against ? "for" : "against") : null;
+      const localMajority = callMajority(majority.constituency);
+      const nationalMajority = callMajority(majority.national);
+      if (localMajority) {
+        tally.local.compared += 1;
+        if (localMajority === mine) tally.local.matched += 1;
+      }
+      if (nationalMajority) {
+        tally.national.compared += 1;
+        if (nationalMajority === mine) tally.national.matched += 1;
+      }
+      if (localMajority || nationalMajority) {
+        rows.push({ billId: majority.billId, billTitle: majority.billTitle, mine, localMajority, nationalMajority });
+      }
+    }
+    const percent = (t: { compared: number; matched: number }) =>
+      t.compared ? Math.round((t.matched / t.compared) * 100) : null;
+    return {
+      rows,
+      localPercent: percent(tally.local),
+      localCompared: tally.local.compared,
+      nationalPercent: percent(tally.national),
+      nationalCompared: tally.national.compared,
+      disagreements: rows.filter(
+        (row) =>
+          (row.localMajority ?? row.nationalMajority) != null &&
+          (row.localMajority ?? row.nationalMajority) !== row.mine
+      )
+    };
+  }, [majorities]);
+
+  const mediaExtras =
+    media?.overall != null
+      ? [
+          {
+            key: "media",
+            label: "Media coverage (avg)",
+            color: "#8a4f9e",
+            point: media.overall
+          }
+        ]
+      : [];
 
   if (!user) {
     return (
@@ -225,6 +324,140 @@ export function Dashboard({
           </p>
         </section>
       </div>
+
+      <section className="workspace-section">
+        <div className="section-heading">
+          <Scale size={20} />
+          <div>
+            <h2>How well are you represented?</h2>
+            <p>
+              Your questionnaire position against your MP, their party, your constituency, the
+              country, and the media — plus how often you vote with each majority.
+            </p>
+          </div>
+        </div>
+        <div className="dashboard-split">
+          <div className="panel">
+            {profile?.compass ? (
+              <CompassCompare
+                compass={profile.compass}
+                mpName={mp?.name ?? null}
+                constituencyName={user.constituencyName ?? "Your constituency"}
+                you={myCompass ? { x: myCompass.x, y: myCompass.y } : null}
+                extras={mediaExtras}
+              />
+            ) : (
+              <p className="muted">Compass comparison loads once your constituency profile is in.</p>
+            )}
+          </div>
+          <div className="panel agreement-panel">
+            <h3>You vs the majorities</h3>
+            {personalMp && personalMp.compared > 0 && (
+              <div className="proximity-bar">
+                <span>You ↔ your MP</span>
+                <div className="bar">
+                  <div
+                    className="fill"
+                    style={{ width: `${Math.round((personalMp.matched / personalMp.compared) * 100)}%` }}
+                  />
+                </div>
+                <strong>
+                  {Math.round((personalMp.matched / personalMp.compared) * 100)}%
+                  <em className="muted"> · {personalMp.compared} bills</em>
+                </strong>
+              </div>
+            )}
+            {youVs.localPercent != null && (
+              <div className="proximity-bar">
+                <span>You ↔ {user.constituencyName ?? "constituency"} majority</span>
+                <div className="bar">
+                  <div className="fill" style={{ width: `${youVs.localPercent}%` }} />
+                </div>
+                <strong>
+                  {youVs.localPercent}%<em className="muted"> · {youVs.localCompared} bills</em>
+                </strong>
+              </div>
+            )}
+            {youVs.nationalPercent != null && (
+              <div className="proximity-bar">
+                <span>You ↔ country majority</span>
+                <div className="bar">
+                  <div className="fill" style={{ width: `${youVs.nationalPercent}%` }} />
+                </div>
+                <strong>
+                  {youVs.nationalPercent}%<em className="muted"> · {youVs.nationalCompared} bills</em>
+                </strong>
+              </div>
+            )}
+            {youVs.localPercent == null && youVs.nationalPercent == null && (
+              <p className="muted">
+                Vote on a few bills and these comparisons fill in — your choices never leave this
+                device, the maths happens in your browser against published aggregates.
+              </p>
+            )}
+            {youVs.disagreements.length > 0 && (
+              <>
+                <h4>Where you split from the majority</h4>
+                <div className="disagreement-list">
+                  {youVs.disagreements.slice(0, 4).map((row) => (
+                    <button
+                      key={row.billId}
+                      className="disagreement-row"
+                      onClick={() => onOpenBill(row.billId)}
+                    >
+                      <strong>{row.billTitle}</strong>
+                      <span>
+                        You voted {row.mine},{" "}
+                        {row.localMajority
+                          ? `your constituency went ${row.localMajority}`
+                          : `the country went ${row.nationalMajority}`}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="workspace-section">
+        <div className="section-heading">
+          <MapPinned size={20} />
+          <div>
+            <h2>Your local area</h2>
+            <p>
+              The seats around {user.constituencyName ?? "you"} — who holds them, how they lean on
+              civic votes, and where participation is strongest.
+            </p>
+          </div>
+        </div>
+        <LocalAreaMap
+          bindings={mapBindings}
+          leans={leans}
+          homeConstituencyId={user.constituencyId}
+          homeConstituencyName={user.constituencyName}
+          onOpenFullMap={() => onGoToTab("map")}
+        />
+      </section>
+
+      {media && media.outlets.length > 0 && (
+        <section className="workspace-section">
+          <div className="section-heading">
+            <Newspaper size={20} />
+            <div>
+              <h2>You vs the media</h2>
+              <p>
+                Every ingested article is compass-scored — this is where each outlet's recent
+                politics coverage sits, and how close it is to you.
+              </p>
+            </div>
+          </div>
+          <div className="panel">
+            <MediaLandscape media={media} you={myCompass ? { x: myCompass.x, y: myCompass.y } : null} />
+          </div>
+        </section>
+      )}
 
       <section className="workspace-section">
         <div className="section-heading">
