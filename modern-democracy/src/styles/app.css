@@ -1963,3 +1963,8 @@ button.ghost {
 .division-vote.rebelled {
   box-shadow: 0 0 0 2px var(--gold);
 }
+
+.back-link {
+  margin-bottom: 14px;
+  align-self: flex-start;
+}
