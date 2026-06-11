@@ -1332,3 +1332,237 @@ button.ghost {
     font-size: 30px;
   }
 }
+
+/* --- My MP --- */
+
+.mp-card {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  border-top: 4px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.mp-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--line);
+}
+
+.mp-photo.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--muted);
+}
+
+.mp-card-body {
+  flex: 1;
+  min-width: 220px;
+}
+
+.mp-card-body h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.mp-card-body p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.party-chip {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+.mp-scores {
+  display: flex;
+  gap: 24px;
+}
+
+.mp-score {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 150px;
+}
+
+.mp-score span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mp-score strong {
+  font-size: 28px;
+}
+
+.mp-score em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.mp-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mp-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.comparison-list,
+.civic-vote-list,
+.division-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comparison-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.comparison-row > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.comparison-row .muted {
+  font-size: 13px;
+}
+
+.comparison-verdict {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+}
+
+.comparison-verdict strong.for {
+  color: var(--green);
+}
+
+.comparison-verdict strong.against {
+  color: var(--red);
+}
+
+.match {
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.match.yes {
+  background: rgba(22, 138, 90, 0.12);
+  color: var(--green);
+}
+
+.match.no {
+  background: rgba(191, 68, 62, 0.12);
+  color: var(--red);
+}
+
+.civic-vote-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.civic-vote-row > strong {
+  flex: 1;
+  min-width: 200px;
+}
+
+.civic-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.civic-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.civic-bar span {
+  width: 90px;
+}
+
+.civic-bar .bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.civic-bar .fill.for {
+  height: 100%;
+  background: var(--green);
+}
+
+.civic-bar .fill.against {
+  height: 100%;
+  background: var(--red);
+}
+
+.division-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.division-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.division-row .muted {
+  font-size: 12px;
+}
+
+.division-vote {
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 6px 14px;
+}
+
+.division-vote.aye {
+  background: rgba(22, 138, 90, 0.12);
+  color: var(--green);
+}
+
+.division-vote.no {
+  background: rgba(191, 68, 62, 0.12);
+  color: var(--red);
+}

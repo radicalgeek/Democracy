@@ -213,6 +213,29 @@ create table if not exists ai_analyses (
 );
 create index if not exists ai_subject_idx on ai_analyses (subject_type, subject_id, kind, id desc);
 
+-- Commons divisions: how MPs actually voted, from the official Commons Votes
+-- API. division_votes.member_id is intentionally not a foreign key — division
+-- lists can include members who have since left the House.
+create table if not exists divisions (
+  id integer primary key,
+  title text not null,
+  date timestamptz,
+  number integer,
+  aye_count integer not null default 0,
+  no_count integer not null default 0,
+  bill_id integer references bills(id),
+  imported_at timestamptz not null default now()
+);
+create index if not exists divisions_bill_idx on divisions (bill_id);
+
+create table if not exists division_votes (
+  division_id integer not null references divisions(id),
+  member_id integer not null,
+  vote text not null check (vote in ('aye', 'no')),
+  primary key (division_id, member_id)
+);
+create index if not exists division_votes_member_idx on division_votes (member_id, division_id desc);
+
 -- News groundwork (ingestion is a later milestone)
 create table if not exists news_sources (
   id bigserial primary key,

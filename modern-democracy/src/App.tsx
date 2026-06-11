@@ -20,6 +20,7 @@ import { Compass } from "./components/Compass";
 import { ConstituencyMap } from "./components/ConstituencyMap";
 import { DebatePanel } from "./components/DebatePanel";
 import { Landing } from "./components/Landing";
+import { MyMP } from "./components/MyMP";
 import { IntegrationBanner } from "./components/IntegrationBanner";
 import { NewsLens } from "./components/NewsLens";
 import { PetitionsPanel } from "./components/PetitionsPanel";
@@ -49,6 +50,7 @@ import {
 type Tab =
   | "bills"
   | "workspace"
+  | "mymp"
   | "petitions"
   | "debate"
   | "news"
@@ -61,6 +63,7 @@ type MapMode = "vote" | "alignment" | "compass" | "debate";
 const navItems: Array<[string, Tab, typeof FileText]> = [
   ["Bills", "bills", FileText],
   ["Vote", "workspace", Vote],
+  ["My MP", "mymp", Landmark],
   ["Petitions", "petitions", ScrollText],
   ["Debate", "debate", MessageSquare],
   ["News Lens", "news", Newspaper],
@@ -419,6 +422,7 @@ export function App() {
           {[
             ["bills", "Bills"],
             ["workspace", "Bill workspace"],
+            ["mymp", "My MP"],
             ["petitions", "Petitions"],
             ["debate", "Debate"],
             ["news", "News Lens"],
@@ -577,6 +581,9 @@ export function App() {
           </div>
         )}
 
+        {selectedTab === "mymp" && (
+          <MyMP user={user} onRequireAccount={() => setAuthMode("signup")} />
+        )}
         {selectedTab === "petitions" && (
           <PetitionsPanel petitions={samplePetitions} livePetitions={livePetitions} />
         )}

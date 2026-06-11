@@ -1,5 +1,10 @@
 import { ensureSchema, waitForDatabase } from "./db.js";
-import { checkpointAllBills, runFullImport, seedDemoBallots } from "./worker-jobs.js";
+import {
+  checkpointAllBills,
+  runFullImport,
+  seedDemoBallots,
+  seedDivisionBallots
+} from "./worker-jobs.js";
 
 const IMPORT_INTERVAL_MS = Number(process.env.IMPORT_INTERVAL_MS ?? 6 * 60 * 60 * 1000);
 const CHECKPOINT_INTERVAL_MS = Number(process.env.CHECKPOINT_INTERVAL_MS ?? 60 * 1000);
@@ -21,6 +26,8 @@ async function main() {
     try {
       const seeded = await seedDemoBallots();
       console.log("[worker] demo seed:", JSON.stringify(seeded));
+      const divisionSeed = await seedDivisionBallots();
+      console.log("[worker] division demo seed:", JSON.stringify(divisionSeed));
     } catch (error) {
       console.error("[worker] demo seed failed:", error);
     }

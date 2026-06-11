@@ -266,6 +266,9 @@ export async function castVote(
       { credential: credential.credential, choice }
     );
     localStorage.setItem(`democracy.receipt.${billId}`, ballot.receiptCode);
+    // Choice stays on this device only — the server never links it to you.
+    // It powers the client-side "does my MP vote like me" comparison.
+    localStorage.setItem(`democracy.choice.${billId}`, choice);
     return { ok: true, ...ballot };
   } catch (error) {
     return {
@@ -277,6 +280,60 @@ export async function castVote(
 
 export function storedReceipt(billId: number) {
   return localStorage.getItem(`democracy.receipt.${billId}`);
+}
+
+export function storedChoice(billId: number): VoteChoice | null {
+  const value = localStorage.getItem(`democracy.choice.${billId}`);
+  return value === "for" || value === "against" || value === "abstain" ? value : null;
+}
+
+export type ConstituencyProfile = {
+  constituency: { id: number; name: string };
+  mp: {
+    id: number;
+    name: string;
+    party: string | null;
+    partyAbbreviation: string | null;
+    partyColour: string | null;
+    thumbnailUrl: string | null;
+  } | null;
+  votingRecord: Array<{
+    divisionId: number;
+    title: string;
+    date: string;
+    vote: "aye" | "no";
+    ayeCount: number;
+    noCount: number;
+    billId: number | null;
+    billTitle: string | null;
+  }>;
+  civicVotes: Array<{
+    billId: number;
+    billTitle: string;
+    for: number;
+    against: number;
+    abstain: number;
+    total: number;
+  }>;
+  alignment: {
+    compared: number;
+    matched: number;
+    percent: number | null;
+    comparisons: Array<{
+      divisionId: number;
+      billId: number;
+      billTitle: string | null;
+      divisionTitle: string;
+      mpVote: string;
+      scope: "constituency" | "national";
+      matched: boolean;
+    }>;
+  };
+  participation: { ballots: number; privacyThreshold: number };
+};
+
+export function fetchConstituencyProfile(constituencyId: number) {
+  return getJson<ConstituencyProfile>(`/api/constituencies/${constituencyId}/profile`);
 }
 
 export type ReceiptVerification = {

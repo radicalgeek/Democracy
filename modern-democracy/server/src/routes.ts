@@ -16,6 +16,7 @@ import {
   registerUser,
   verifyIdentity
 } from "./services/auth.js";
+import { constituencyProfile } from "./services/divisions.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 
@@ -160,6 +161,13 @@ export async function registerRoutes(app: FastifyInstance) {
       order by c.name
     `;
     return { constituencies };
+  });
+
+  app.get("/api/constituencies/:id/profile", async (request, reply) => {
+    const constituencyId = Number((request.params as { id: string }).id);
+    const profile = await constituencyProfile(sql, constituencyId);
+    if (!profile) return reply.code(404).send({ error: "constituency not found" });
+    return profile;
   });
 
   app.get("/api/postcode/:postcode", async (request, reply) => {
