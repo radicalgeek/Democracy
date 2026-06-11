@@ -470,6 +470,7 @@ export function App() {
           <Dashboard
             user={user}
             backendBills={backendBills}
+            mapBindings={mapBindings}
             onOpenBill={openBackendBill}
             onOpenPetition={(petitionId) => {
               setSelectedTab("petitions");

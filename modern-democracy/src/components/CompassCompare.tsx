@@ -1,10 +1,18 @@
 import type { CompassComparison } from "../lib/api";
 
+type ExtraPoint = {
+  key: string;
+  label: string;
+  color: string;
+  point: { x: number; y: number; sample: number };
+};
+
 type CompassCompareProps = {
   compass: CompassComparison;
   mpName: string | null;
   constituencyName: string;
   you?: { x: number; y: number } | null;
+  extras?: ExtraPoint[];
 };
 
 const COLORS = {
@@ -20,7 +28,7 @@ const COLORS = {
  * derived from votes on compass-scored bills) on one chart with proximity
  * scores between them.
  */
-export function CompassCompare({ compass, mpName, constituencyName, you }: CompassCompareProps) {
+export function CompassCompare({ compass, mpName, constituencyName, you, extras }: CompassCompareProps) {
   const size = 260;
   const padding = 22;
   const mid = size / 2;
@@ -85,6 +93,21 @@ export function CompassCompare({ compass, mpName, constituencyName, you }: Compa
         <text x={size - padding + 4} y={mid + 4}>
           Right
         </text>
+        {(extras ?? []).map((entry) => {
+          const { cx, cy } = place(entry.point);
+          return (
+            <rect
+              key={entry.key}
+              x={cx - 5}
+              y={cy - 5}
+              width={10}
+              height={10}
+              transform={`rotate(45 ${cx} ${cy})`}
+              fill={entry.color}
+              opacity={0.85}
+            />
+          );
+        })}
         {points.map((entry) => {
           const { cx, cy } = place(entry.point);
           return <circle key={entry.key} cx={cx} cy={cy} r={7} fill={COLORS[entry.key]} />;
@@ -98,6 +121,15 @@ export function CompassCompare({ compass, mpName, constituencyName, you }: Compa
             <span className="muted">
               ({entry.point.x.toFixed(1)}, {entry.point.y.toFixed(1)})
               {entry.key !== "you" && ` · ${entry.point.sample} votes`}
+            </span>
+          </div>
+        ))}
+        {(extras ?? []).map((entry) => (
+          <div key={entry.key} className="compass-legend-row">
+            <span className="dot diamond" style={{ background: entry.color }} />
+            <span className="legend-label">{entry.label}</span>
+            <span className="muted">
+              ({entry.point.x.toFixed(1)}, {entry.point.y.toFixed(1)}) · {entry.point.sample} articles
             </span>
           </div>
         ))}

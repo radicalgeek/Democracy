@@ -535,6 +535,41 @@ export function fetchPetitions() {
   return getJson<{ petitions: BackendPetition[] }>("/api/petitions");
 }
 
+export type MediaOutlet = { name: string; x: number; y: number; sample: number };
+
+export type MediaCompassPayload = {
+  outlets: MediaOutlet[];
+  overall: { x: number; y: number; sample: number } | null;
+};
+
+export function fetchMediaCompass() {
+  return getJson<MediaCompassPayload>("/api/insights/media");
+}
+
+export type BallotMajority = {
+  billId: number;
+  billTitle: string;
+  national: { for: number; against: number; total: number };
+  constituency: { for: number; against: number; total: number } | null;
+};
+
+export function fetchBallotMajorities(constituencyId: number | null) {
+  const query = constituencyId ? `?constituencyId=${constituencyId}` : "";
+  return getJson<{ privacyThreshold: number; majorities: BallotMajority[] }>(
+    `/api/insights/ballots${query}`
+  );
+}
+
+export type ConstituencyLean = {
+  constituencyId: number;
+  ballots: number;
+  lean: { x: number; y: number; sample: number } | null;
+};
+
+export function fetchConstituencyLeans() {
+  return getJson<{ privacyThreshold: number; leans: ConstituencyLean[] }>("/api/insights/leans");
+}
+
 export async function fetchPetitionDetail(petitionId: number) {
   const token = storedToken();
   const response = await fetch(`${API_BASE}/api/petitions/${petitionId}`, {

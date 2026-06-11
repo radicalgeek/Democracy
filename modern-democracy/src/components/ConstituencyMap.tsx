@@ -123,7 +123,7 @@ const LEGACY_PAGE_STYLES = `
   tspan { font-size: 14px; }
 `;
 
-function cleanLegacySvg(svg: string) {
+export function cleanLegacySvg(svg: string) {
   return svg
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/\son[a-z]+="[^"]*"/gi, "")
