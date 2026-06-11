@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, Compass as CompassIcon, Landmark, Loader2, ScrollText, UserRound, Vote } from "lucide-react";
+import { BarChart3, Compass as CompassIcon, ExternalLink, Landmark, Loader2, ScrollText, UserRound, Vote } from "lucide-react";
 import { CompassCompare } from "./CompassCompare";
+import { divisionUrl } from "./RepresentativesPanel";
 import { storedMyCompass } from "./Onboarding";
 import {
   fetchConstituencyProfile,
@@ -217,7 +218,7 @@ export function MyMP({ user, onRequireAccount }: MyMPProps) {
                   </span>
                   <span className="muted">{item.scope} majority</span>
                   <span className={item.matched ? "match yes" : "match no"}>
-                    {item.matched ? "aligned" : "diverged"}
+                    {item.matched ? "agreed" : "disagreed"}
                   </span>
                 </div>
               </article>
@@ -280,13 +281,23 @@ export function MyMP({ user, onRequireAccount }: MyMPProps) {
               <div>
                 <strong>{record.title}</strong>
                 <span className="muted">
-                  {new Date(record.date).toLocaleDateString()} · Ayes {record.ayeCount} · Noes{" "}
-                  {record.noCount}
+                  {new Date(record.date).toLocaleDateString("en-GB")} · Ayes {record.ayeCount} ·
+                  Noes {record.noCount}
                 </span>
               </div>
               <span className={`division-vote ${record.vote}`}>
                 {record.vote === "aye" ? "Aye" : "No"}
               </span>
+              <a
+                className="division-link"
+                href={divisionUrl(record.divisionId)}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Open this division on votes.parliament.uk"
+                title="Open on votes.parliament.uk"
+              >
+                <ExternalLink size={14} />
+              </a>
             </article>
           ))}
           {profile.votingRecord.length === 0 && (

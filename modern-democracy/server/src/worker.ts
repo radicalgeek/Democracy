@@ -1,4 +1,5 @@
-import { ensureSchema, waitForDatabase } from "./db.js";
+import { ensureSchema, sql, waitForDatabase } from "./db.js";
+import { seedDemoCommunity } from "./services/demo-community.js";
 import {
   checkpointAllBills,
   runFullImport,
@@ -9,6 +10,7 @@ import {
 const IMPORT_INTERVAL_MS = Number(process.env.IMPORT_INTERVAL_MS ?? 6 * 60 * 60 * 1000);
 const CHECKPOINT_INTERVAL_MS = Number(process.env.CHECKPOINT_INTERVAL_MS ?? 60 * 1000);
 const DEMO_SEED = (process.env.DEMO_SEED ?? "false").toLowerCase() === "true";
+const DEMO_COMMUNITY_SEED = (process.env.DEMO_COMMUNITY_SEED ?? "false").toLowerCase() === "true";
 
 async function main() {
   await waitForDatabase();
@@ -30,6 +32,15 @@ async function main() {
       console.log("[worker] division demo seed:", JSON.stringify(divisionSeed));
     } catch (error) {
       console.error("[worker] demo seed failed:", error);
+    }
+  }
+
+  if (DEMO_COMMUNITY_SEED) {
+    try {
+      const community = await seedDemoCommunity(sql);
+      console.log("[worker] demo community seed:", JSON.stringify(community));
+    } catch (error) {
+      console.error("[worker] demo community seed failed:", error);
     }
   }
 

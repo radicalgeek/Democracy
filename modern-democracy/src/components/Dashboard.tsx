@@ -4,12 +4,15 @@ import {
   BadgeCheck,
   Compass as CompassIcon,
   FileText,
+  Flame,
+  HelpCircle,
   Landmark,
   MapPinned,
   Newspaper,
   ScrollText,
   Scale,
   ShieldCheck,
+  Trophy,
   UserRound,
   Vote
 } from "lucide-react";
@@ -18,6 +21,8 @@ import { CompassCompare } from "./CompassCompare";
 import { LocalAreaMap } from "./LocalAreaMap";
 import { MediaLandscape } from "./MediaLandscape";
 import { storedMyCompass } from "./Onboarding";
+import { HelpTrigger } from "./HelpTrigger";
+import { getHelpViewedCountGlobal, markHelpViewedGlobal } from "../lib/useHelpTracking";
 import {
   fetchBallotMajorities,
   fetchConstituencyLeans,
@@ -66,6 +71,7 @@ export function Dashboard({
   const [media, setMedia] = useState<MediaCompassPayload | null>(null);
   const [majorities, setMajorities] = useState<BallotMajority[]>([]);
   const [leans, setLeans] = useState<Record<number, ConstituencyLean> | null>(null);
+  const [helpViewedCount, setHelpViewedCount] = useState(() => getHelpViewedCountGlobal());
 
   useEffect(() => {
     let mounted = true;
@@ -277,6 +283,9 @@ export function Dashboard({
             <CompassIcon size={18} />
             <div>
               <h3>Your position</h3>
+              <HelpTrigger topicId="compass" inline>
+                <HelpCircle size={16} />
+              </HelpTrigger>
             </div>
           </div>
           {myCompass ? (
@@ -313,6 +322,10 @@ export function Dashboard({
             <div>
               <span>Bills voted</span>
               <strong>{myVotes.length}</strong>
+            </div>
+            <div>
+              <span>Learning</span>
+              <strong>{helpViewedCount} topics read</strong>
             </div>
             <div>
               <span>Status</span>

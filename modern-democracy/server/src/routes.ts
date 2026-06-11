@@ -33,11 +33,36 @@ import {
 import { ballotMajorities, constituencyLeans, mediaCompass } from "./services/insights.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
+import { getUserEngagementStats, computeEngagementStatsForUser } from "./services/learning.js";
 
 function bearer(headers: Record<string, unknown>) {
   const value = headers.authorization;
   if (typeof value !== "string") return undefined;
   return value.replace(/^Bearer\s+/i, "");
+}
+
+function getNextMilestone(
+  level: string,
+  billsVoted: number,
+  topicsViewed: number
+): { target: string; billsNeeded: number; billsRemaining: number; topicsNeeded: number; topicsRemaining: number } | null {
+  const milestones = [
+    { target: "curious", billsNeeded: 1, topicsNeeded: 1 },
+    { target: "engaged", billsNeeded: 6, topicsNeeded: 3 },
+    { target: "committed", billsNeeded: 21, topicsNeeded: 5 },
+    { target: "scholar", billsNeeded: 50, topicsNeeded: 8 }
+  ];
+
+  const nextMilestone = milestones.find((m) => m.target !== level);
+  if (!nextMilestone) return null;
+
+  return {
+    target: nextMilestone.target,
+    billsNeeded: nextMilestone.billsNeeded,
+    billsRemaining: Math.max(0, nextMilestone.billsNeeded - billsVoted),
+    topicsNeeded: nextMilestone.topicsNeeded,
+    topicsRemaining: Math.max(0, nextMilestone.topicsNeeded - topicsViewed)
+  };
 }
 
 export async function registerRoutes(app: FastifyInstance) {
@@ -421,5 +446,75 @@ export async function registerRoutes(app: FastifyInstance) {
   app.post("/api/admin/import", async () => {
     const summary = await runFullImport();
     return summary;
+  });
+
+  // Learning & gamification endpoints
+  app.get("/api/auth/me/engagement", async (request, reply) => {
+    const user = await publicUserFromToken(sql, bearer(request.headers as Record<string, unknown>));
+    if (!user) return reply.code(401).send({ error: "not signed in" });
+
+    const stats = await getUserEngagementStats(sql, user.id);
+    if (!stats) return reply.code(404).send({ error: "engagement stats not found" });
+
+    return {
+      engagement: {
+        billsVoted: stats.billsVoted,
+        debatePostsCreated: stats.debatePostsCreated,
+        constituenciesExplored: stats.constituenciesExplored,
+        helpTopicsViewed: stats.helpTopicsViewed,
+        currentStreak: stats.currentStreak,
+        engagementLevel: stats.engagementLevel,
+        achievements: stats.achievements,
+        nextMilestone: getNextMilestone(stats.engagementLevel, stats.billsVoted, stats.helpTopicsViewed)
+      }
+    };
+  });
+
+  app.post("/api/auth/me/help-view", async (request, reply) => {
+    const user = await publicUserFromToken(sql, bearer(request.headers as Record<string, unknown>));
+    if (!user) return reply.code(401).send({ error: "not signed in" });
+
+    const body = (request.body ?? {}) as { topicId?: string };
+    if (!body.topicId) return reply.code(400).send({ error: "topicId required" });
+
+    try {
+      await sql`
+        insert into user_help_views (user_id, topic_id, viewed_at)
+        values (${user.id}, ${body.topicId}, now())
+        on conflict (user_id, topic_id) do nothing
+      `;
+
+      // Update engagement stats
+      await computeEngagementStatsForUser(sql, user.id);
+
+      return { ok: true, topicId: body.topicId };
+    } catch (err) {
+      return reply.code(500).send({ error: "failed to record help view" });
+    }
+  });
+
+  app.get("/api/auth/me/learning", async (request, reply) => {
+    const user = await publicUserFromToken(sql, bearer(request.headers as Record<string, unknown>));
+    if (!user) return reply.code(401).send({ error: "not signed in" });
+
+    const helpViews = await sql`
+      select topic_id from user_help_views where user_id = ${user.id}
+    `;
+
+    const achievements = await sql`
+      select achievement_id, unlocked_at from user_achievements
+      where user_id = ${user.id}
+      order by unlocked_at desc
+    `;
+
+    return {
+      learning: {
+        helpTopicsViewed: helpViews.map((r: any) => r.topic_id),
+        achievements: achievements.map((r: any) => ({
+          id: r.achievement_id,
+          unlockedAt: r.unlocked_at
+        }))
+      }
+    };
   });
 }

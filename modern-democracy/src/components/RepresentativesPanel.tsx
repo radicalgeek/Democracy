@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   BadgeAlert,
+  ExternalLink,
   Landmark,
   Loader2,
   ScrollText,
@@ -28,14 +29,30 @@ function partyColour(colour: string | null | undefined) {
   return colour ? `#${colour.replace(/^#/, "")}` : "var(--muted)";
 }
 
-export function RepresentativesPanel() {
+/** Official public page for a Commons division — ids are the Votes API's own. */
+export function divisionUrl(divisionId: number) {
+  return `https://votes.parliament.uk/Votes/Commons/Division/${divisionId}`;
+}
+
+type RepresentativesPanelProps = {
+  /** Open this MP's profile directly (e.g. from the global search). */
+  openMemberId?: number | null;
+  /** Open a bill in the app when a division row is linked to one. */
+  onOpenBill?: (billId: number) => void;
+};
+
+export function RepresentativesPanel({ openMemberId, onOpenBill }: RepresentativesPanelProps) {
   const [members, setMembers] = useState<RepListMember[]>([]);
   const [total, setTotal] = useState(0);
   const [parties, setParties] = useState<PartySummary[]>([]);
   const [search, setSearch] = useState("");
   const [partyFilter, setPartyFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(openMemberId ?? null);
+
+  useEffect(() => {
+    if (openMemberId != null) setSelectedId(openMemberId);
+  }, [openMemberId]);
 
   const load = useCallback(
     async (reset: boolean, currentCount: number) => {
@@ -69,7 +86,13 @@ export function RepresentativesPanel() {
   }, []);
 
   if (selectedId != null) {
-    return <RepresentativeDetail memberId={selectedId} onBack={() => setSelectedId(null)} />;
+    return (
+      <RepresentativeDetail
+        memberId={selectedId}
+        onBack={() => setSelectedId(null)}
+        onOpenBill={onOpenBill}
+      />
+    );
   }
 
   return (
@@ -167,7 +190,15 @@ export function RepresentativesPanel() {
   );
 }
 
-function RepresentativeDetail({ memberId, onBack }: { memberId: number; onBack: () => void }) {
+function RepresentativeDetail({
+  memberId,
+  onBack,
+  onOpenBill
+}: {
+  memberId: number;
+  onBack: () => void;
+  onOpenBill?: (billId: number) => void;
+}) {
   const [detail, setDetail] = useState<RepDetail | null>(null);
   const [elections, setElections] = useState<ConstituencyElection[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -390,18 +421,41 @@ function RepresentativeDetail({ memberId, onBack }: { memberId: number; onBack: 
         </div>
         <div className="division-list">
           {votingRecord.map((record) => (
-            <article className="division-row" key={record.divisionId}>
+            <article
+              className={record.billId && onOpenBill ? "division-row clickable" : "division-row"}
+              key={record.divisionId}
+              role={record.billId && onOpenBill ? "button" : undefined}
+              tabIndex={record.billId && onOpenBill ? 0 : undefined}
+              onClick={() => record.billId && onOpenBill?.(record.billId)}
+              onKeyDown={(event) => {
+                if ((event.key === "Enter" || event.key === " ") && record.billId) {
+                  onOpenBill?.(record.billId);
+                }
+              }}
+            >
               <div>
                 <strong>{record.title}</strong>
                 <span className="muted">
-                  {new Date(record.date).toLocaleDateString()} · Ayes {record.ayeCount} · Noes{" "}
-                  {record.noCount}
+                  {new Date(record.date).toLocaleDateString("en-GB")} · Ayes {record.ayeCount} ·
+                  Noes {record.noCount}
                   {record.rebelled && " · rebelled against party majority"}
+                  {record.billId && onOpenBill && " · view the bill"}
                 </span>
               </div>
               <span className={`division-vote ${record.vote}${record.rebelled ? " rebelled" : ""}`}>
                 {record.vote === "aye" ? "Aye" : "No"}
               </span>
+              <a
+                className="division-link"
+                href={divisionUrl(record.divisionId)}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Open this division on votes.parliament.uk"
+                title="Open on votes.parliament.uk"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <ExternalLink size={14} />
+              </a>
             </article>
           ))}
           {votingRecord.length === 0 && (

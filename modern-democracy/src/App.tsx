@@ -9,17 +9,18 @@ import {
   LayoutDashboard,
   Map,
   ScrollText,
-  Search,
   Shield,
   UserRoundCheck,
   Vote
 } from "lucide-react";
 import { AuthScreen, type AuthMode } from "./components/AuthScreen";
 import { BillView } from "./components/BillView";
-import { ConstituencyMap } from "./components/ConstituencyMap";
+import { ConstituencyMap, MAP_MODE_META } from "./components/ConstituencyMap";
 import { Dashboard } from "./components/Dashboard";
+import { GlobalSearch } from "./components/GlobalSearch";
 import { Landing } from "./components/Landing";
 import { MyMP } from "./components/MyMP";
+import { NationFlags } from "./components/NationFlags";
 import { IntegrationBanner } from "./components/IntegrationBanner";
 import { ONBOARDED_KEY, Onboarding } from "./components/Onboarding";
 import { PetitionsPanel } from "./components/PetitionsPanel";
@@ -40,6 +41,7 @@ import {
   fetchBackendBills,
   fetchBillDetail,
   fetchMapBindings,
+  storedChoice,
   type AccountUser,
   type BackendBill,
   type BackendBillDetail,
@@ -104,6 +106,7 @@ export function App() {
   });
   const [backendBills, setBackendBills] = useState<BackendBill[]>([]);
   const [billDetail, setBillDetail] = useState<BackendBillDetail | null>(null);
+  const [repOpenMemberId, setRepOpenMemberId] = useState<number | null>(null);
   const [mapBindings, setMapBindings] = useState<MapBindings | null>(null);
   const [statuses, setStatuses] = useState<IntegrationStatus[]>([
     {
@@ -190,6 +193,10 @@ export function App() {
         setBackendBills(billsPayload.bills);
         setMapBindings(bindings);
 
+        // If the URL already names a bill, the hash router is loading it —
+        // picking a default here would race it and open the wrong bill.
+        if (/^#\/?bills\/\d+/.test(window.location.hash)) return;
+
         // Open the most data-rich bill: prefer real ballots, then real text.
         const first =
           billsPayload.bills.find((item) => item.ballots > 0 && item.has_text) ??
@@ -241,6 +248,13 @@ export function App() {
       // keep current bill if the detail fetch fails
     }
   }
+
+  // Each bill carries its own vote state: restore the choice stored on this
+  // device (or none) whenever a different bill is loaded, so one bill's
+  // selection never bleeds into another's vote buttons.
+  useEffect(() => {
+    setSelectedVote(billDetail ? storedChoice(billDetail.bill.id) : null);
+  }, [billDetail]);
 
   // Hash routing: #/bills, #/bills/4140, #/petitions/123, #/my-mp, ... so the
   // back button and shared links work. State is the source of truth; the hash
@@ -430,17 +444,37 @@ export function App() {
           <strong>Anonymous vote mode</strong>
           <span>Receipt ready · checkpoint hash published</span>
         </div>
+        <div className="nations-card">
+          <NationFlags />
+          <span>One platform for all four nations</span>
+        </div>
       </aside>
 
       <main>
         <header className="topbar">
-          <div className="searchbox">
-            <Search size={18} />
-            <input aria-label="Search bills, topics, and representatives" placeholder="Search bills, topics, representatives" />
-          </div>
+          <GlobalSearch
+            bills={backendBills}
+            petitions={livePetitions}
+            backendLive={backendStatus.status === "live"}
+            onOpenBill={openBackendBill}
+            onOpenMember={(memberId) => {
+              setRepOpenMemberId(memberId);
+              setSelectedTab("representatives");
+            }}
+            onOpenPetition={(petitionId) => {
+              setOpenPetitionId(petitionId);
+              setSelectedTab("petitions");
+            }}
+          />
           <div className="topbar-status">
             <span>Live civic data</span>
-            <strong>{new Date().toLocaleDateString()}</strong>
+            <strong>
+              {new Date().toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric"
+              })}
+            </strong>
           </div>
           {user ? (
             <div className="account-area">
@@ -602,7 +636,7 @@ export function App() {
             <div className="map-controls">
               <div>
                 <h2>Full map analysis</h2>
-                <p>Switch layers to compare vote, compass, debate intensity, and MP divergence.</p>
+                <p>{MAP_MODE_META[mapMode].description}</p>
               </div>
               <div className="segmented">
                 {(["vote", "alignment", "compass", "debate"] as MapMode[]).map((mode) => (
@@ -611,7 +645,7 @@ export function App() {
                     className={mapMode === mode ? "selected" : ""}
                     onClick={() => setMapMode(mode)}
                   >
-                    {mode}
+                    {MAP_MODE_META[mode].label}
                   </button>
                 ))}
               </div>
@@ -623,10 +657,13 @@ export function App() {
               onSelect={setSelectedConstituency}
               bindings={mapBindings}
               aggregates={billAggregatesBySeat}
+              autoFocus={Boolean(user?.constituencyId)}
             />
           </section>
         )}
-        {selectedTab === "representatives" && <RepresentativesPanel />}
+        {selectedTab === "representatives" && (
+          <RepresentativesPanel openMemberId={repOpenMemberId} onOpenBill={openBackendBill} />
+        )}
         {selectedTab === "voice" && (
           <section className="workspace-section">
             <div className="section-heading">

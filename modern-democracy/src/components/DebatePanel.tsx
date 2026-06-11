@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, BadgeCheck, Ban, MessageSquare, Send } from "lucide-react";
+import { AlertTriangle, BadgeCheck, Ban, HelpCircle, MessageSquare, Send } from "lucide-react";
 import {
   fetchDebate,
   submitDebatePost,
   type BackendDebatePost
 } from "../lib/api";
+import { HelpTrigger } from "./HelpTrigger";
 import type { DebatePost, VoteChoice } from "../data/types";
 
 type DebatePanelProps = {
@@ -88,7 +89,12 @@ export function DebatePanel({
       <div className="section-heading">
         <MessageSquare size={20} />
         <div>
-          <h2>AI moderated debate</h2>
+          <h2>
+            AI moderated debate
+            <HelpTrigger topicId="moderation" inline>
+              <HelpCircle size={16} />
+            </HelpTrigger>
+          </h2>
           <p>Legitimate political concerns are protected. Personal attacks escalate temporary bans.</p>
         </div>
       </div>

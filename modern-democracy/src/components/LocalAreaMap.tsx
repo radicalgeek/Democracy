@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { cleanLegacySvg } from "./ConstituencyMap";
+import { cleanLegacySvg, seatCoreBBox } from "./ConstituencyMap";
 import type { ConstituencyLean, MapBindings, SeatBinding } from "../lib/api";
 
 type LocalMode = "party" | "lean" | "turnout";
@@ -27,27 +27,6 @@ export function leanLabel(lean: { x: number; y: number } | null | undefined) {
   const econ = lean.x < 0 ? "left" : "right";
   const social = lean.y < 0 ? "libertarian" : "authoritarian";
   return `${econ}-${social}`;
-}
-
-/**
- * Bounding box of a seat's actual shape. Legacy seat paths can carry extra
- * subpaths (label leaders far from the seat), so a raw getBBox can span half
- * the map. The seat outline is always the densest subpath.
- */
-function seatCoreBBox(svg: SVGSVGElement, seat: SVGPathElement) {
-  const d = seat.getAttribute("d") ?? "";
-  const subpaths = d.split(/(?=[Mm])/).filter((part) => part.trim());
-  if (subpaths.length <= 1) return seat.getBBox();
-  const densest = subpaths.reduce((best, part) =>
-    (part.match(/[-\d.]+/g) ?? []).length > (best.match(/[-\d.]+/g) ?? []).length ? part : best
-  );
-  const probe = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  probe.setAttribute("d", densest);
-  probe.setAttribute("fill", "none");
-  svg.appendChild(probe);
-  const box = probe.getBBox();
-  svg.removeChild(probe);
-  return box;
 }
 
 function turnoutColor(ballots: number, maxBallots: number) {

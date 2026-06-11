@@ -414,13 +414,23 @@ h3 {
   min-height: 520px;
 }
 
+.legacy-map-stage {
+  position: relative;
+}
+
 .legacy-map-svg {
   width: 100%;
   min-height: 620px;
   max-height: 72vh;
-  overflow: auto;
+  overflow: hidden;
   border-radius: 8px;
   background: #eef3f5;
+  cursor: grab;
+  touch-action: none;
+}
+
+.legacy-map-svg:active {
+  cursor: grabbing;
 }
 
 .legacy-map-svg svg {
@@ -428,8 +438,43 @@ h3 {
   display: block;
   width: 100% !important;
   height: auto !important;
-  min-width: 860px;
-  overflow: visible !important;
+  max-height: 70vh;
+  margin: 0 auto;
+  overflow: hidden !important;
+}
+
+.map-zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-zoom-controls button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #cbd8dd;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #243239;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(17, 27, 32, 0.12);
+}
+
+.map-zoom-controls button:hover {
+  background: #f0f6f8;
+}
+
+.map-zoom-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #526169;
+  text-align: center;
 }
 
 .legacy-map-svg path.seat {
@@ -545,10 +590,13 @@ h3 {
 .compass svg {
   width: 100%;
   max-width: 220px;
+  height: auto;
+  aspect-ratio: 1;
 }
 
 .compass.compact svg {
   max-width: 86px;
+  aspect-ratio: 1;
 }
 
 .compass rect {
@@ -1103,6 +1151,115 @@ button.ghost {
   gap: 18px;
 }
 
+/* Two-column hero: copy on the left, the map artwork on the right. */
+.landing-hero.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 36px;
+  align-items: center;
+  text-align: left;
+  max-width: none;
+  margin: 12px 0 0;
+}
+
+.landing-hero.split .landing-cta {
+  justify-content: flex-start;
+}
+
+.landing-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.landing-kicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.landing-kicker .nation-flags {
+  gap: 4px;
+}
+
+.landing-kicker .nation-flag {
+  width: 22px;
+  height: 13px;
+  border-radius: 2px;
+}
+
+/* --- Map artwork panel --- */
+
+.map-art {
+  position: relative;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 90% at 70% 12%, rgba(20, 123, 142, 0.35), transparent 60%),
+    linear-gradient(160deg, #0f1d24, #13232a 55%, #0c161b);
+  border: 1px solid #24383f;
+  box-shadow: var(--shadow);
+  padding: 22px 22px 16px;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.map-art.ready {
+  opacity: 1;
+}
+
+.map-art-svg {
+  flex: 1;
+  min-height: 0;
+}
+
+.map-art-svg svg {
+  position: static !important;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 520px;
+  /* the cropped-out city blow-up subpaths must not paint past the viewBox */
+  overflow: hidden !important;
+  filter: drop-shadow(0 14px 26px rgba(5, 12, 15, 0.55));
+}
+
+.map-art-caption {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8fa6ad;
+}
+
+/* --- Flag ribbon divider --- */
+
+.flag-ribbon {
+  display: block;
+  width: 100%;
+  height: 84px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  margin: -6px 0;
+}
+
+.landing-footer-flags {
+  display: flex;
+  justify-content: center;
+}
+
+.landing-footer {
+  flex-wrap: wrap;
+}
+
 .landing-hero h1 {
   font-size: 40px;
   line-height: 1.15;
@@ -1330,6 +1487,23 @@ button.ghost {
 
   .landing-hero h1 {
     font-size: 30px;
+  }
+
+  .landing-hero.split {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .map-art {
+    min-height: 320px;
+  }
+
+  .map-art-svg svg {
+    max-height: 360px;
+  }
+
+  .flag-ribbon {
+    height: 56px;
   }
 }
 
@@ -2051,6 +2225,237 @@ button.ghost {
   }
 }
 
+/* Help system styles */
+.help-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: var(--teal);
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.help-trigger:hover {
+  border-color: var(--teal);
+  background: rgba(20, 123, 142, 0.05);
+}
+
+.help-trigger svg {
+  flex-shrink: 0;
+}
+
+.help-trigger-inline {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--teal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.help-trigger-inline:hover {
+  opacity: 1;
+}
+
+.help-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(24, 38, 48, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.help-modal {
+  background: var(--panel);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.help-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.help-modal-header h2 {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.help-modal-header p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.help-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.help-close:hover {
+  opacity: 1;
+}
+
+.help-modal-content {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.help-modal-content p {
+  margin: 0 0 12px;
+}
+
+.help-modal-content p:last-child {
+  margin-bottom: 0;
+}
+
+.help-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Achievement badge */
+.achievement-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(20, 123, 142, 0.1), rgba(22, 138, 90, 0.1));
+  border: 1px solid var(--teal);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.achievement-badge.locked {
+  opacity: 0.5;
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--line);
+}
+
+.achievement-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.engagement-level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.engagement-level-badge.curious {
+  background: rgba(52, 108, 170, 0.1);
+  color: #356caa;
+  border: 1px solid rgba(52, 108, 170, 0.3);
+}
+
+.engagement-level-badge.engaged {
+  background: rgba(22, 138, 90, 0.1);
+  color: #168a5a;
+  border: 1px solid rgba(22, 138, 90, 0.3);
+}
+
+.engagement-level-badge.committed {
+  background: rgba(201, 146, 44, 0.1);
+  color: #c9922c;
+  border: 1px solid rgba(201, 146, 44, 0.3);
+}
+
+.engagement-level-badge.scholar {
+  background: linear-gradient(135deg, rgba(201, 146, 44, 0.1), rgba(52, 108, 170, 0.1));
+  color: #c9922c;
+  border: 1px solid rgba(201, 146, 44, 0.3);
+}
+
+.engagement-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #c9922c;
+}
+
+.engagement-progress {
+  width: 100%;
+  height: 6px;
+  background: var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.engagement-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--green));
+  transition: width 0.3s ease;
+}
+
 /* --- rich dashboard data views --- */
 
 .dashboard-split {
@@ -2153,4 +2558,144 @@ button.ghost {
   .dashboard-split {
     grid-template-columns: 1fr;
   }
+}
+
+/* --- Global search dropdown --- */
+
+.global-search {
+  position: relative;
+}
+
+.search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(17, 27, 32, 0.18);
+  padding: 8px;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.search-group {
+  display: grid;
+  gap: 2px;
+}
+
+.search-group + .search-group {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.search-group-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #526169;
+  padding: 2px 8px;
+}
+
+.search-group button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.search-group button:hover,
+.search-group button:focus {
+  background: #eef3f5;
+  outline: none;
+}
+
+.search-group button span {
+  display: grid;
+}
+
+.search-group button em {
+  font-style: normal;
+  font-size: 12px;
+  color: #526169;
+}
+
+.search-empty {
+  margin: 6px 8px;
+  font-size: 13px;
+  color: #526169;
+}
+
+/* --- Vote panel: already-voted note --- */
+
+.vote-note {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #526169;
+  background: #f0f6f8;
+  border: 1px solid #cbd8dd;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+/* --- Four-nations flag strip --- */
+
+.nations-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #1a282e;
+  border: 1px solid #2c4048;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.nations-card span {
+  font-size: 11px;
+  color: #9fb3ba;
+}
+
+.nation-flags {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.nation-flag {
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+/* --- Division rows: official links and in-app bill links --- */
+
+.division-row .division-link {
+  display: grid;
+  place-items: center;
+  color: #526169;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.division-row .division-link:hover {
+  background: #eef3f5;
+  color: var(--ink);
+}
+
+.division-row.clickable {
+  cursor: pointer;
+}
+
+.division-row.clickable:hover {
+  border-color: #9cc0ca;
+  box-shadow: 0 2px 10px rgba(17, 27, 32, 0.08);
 }

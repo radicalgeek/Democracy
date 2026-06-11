@@ -259,7 +259,7 @@ function PetitionDetail({
           <div className="status-row">
             <span>Petition</span>
             <span>{stateLabel(petition.state)}</span>
-            {petition.openedAt && <span>Opened {new Date(petition.openedAt).toLocaleDateString()}</span>}
+            {petition.openedAt && <span>Opened {new Date(petition.openedAt).toLocaleDateString("en-GB")}</span>}
           </div>
           <h1>{petition.action}</h1>
           {analyses.summary?.summary ? (

@@ -5,6 +5,7 @@ import { rebuildSeatBindings } from "./services/mapping.js";
 import { importDivisions } from "./services/divisions.js";
 import { importNews } from "./services/news.js";
 import { analyzePetitions, importPetitions } from "./services/petitions.js";
+import { computeEngagementStatsForUser } from "./services/learning.js";
 import {
   importBills,
   importBillTexts,
@@ -182,4 +183,19 @@ export async function checkpointAllBills() {
     if (result) published += 1;
   }
   return { published };
+}
+
+/** Compute daily engagement stats for all users (nightly cron job). */
+export async function computeAllEngagementStats() {
+  const users = await sql`select id from users order by id`;
+  let computed = 0;
+  for (const user of users) {
+    try {
+      await computeEngagementStatsForUser(sql, user.id as number);
+      computed += 1;
+    } catch (err) {
+      console.error(`Failed to compute engagement for user ${user.id}:`, err);
+    }
+  }
+  return { computed, total: users.length };
 }

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { BadgeCheck, Check, Loader2, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Check, HelpCircle, Loader2, ShieldCheck } from "lucide-react";
 import {
   castVote,
   storedReceipt,
   verifyReceipt,
   type ReceiptVerification
 } from "../lib/api";
+import { HelpTrigger } from "./HelpTrigger";
 import type { IntegritySnapshot, VoteChoice } from "../data/types";
 
 type VotePanelProps = {
@@ -67,6 +68,9 @@ export function VotePanel({
         <ShieldCheck size={18} />
         <div>
           <h3>Cast civic vote</h3>
+          <HelpTrigger topicId="anonymous-voting" inline>
+            <HelpCircle size={16} />
+          </HelpTrigger>
           <p>
             {!signedIn
               ? "Create an account to cast a vote in your constituency."
@@ -76,6 +80,12 @@ export function VotePanel({
           </p>
         </div>
       </div>
+      {liveBillId != null && receipt != null && (
+        <p className="vote-note">
+          Your anonymous ballot on this bill is already in — one vote per person, so the buttons
+          are locked. Your receipt is below.
+        </p>
+      )}
       <div className="vote-actions">
         {(["for", "against", "abstain"] as VoteChoice[]).map((choice) => (
           <button
@@ -96,7 +106,12 @@ export function VotePanel({
       {castError && <p className="vote-error">{castError}</p>}
       {liveBillId && receipt ? (
         <div className="receipt-card">
-          <span>Your private receipt</span>
+          <span>
+            Your private receipt
+            <HelpTrigger topicId="vote-receipts" inline>
+              <HelpCircle size={14} />
+            </HelpTrigger>
+          </span>
           <strong>{receipt.slice(0, 18)}...</strong>
           <p>Proves your ballot's inclusion without revealing your choice.</p>
           <button

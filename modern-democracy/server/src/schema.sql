@@ -311,3 +311,42 @@ create table if not exists news_petition_links (
   petition_id integer not null references petitions(id),
   primary key (news_item_id, petition_id)
 );
+
+-- Gamification: help topic views
+create table if not exists user_help_views (
+  user_id bigint not null references users(id),
+  topic_id text not null,
+  viewed_at timestamptz default now(),
+  unique (user_id, topic_id)
+);
+create index if not exists user_help_views_user_idx on user_help_views (user_id);
+
+-- Gamification: achievements
+create table if not exists user_achievements (
+  id bigserial primary key,
+  user_id bigint not null references users(id),
+  achievement_id text not null,
+  unlocked_at timestamptz default now(),
+  condition_progress jsonb default '{}',
+  unique (user_id, achievement_id)
+);
+create index if not exists user_achievements_user_idx on user_achievements (user_id);
+
+-- Gamification: engagement stats (daily snapshot)
+create table if not exists user_engagement_stats (
+  id bigserial primary key,
+  user_id bigint not null references users(id),
+  period_date date not null,
+  bills_voted_cumulative int default 0,
+  debate_posts_cumulative int default 0,
+  constituencies_explored int default 0,
+  help_topics_viewed_cumulative int default 0,
+  current_streak int default 0,
+  current_engagement_level text default 'inactive'
+    check (current_engagement_level in ('inactive', 'curious', 'engaged', 'committed', 'scholar')),
+  learning_achievements jsonb default '[]',
+  created_at timestamptz default now(),
+  unique (user_id, period_date)
+);
+create index if not exists engagement_stats_user_idx on user_engagement_stats (user_id, period_date desc);
+create index if not exists engagement_stats_period_idx on user_engagement_stats (period_date);

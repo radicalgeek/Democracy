@@ -1,9 +1,10 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, HelpCircle } from "lucide-react";
 import type { Bill, VoteChoice } from "../data/types";
 import { mapBackendNews, type BackendBillDetail, type MapBindings } from "../lib/api";
 import { Compass } from "./Compass";
-import { ConstituencyMap } from "./ConstituencyMap";
+import { ConstituencyMap, MAP_MODE_META } from "./ConstituencyMap";
 import { DebatePanel } from "./DebatePanel";
+import { HelpTrigger } from "./HelpTrigger";
 import { NewsLens } from "./NewsLens";
 import { VotePanel } from "./VotePanel";
 
@@ -71,7 +72,12 @@ export function BillView({
       <section className="hero-workspace">
         <div className="bill-copy">
           <div className="status-row">
-            <span>{bill.house}</span>
+            <span>
+              <HelpTrigger topicId="bill-process" inline label="">
+                <HelpCircle size={14} style={{ marginRight: "4px", marginTop: "-2px" }} />
+              </HelpTrigger>
+              {bill.house}
+            </span>
             <span>{bill.stage}</span>
             <span>{bill.status}</span>
           </div>
@@ -110,7 +116,7 @@ export function BillView({
                   className={mapMode === mode ? "selected" : ""}
                   onClick={() => setMapMode(mode)}
                 >
-                  {mode}
+                  {MAP_MODE_META[mode].label}
                 </button>
               ))}
             </div>
@@ -149,7 +155,12 @@ export function BillView({
           </section>
 
           <section className="panel">
-            <h3>Political direction</h3>
+            <h3>
+              Political direction
+              <HelpTrigger topicId="compass" inline>
+                <HelpCircle size={16} />
+              </HelpTrigger>
+            </h3>
             <Compass point={bill.compass} />
             <p className="muted">{bill.compass.rationale}</p>
           </section>

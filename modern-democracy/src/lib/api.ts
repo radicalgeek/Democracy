@@ -652,3 +652,72 @@ export async function submitDebatePost(
   }
   return payload;
 }
+
+// Learning & gamification API
+export type EngagementStats = {
+  billsVoted: number;
+  debatePostsCreated: number;
+  constituenciesExplored: number;
+  helpTopicsViewed: number;
+  currentStreak: number;
+  engagementLevel: string;
+  achievements: string[];
+  nextMilestone: {
+    target: string;
+    billsNeeded: number;
+    billsRemaining: number;
+    topicsNeeded: number;
+    topicsRemaining: number;
+  } | null;
+};
+
+export async function fetchEngagementStats(): Promise<{ engagement: EngagementStats } | null> {
+  const token = storedToken();
+  if (!token) return null;
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/me/engagement`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function markHelpViewedBackend(topicId: string): Promise<boolean> {
+  const token = storedToken();
+  if (!token) return false;
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/me/help-view`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ topicId })
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function fetchLearningStats(): Promise<{
+  learning: {
+    helpTopicsViewed: string[];
+    achievements: Array<{ id: string; unlockedAt: string }>;
+  };
+} | null> {
+  const token = storedToken();
+  if (!token) return null;
+  try {
+    const response = await fetch(`${API_BASE}/api/auth/me/learning`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}

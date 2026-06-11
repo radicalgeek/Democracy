@@ -9,6 +9,8 @@ import {
   ShieldCheck,
   Vote
 } from "lucide-react";
+import { FlagRibbon, MapArt } from "./LandingArt";
+import { NationFlags } from "./NationFlags";
 
 type LandingProps = {
   onCreateAccount: () => void;
@@ -37,31 +39,40 @@ export function Landing({ onCreateAccount, onSignIn, onExplore }: LandingProps) 
         </div>
       </header>
 
-      <section className="landing-hero">
-        <h1>
-          Parliament votes on your behalf.
-          <br />
-          Now you can vote too — and see the gap.
-        </h1>
-        <p>
-          Democracy lets you cast your own vote on the same bills MPs debate in Westminster,
-          deliberate with other citizens, and compare what your constituency thinks with how your MP
-          actually votes.
-        </p>
-        <div className="landing-cta">
-          <button className="primary" onClick={onCreateAccount}>
-            <Vote size={18} /> Create your account
-          </button>
-          <button className="ghost" onClick={onExplore}>
-            Explore first, sign up later
-          </button>
+      <section className="landing-hero split">
+        <div className="landing-hero-copy">
+          <div className="landing-kicker">
+            <NationFlags />
+            <span>England · Scotland · Wales · Northern Ireland</span>
+          </div>
+          <h1>
+            Parliament votes on your behalf.
+            <br />
+            Now you can vote too — and see the gap.
+          </h1>
+          <p>
+            Democracy lets you cast your own vote on the same bills MPs debate in Westminster,
+            deliberate with other citizens, and compare what your constituency thinks with how your
+            MP actually votes.
+          </p>
+          <div className="landing-cta">
+            <button className="primary" onClick={onCreateAccount}>
+              <Vote size={18} /> Create your account
+            </button>
+            <button className="ghost" onClick={onExplore}>
+              Explore first, sign up later
+            </button>
+          </div>
+          <p className="landing-disclaimer">
+            Democracy is an independent civic platform. Votes here are public opinion — they are
+            not official electoral votes and have no legal effect. We exist to make the will of
+            constituents visible, not to replace the ballot box.
+          </p>
         </div>
-        <p className="landing-disclaimer">
-          Democracy is an independent civic platform. Votes here are public opinion — they are not
-          official electoral votes and have no legal effect. We exist to make the will of
-          constituents visible, not to replace the ballot box.
-        </p>
+        <MapArt />
       </section>
+
+      <FlagRibbon />
 
       <section className="landing-grid">
         <article>
@@ -147,6 +158,9 @@ export function Landing({ onCreateAccount, onSignIn, onExplore }: LandingProps) 
       </section>
 
       <footer className="landing-footer">
+        <div className="landing-footer-flags">
+          <NationFlags />
+        </div>
         <Landmark size={16} />
         <span>
           Built on official UK Parliament data. Not affiliated with the UK Parliament or any
