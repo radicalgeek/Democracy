@@ -6,6 +6,7 @@ import {
   Fingerprint,
   Gavel,
   Landmark,
+  LayoutDashboard,
   Map,
   ScrollText,
   Search,
@@ -16,6 +17,7 @@ import {
 import { AuthScreen, type AuthMode } from "./components/AuthScreen";
 import { BillView } from "./components/BillView";
 import { ConstituencyMap } from "./components/ConstituencyMap";
+import { Dashboard } from "./components/Dashboard";
 import { Landing } from "./components/Landing";
 import { MyMP } from "./components/MyMP";
 import { IntegrationBanner } from "./components/IntegrationBanner";
@@ -45,6 +47,7 @@ import {
 } from "./lib/api";
 
 type Tab =
+  | "home"
   | "bills"
   | "mymp"
   | "petitions"
@@ -54,9 +57,19 @@ type Tab =
   | "transparency";
 type MapMode = "vote" | "alignment" | "compass" | "debate";
 
-const TABS: Tab[] = ["bills", "mymp", "petitions", "map", "representatives", "voice", "transparency"];
+const TABS: Tab[] = [
+  "home",
+  "bills",
+  "mymp",
+  "petitions",
+  "map",
+  "representatives",
+  "voice",
+  "transparency"
+];
 
 const navItems: Array<[string, Tab, typeof FileText]> = [
+  ["Home", "home", LayoutDashboard],
   ["Bills", "bills", FileText],
   ["My MP", "mymp", Landmark],
   ["Petitions", "petitions", ScrollText],
@@ -76,7 +89,7 @@ export function App() {
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [exploring, setExploring] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<Tab>("bills");
+  const [selectedTab, setSelectedTab] = useState<Tab>("home");
   const [billOpen, setBillOpen] = useState(false);
   const [openPetitionId, setOpenPetitionId] = useState<number | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("vote");
@@ -237,7 +250,7 @@ export function App() {
   useEffect(() => {
     function applyHash() {
       const parts = window.location.hash.replace(/^#\/?/, "").split("/");
-      const head = parts[0] || "bills";
+      const head = parts[0] || "home";
       const tab = (head === "my-mp" ? "mymp" : head) as Tab;
       if (!TABS.includes(tab)) return;
       applyingHash.current = true;
@@ -452,6 +465,22 @@ export function App() {
         </header>
 
         <IntegrationBanner statuses={[...statuses, backendStatus]} liveBills={liveBills} />
+
+        {selectedTab === "home" && (
+          <Dashboard
+            user={user}
+            backendBills={backendBills}
+            onOpenBill={openBackendBill}
+            onOpenPetition={(petitionId) => {
+              setSelectedTab("petitions");
+              setOpenPetitionId(petitionId);
+            }}
+            onGoToTab={(tab) => setSelectedTab(tab as Tab)}
+            onRequireAccount={() => setAuthMode("signup")}
+            onVerify={() => setAuthMode("verify")}
+            onStartTour={() => setShowOnboarding(true)}
+          />
+        )}
 
         {selectedTab === "bills" && billOpen && (
           <BillView
