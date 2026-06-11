@@ -16,6 +16,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/dist ./dist
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json ./
+# vite.config.ts must ship with the runtime: `vite preview` reads
+# preview.allowedHosts from it, and without it non-localhost hosts are blocked.
+COPY package.json vite.config.ts ./
 EXPOSE 4173
 CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
