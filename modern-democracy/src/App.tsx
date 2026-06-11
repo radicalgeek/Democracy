@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
   CheckCircle2,
@@ -201,6 +201,20 @@ export function App() {
       mounted = false;
     };
   }, []);
+
+  // Default the map selection to the signed-in user's own constituency once
+  // the seat bindings are loaded. Applied once so manual selection sticks.
+  const homeSeatApplied = useRef(false);
+  useEffect(() => {
+    if (homeSeatApplied.current || !user?.constituencyId || !mapBindings) return;
+    const entry = Object.entries(mapBindings.bySvgId).find(
+      ([, binding]) => binding.constituency_id === user.constituencyId
+    );
+    if (entry) {
+      setSelectedConstituency(entry[0]);
+      homeSeatApplied.current = true;
+    }
+  }, [user, mapBindings]);
 
   async function openBackendBill(billId: number) {
     try {

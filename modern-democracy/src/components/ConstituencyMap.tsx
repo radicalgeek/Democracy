@@ -193,6 +193,12 @@ export function ConstituencyMap({
     };
   }, []);
 
+  // Sync the legacy-SVG selection when the app sets a seat id from outside
+  // (e.g. defaulting the map to the signed-in user's own constituency).
+  useEffect(() => {
+    if (bindings?.bySvgId[selectedId]) setLegacySeat(selectedId);
+  }, [bindings, selectedId]);
+
   useEffect(() => {
     const root = mapRef.current;
     if (!root || !svgMarkup) return;
@@ -204,9 +210,11 @@ export function ConstituencyMap({
       const id = seat.id || seat.getAttribute("name") || "Unknown";
       const binding = bindings?.bySvgId[id];
       seat.style.fill = seatColor(id, mode, binding, aggregates);
-      // original 2015 cartography: black hairline seat borders
-      seat.style.stroke = "#1a1a1a";
-      seat.style.strokeWidth = "0.5";
+      // original 2015 cartography: black hairline seat borders; the selected
+      // seat gets a heavier teal outline so the selection is visible.
+      const isSelected = id === legacySeat;
+      seat.style.stroke = isSelected ? "#147b8e" : "#1a1a1a";
+      seat.style.strokeWidth = isSelected ? "2" : "0.5";
       seat.style.cursor = "pointer";
       seat.setAttribute("tabindex", "0");
       seat.setAttribute("role", "button");
@@ -232,7 +240,7 @@ export function ConstituencyMap({
     });
 
     return () => cleanup.forEach((dispose) => dispose());
-  }, [aggregates, bindings, mode, onSelect, svgMarkup]);
+  }, [aggregates, bindings, legacySeat, mode, onSelect, svgMarkup]);
 
   return (
     <div className="map-frame">
