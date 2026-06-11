@@ -428,6 +428,109 @@ export function mapBackendNews(item: BackendNewsItem): import("../data/types").N
   };
 }
 
+export type RepListMember = {
+  id: number;
+  name: string;
+  gender: string | null;
+  thumbnail_url: string | null;
+  party: string | null;
+  party_abbreviation: string | null;
+  party_colour: string | null;
+  constituency_id: number | null;
+  constituency: string | null;
+  division_votes: number;
+};
+
+export type PartySummary = {
+  id: number;
+  name: string;
+  abbreviation: string | null;
+  colour: string | null;
+  seats: number;
+  discipline: number | null;
+  compass: { x: number; y: number; sample: number } | null;
+};
+
+export type RepDetail = {
+  member: {
+    id: number;
+    name: string;
+    gender: string | null;
+    thumbnailUrl: string | null;
+    party: string | null;
+    partyAbbreviation: string | null;
+    partyColour: string | null;
+    constituencyId: number | null;
+    constituency: string | null;
+    memberSince: string | null;
+    synopsis: string | null;
+  };
+  biography: {
+    representations?: Array<{ name: string; startDate?: string; endDate?: string | null }>;
+    governmentPosts?: Array<{ name: string; startDate?: string; endDate?: string | null }>;
+    oppositionPosts?: Array<{ name: string; startDate?: string; endDate?: string | null }>;
+    committeeMemberships?: Array<{ name: string; startDate?: string; endDate?: string | null }>;
+  } | null;
+  latestElection: {
+    electionDate?: string;
+    majority?: number;
+    turnout?: number;
+    electorate?: number;
+    candidates?: Array<{
+      name: string;
+      votes: number;
+      voteShare: number;
+      party?: { name?: string; backgroundColour?: string };
+    }>;
+  } | null;
+  stats: { divisionsVoted: number; rebellions: number; partyLinePercent: number | null };
+  compass: { x: number; y: number; sample: number } | null;
+  votingRecord: Array<{
+    divisionId: number;
+    title: string;
+    date: string;
+    vote: "aye" | "no";
+    ayeCount: number;
+    noCount: number;
+    billId: number | null;
+    billTitle: string | null;
+    rebelled: boolean;
+  }>;
+};
+
+export type ConstituencyElection = {
+  electionDate?: string;
+  electionTitle?: string;
+  result?: string;
+  winningParty?: { name?: string; backgroundColour?: string; abbreviation?: string } | null;
+  electorate?: number;
+  turnout?: number;
+  majority?: number;
+};
+
+export function fetchRepresentatives(params: { search?: string; party?: string; skip?: number; take?: number }) {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+  if (params.party) query.set("party", params.party);
+  if (params.skip) query.set("skip", String(params.skip));
+  if (params.take) query.set("take", String(params.take));
+  return getJson<{ total: number; members: RepListMember[] }>(`/api/representatives?${query}`);
+}
+
+export function fetchRepresentativeDetail(memberId: number) {
+  return getJson<RepDetail>(`/api/representatives/${memberId}`);
+}
+
+export function fetchParties() {
+  return getJson<{ parties: PartySummary[] }>("/api/parties");
+}
+
+export function fetchConstituencyElections(constituencyId: number) {
+  return getJson<{ elections: ConstituencyElection[] }>(
+    `/api/constituencies/${constituencyId}/elections`
+  );
+}
+
 export function fetchPetitions() {
   return getJson<{ petitions: BackendPetition[] }>("/api/petitions");
 }

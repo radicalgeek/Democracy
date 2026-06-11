@@ -264,6 +264,24 @@ alter table debate_posts add column if not exists petition_id integer references
 alter table debate_posts alter column bill_id drop not null;
 create index if not exists debate_petition_idx on debate_posts (petition_id, id desc);
 
+-- Rich member/constituency data fetched lazily from the Members API and
+-- cached as JSONB (refreshed when stale) — keeps import cycles light while
+-- letting detail pages be as rich as the upstream API allows.
+create table if not exists member_profiles (
+  member_id integer primary key,
+  synopsis text,
+  membership_start date,
+  biography jsonb,
+  latest_election jsonb,
+  fetched_at timestamptz not null default now()
+);
+
+create table if not exists constituency_election_cache (
+  constituency_id integer primary key,
+  elections jsonb not null,
+  fetched_at timestamptz not null default now()
+);
+
 -- News groundwork (ingestion is a later milestone)
 create table if not exists news_sources (
   id bigserial primary key,

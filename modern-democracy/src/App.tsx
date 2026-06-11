@@ -25,6 +25,7 @@ import { IntegrationBanner } from "./components/IntegrationBanner";
 import { NewsLens } from "./components/NewsLens";
 import { ONBOARDED_KEY, Onboarding } from "./components/Onboarding";
 import { PetitionsPanel } from "./components/PetitionsPanel";
+import { RepresentativesPanel } from "./components/RepresentativesPanel";
 import { VotePanel } from "./components/VotePanel";
 import { sampleBill, samplePetitions } from "./data/sampleData";
 import type {
@@ -683,42 +684,7 @@ export function App() {
             />
           </section>
         )}
-        {selectedTab === "representatives" && (
-          <section className="workspace-section">
-            <div className="section-heading">
-              <Landmark size={20} />
-              <div>
-                <h2>Representative alignment</h2>
-                <p>Compare MP votes with the public vote in each constituency.</p>
-              </div>
-            </div>
-            <div className="representative-grid">
-              {bill.representatives.map((mp) => {
-                const constituency = bill.constituencies.find((item) => item.id === mp.constituencyId);
-                return (
-                  <article className="representative-card" key={mp.id}>
-                    <header>
-                      <div className="avatar">{mp.name.slice(0, 1)}</div>
-                      <div>
-                        <strong>{mp.name}</strong>
-                        <span>
-                          {mp.party} · {constituency?.name}
-                        </span>
-                      </div>
-                    </header>
-                    <div className="alignment-meter">
-                      <div style={{ width: `${mp.alignment}%` }} />
-                    </div>
-                    <p>
-                      Voted <strong>{mp.recentVote}</strong>; public alignment{" "}
-                      <strong>{mp.alignment}%</strong>
-                    </p>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-        )}
+        {selectedTab === "representatives" && <RepresentativesPanel />}
         {selectedTab === "voice" && (
           <section className="workspace-section">
             <div className="section-heading">

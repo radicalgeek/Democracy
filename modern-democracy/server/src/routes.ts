@@ -24,6 +24,12 @@ import {
   postPetitionDebate
 } from "./services/petitions.js";
 import { newsForSubject } from "./services/news.js";
+import {
+  constituencyElections,
+  listRepresentatives,
+  partySummaries,
+  representativeDetail
+} from "./services/representatives.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 
@@ -176,6 +182,32 @@ export async function registerRoutes(app: FastifyInstance) {
     const profile = await constituencyProfile(sql, constituencyId);
     if (!profile) return reply.code(404).send({ error: "constituency not found" });
     return profile;
+  });
+
+  app.get("/api/representatives", async (request) => {
+    const query = request.query as { search?: string; party?: string; skip?: string; take?: string };
+    return listRepresentatives(sql, {
+      search: query.search,
+      party: query.party,
+      skip: Number(query.skip ?? 0),
+      take: Number(query.take ?? 24)
+    });
+  });
+
+  app.get("/api/representatives/:id", async (request, reply) => {
+    const memberId = Number((request.params as { id: string }).id);
+    const detail = await representativeDetail(sql, memberId);
+    if (!detail) return reply.code(404).send({ error: "representative not found" });
+    return detail;
+  });
+
+  app.get("/api/parties", async () => {
+    return { parties: await partySummaries(sql) };
+  });
+
+  app.get("/api/constituencies/:id/elections", async (request) => {
+    const constituencyId = Number((request.params as { id: string }).id);
+    return { elections: await constituencyElections(sql, constituencyId) };
   });
 
   app.get("/api/petitions", async () => {
