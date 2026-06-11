@@ -1,0 +1,42 @@
+# Web image must be built with VITE_API_BASE="" so the SPA calls /api on the
+# same origin; the ingress routes /api to the api service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: democracy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: democracy-web
+  template:
+    metadata:
+      labels:
+        app: democracy-web
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      containers:
+        - name: web
+          image: ghcr.io/radicalgeek/democracy-web:0.1.0
+          ports:
+            - containerPort: 4173
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 4173
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: democracy
+spec:
+  selector:
+    app: democracy-web
+  ports:
+    - port: 4173
+      targetPort: 4173

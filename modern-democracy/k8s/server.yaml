@@ -1,0 +1,89 @@
+# api + worker share one image (see modern-democracy/server/Dockerfile).
+# IMAGE_SERVER is finalized once the registry project exists.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: democracy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: democracy-api
+  template:
+    metadata:
+      labels:
+        app: democracy-api
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      containers:
+        - name: api
+          image: ghcr.io/radicalgeek/democracy-server:0.1.0
+          env:
+            - name: PORT
+              value: "8787"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: democracy-db
+                  key: url
+            # LiteLLM router reached in-cluster — no port-forward needed.
+            - name: LLM_BASE_URL
+              value: http://dev-team-litellm-router.dev-team.svc.cluster.local:4000
+            - name: LLM_MODEL
+              value: router-local
+          ports:
+            - containerPort: 8787
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8787
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: democracy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: democracy-worker
+  template:
+    metadata:
+      labels:
+        app: democracy-worker
+    spec:
+      nodeSelector:
+        kubernetes.io/arch: arm64
+      containers:
+        - name: worker
+          image: ghcr.io/radicalgeek/democracy-server:0.1.0
+          command: ["node", "dist/worker.js"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: democracy-db
+                  key: url
+            - name: DEMO_SEED
+              value: "true"
+            - name: LLM_BASE_URL
+              value: http://dev-team-litellm-router.dev-team.svc.cluster.local:4000
+            - name: LLM_MODEL
+              value: router-local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: democracy
+spec:
+  selector:
+    app: democracy-api
+  ports:
+    - port: 8787
+      targetPort: 8787
