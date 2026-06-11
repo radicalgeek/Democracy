@@ -236,6 +236,34 @@ create table if not exists division_votes (
 );
 create index if not exists division_votes_member_idx on division_votes (member_id, division_id desc);
 
+-- Petitions imported from petition.parliament.uk. Unlike bill ballots,
+-- petition votes are account-linked (one per user, like a public petition
+-- signature) — only aggregates are ever published.
+create table if not exists petitions (
+  id integer primary key,
+  action text not null,
+  background text,
+  additional_details text,
+  state text not null,
+  signature_count integer not null default 0,
+  opened_at timestamptz,
+  imported_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists petition_votes (
+  petition_id integer not null references petitions(id),
+  user_id bigint not null references users(id),
+  choice text not null check (choice in ('for', 'against', 'abstain')),
+  cast_at timestamptz not null default now(),
+  primary key (petition_id, user_id)
+);
+
+-- Debate generalized to petitions: posts attach to a bill OR a petition.
+alter table debate_posts add column if not exists petition_id integer references petitions(id);
+alter table debate_posts alter column bill_id drop not null;
+create index if not exists debate_petition_idx on debate_posts (petition_id, id desc);
+
 -- News groundwork (ingestion is a later milestone)
 create table if not exists news_sources (
   id bigserial primary key,

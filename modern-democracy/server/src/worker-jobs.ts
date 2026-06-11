@@ -3,6 +3,7 @@ import { analyzeAndStore } from "./services/ai.js";
 import { castBallot, createSession, issueCredential, runCheckpoint } from "./services/integrity.js";
 import { rebuildSeatBindings } from "./services/mapping.js";
 import { importDivisions } from "./services/divisions.js";
+import { analyzePetitions, importPetitions } from "./services/petitions.js";
 import {
   importBills,
   importBillTexts,
@@ -14,9 +15,11 @@ export async function runFullImport() {
   const bills = await importBills(sql);
   const texts = await importBillTexts(sql);
   const divisions = await importDivisions(sql);
+  const petitions = await importPetitions(sql);
   const bindings = await rebuildSeatBindings(sql);
   const analyses = await analyzeImportedBills();
-  return { constituencies, bills, texts, divisions, bindings, analyses };
+  const petitionAnalyses = await analyzePetitions(sql);
+  return { constituencies, bills, texts, divisions, petitions, bindings, analyses, petitionAnalyses };
 }
 
 /** Generate summary + compass (with provenance) for bills that have source text. */
@@ -30,8 +33,9 @@ export async function analyzeImportedBills() {
       where bill_id = b.id and text_content is not null
       order by id limit 1
     ) t on true
-    order by b.last_updated desc nulls last
-    limit 8
+    order by exists (select 1 from divisions d where d.bill_id = b.id) desc,
+             b.last_updated desc nulls last
+    limit 12
   `;
 
   let generated = 0;

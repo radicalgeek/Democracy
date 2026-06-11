@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, Landmark, Loader2, ScrollText, UserRound, Vote } from "lucide-react";
+import { BarChart3, Compass as CompassIcon, Landmark, Loader2, ScrollText, UserRound, Vote } from "lucide-react";
+import { CompassCompare } from "./CompassCompare";
 import {
   fetchConstituencyProfile,
   storedChoice,
   type AccountUser,
+  type CompassComparison,
   type ConstituencyProfile
 } from "../lib/api";
 
@@ -17,7 +19,9 @@ function percent(value: number, total: number) {
 }
 
 export function MyMP({ user, onRequireAccount }: MyMPProps) {
-  const [profile, setProfile] = useState<ConstituencyProfile | null>(null);
+  const [profile, setProfile] = useState<
+    (ConstituencyProfile & { compass?: CompassComparison }) | null
+  >(null);
   const [state, setState] = useState<"idle" | "loading" | "ready" | "error">("idle");
 
   const constituencyId = user?.constituencyId ?? null;
@@ -162,6 +166,29 @@ export function MyMP({ user, onRequireAccount }: MyMPProps) {
           </div>
         )}
       </section>
+
+      {profile.compass && (
+        <section className="workspace-section">
+          <div className="section-heading">
+            <CompassIcon size={20} />
+            <div>
+              <h2>Political compass: who stands where</h2>
+              <p>
+                Positions derived from votes on compass-scored bills — the MP's and party's division
+                votes, and civic-vote majorities for this constituency and the country. Voting
+                against a bill counts as endorsing its opposite.
+              </p>
+            </div>
+          </div>
+          <div className="panel">
+            <CompassCompare
+              compass={profile.compass}
+              mpName={mp?.name ?? null}
+              constituencyName={profile.constituency.name}
+            />
+          </div>
+        </section>
+      )}
 
       {alignment.comparisons.length > 0 && (
         <section className="workspace-section">

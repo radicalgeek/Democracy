@@ -108,6 +108,134 @@ export async function importDivisions(sql: Sql, take = 50) {
 
 const PRIVACY_THRESHOLD = Number(process.env.PRIVACY_THRESHOLD ?? 5);
 
+type CompassPoint = { x: number; y: number; sample: number };
+
+function meanVector(points: Array<{ x: number; y: number }>): CompassPoint | null {
+  if (points.length === 0) return null;
+  const x = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+  const y = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+  return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, sample: points.length };
+}
+
+/** Proximity between two compass points as a 0-100 score (28.28 = max distance on a ±10 grid). */
+function proximity(a: CompassPoint | null, b: CompassPoint | null) {
+  if (!a || !b) return null;
+  const distance = Math.hypot(a.x - b.x, a.y - b.y);
+  return Math.max(0, Math.round(100 * (1 - distance / Math.hypot(20, 20))));
+}
+
+/**
+ * Revealed-preference compass positions derived from votes: each division on
+ * a compass-scored bill contributes the bill's compass position (aye) or its
+ * inverse (no). The MP's position is the mean over their division votes; the
+ * party's over all its MPs' votes; the constituency's and country's over
+ * civic ballot majorities on the same scored bills. A documented
+ * approximation — voting against a bill is treated as endorsing its opposite.
+ */
+export async function compassComparison(sql: Sql, constituencyId: number) {
+  // Latest compass analysis per bill, joined to its divisions.
+  const scoredBills = await sql`
+    select distinct on (a.subject_id) (a.subject_id)::int as bill_id,
+           (a.output->>'x')::float as x, (a.output->>'y')::float as y
+    from ai_analyses a
+    where a.subject_type = 'bill' and a.kind = 'compass'
+      and a.output->>'x' is not null
+    order by a.subject_id, a.id desc
+  `;
+  const compassByBill = new Map(
+    scoredBills.map((row) => [row.bill_id as number, { x: row.x as number, y: row.y as number }])
+  );
+  if (compassByBill.size === 0) {
+    return { mp: null, party: null, constituency: null, national: null, proximities: null, partyName: null };
+  }
+  const billIds = [...compassByBill.keys()];
+
+  const [mp] = await sql`
+    select r.id, r.party_id, p.name as party_name
+    from representatives r left join parties p on p.id = r.party_id
+    where r.constituency_id = ${constituencyId} limit 1
+  `;
+
+  const signed = (vote: string, bill: { x: number; y: number }) =>
+    vote === "aye" ? bill : { x: -bill.x, y: -bill.y };
+
+  let mpPoint: CompassPoint | null = null;
+  let partyPoint: CompassPoint | null = null;
+  if (mp) {
+    const mpVotes = await sql`
+      select d.bill_id, dv.vote from division_votes dv
+      join divisions d on d.id = dv.division_id
+      where dv.member_id = ${mp.id} and d.bill_id in ${sql(billIds)}
+    `;
+    mpPoint = meanVector(
+      mpVotes.map((row) => signed(row.vote as string, compassByBill.get(row.bill_id as number)!))
+    );
+
+    if (mp.party_id) {
+      const partyVotes = await sql`
+        select d.bill_id, dv.vote from division_votes dv
+        join divisions d on d.id = dv.division_id
+        join representatives r on r.id = dv.member_id
+        where r.party_id = ${mp.party_id} and d.bill_id in ${sql(billIds)}
+      `;
+      partyPoint = meanVector(
+        partyVotes.map((row) => signed(row.vote as string, compassByBill.get(row.bill_id as number)!))
+      );
+    }
+  }
+
+  // Civic majorities: constituency slice (privacy-gated) and national.
+  const civic = await sql`
+    select bill_id, constituency_id,
+      count(*) filter (where choice = 'for')::int as for_count,
+      count(*) filter (where choice = 'against')::int as against_count,
+      count(*)::int as total
+    from anonymous_ballots
+    where bill_id in ${sql(billIds)}
+    group by bill_id, constituency_id
+  `;
+  const constituencyPoints: Array<{ x: number; y: number }> = [];
+  const nationalTotals = new Map<number, { for: number; against: number }>();
+  for (const row of civic) {
+    const bill = compassByBill.get(row.bill_id as number)!;
+    const national = nationalTotals.get(row.bill_id as number) ?? { for: 0, against: 0 };
+    national.for += row.for_count as number;
+    national.against += row.against_count as number;
+    nationalTotals.set(row.bill_id as number, national);
+    if (
+      row.constituency_id === constituencyId &&
+      (row.total as number) >= PRIVACY_THRESHOLD &&
+      (row.for_count as number) !== (row.against_count as number)
+    ) {
+      constituencyPoints.push(
+        signed((row.for_count as number) > (row.against_count as number) ? "aye" : "no", bill)
+      );
+    }
+  }
+  const nationalPoints: Array<{ x: number; y: number }> = [];
+  for (const [billId, totals] of nationalTotals) {
+    if (totals.for === totals.against) continue;
+    nationalPoints.push(signed(totals.for > totals.against ? "aye" : "no", compassByBill.get(billId)!));
+  }
+
+  const constituencyPoint = meanVector(constituencyPoints);
+  const nationalPoint = meanVector(nationalPoints);
+
+  return {
+    mp: mpPoint,
+    party: partyPoint,
+    partyName: (mp?.party_name as string) ?? null,
+    constituency: constituencyPoint,
+    national: nationalPoint,
+    proximities: {
+      mpConstituency: proximity(mpPoint, constituencyPoint),
+      mpNational: proximity(mpPoint, nationalPoint),
+      mpParty: proximity(mpPoint, partyPoint),
+      partyNational: proximity(partyPoint, nationalPoint)
+    }
+  };
+}
+
 /**
  * Everything the "My MP" surface needs for one constituency: the MP, their
  * recent division record, civic votes cast in this constituency, and an
@@ -218,7 +346,10 @@ export async function constituencyProfile(sql: Sql, constituencyId: number) {
     select count(*)::int as ballots from anonymous_ballots where constituency_id = ${constituencyId}
   `;
 
+  const compass = await compassComparison(sql, constituencyId);
+
   return {
+    compass,
     constituency: { id: constituency.id, name: constituency.name },
     mp: mp
       ? {

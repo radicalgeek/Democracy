@@ -332,8 +332,101 @@ export type ConstituencyProfile = {
   participation: { ballots: number; privacyThreshold: number };
 };
 
+export type CompassVector = { x: number; y: number; sample: number } | null;
+
+export type CompassComparison = {
+  mp: CompassVector;
+  party: CompassVector;
+  partyName: string | null;
+  constituency: CompassVector;
+  national: CompassVector;
+  proximities: {
+    mpConstituency: number | null;
+    mpNational: number | null;
+    mpParty: number | null;
+    partyNational: number | null;
+  } | null;
+};
+
 export function fetchConstituencyProfile(constituencyId: number) {
-  return getJson<ConstituencyProfile>(`/api/constituencies/${constituencyId}/profile`);
+  return getJson<ConstituencyProfile & { compass: CompassComparison }>(
+    `/api/constituencies/${constituencyId}/profile`
+  );
+}
+
+export type BackendPetition = {
+  id: number;
+  action: string;
+  state: string;
+  signature_count: number;
+  opened_at: string | null;
+  for_count: number;
+  against_count: number;
+  abstain_count: number;
+  debate_count: number;
+};
+
+export type PetitionDetailPayload = {
+  petition: {
+    id: number;
+    action: string;
+    background: string | null;
+    additionalDetails: string | null;
+    state: string;
+    signatureCount: number;
+    openedAt: string | null;
+    officialUrl: string;
+  };
+  analyses: {
+    summary: { summary?: string } | null;
+    compass:
+      | { x?: number; y?: number; label?: string; rationale?: string; model?: string; confidence?: number }
+      | null;
+  };
+  votes: { for: number; against: number; abstain: number; total: number };
+  myVote: string | null;
+  posts: BackendDebatePost[];
+};
+
+export function fetchPetitions() {
+  return getJson<{ petitions: BackendPetition[] }>("/api/petitions");
+}
+
+export async function fetchPetitionDetail(petitionId: number) {
+  const token = storedToken();
+  const response = await fetch(`${API_BASE}/api/petitions/${petitionId}`, {
+    headers: {
+      accept: "application/json",
+      ...(token ? { authorization: `Bearer ${token}` } : {})
+    }
+  });
+  if (!response.ok) throw new Error(`petition ${petitionId} returned ${response.status}`);
+  return (await response.json()) as PetitionDetailPayload;
+}
+
+export async function votePetition(petitionId: number, choice: VoteChoice) {
+  const token = storedToken();
+  if (!token) throw new Error("sign-in-required");
+  return postJson<{ ok: boolean }>(`/api/petitions/${petitionId}/vote`, { choice }, token);
+}
+
+export async function submitPetitionDebatePost(
+  petitionId: number,
+  body: string,
+  stance: VoteChoice | null
+): Promise<DebatePostResult> {
+  const token = storedToken();
+  if (!token) throw new Error("sign-in-required");
+  const response = await fetch(`${API_BASE}/api/petitions/${petitionId}/debate`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+    body: JSON.stringify({ body, stance })
+  });
+  const payload = (await response.json()) as DebatePostResult & { error?: string };
+  if (!response.ok && payload.status !== "banned") {
+    throw new Error(payload.error ?? `post failed (${response.status})`);
+  }
+  return payload;
 }
 
 export type ReceiptVerification = {

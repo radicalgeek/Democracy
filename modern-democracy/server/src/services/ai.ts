@@ -12,7 +12,7 @@ const MODEL = process.env.LLM_MODEL ?? "router-local";
 export type Citation = { label: string; url: string };
 
 type AnalysisRequest = {
-  subjectType: "bill" | "debate_post" | "news_item";
+  subjectType: "bill" | "debate_post" | "news_item" | "petition";
   subjectId: string;
   kind: "summary" | "compass" | "moderation";
   text: string;

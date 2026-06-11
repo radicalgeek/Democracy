@@ -599,7 +599,12 @@ export function App() {
           <MyMP user={user} onRequireAccount={() => setAuthMode("signup")} />
         )}
         {selectedTab === "petitions" && (
-          <PetitionsPanel petitions={samplePetitions} livePetitions={livePetitions} />
+          <PetitionsPanel
+            petitions={samplePetitions}
+            livePetitions={livePetitions}
+            signedIn={user != null}
+            onRequireAccount={() => setAuthMode("signup")}
+          />
         )}
         {selectedTab === "debate" && (
           <DebatePanel

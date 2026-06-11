@@ -126,7 +126,13 @@ export async function publicBanCount(sql: Sql, userId: number) {
  */
 export async function moderateAndStorePost(
   sql: Sql,
-  params: { billId: number; userId: number; body: string; stance: string | null }
+  params: {
+    billId?: number;
+    petitionId?: number;
+    userId: number;
+    body: string;
+    stance: string | null;
+  }
 ) {
   const ban = await activeBan(sql, params.userId);
   if (ban) {
@@ -136,8 +142,11 @@ export async function moderateAndStorePost(
   const classification = classifyPost(params.body);
 
   const [post] = await sql`
-    insert into debate_posts (bill_id, user_id, stance, body, moderation_state)
-    values (${params.billId}, ${params.userId}, ${params.stance}, ${params.body}, ${classification.state})
+    insert into debate_posts (bill_id, petition_id, user_id, stance, body, moderation_state)
+    values (
+      ${params.billId ?? null}, ${params.petitionId ?? null},
+      ${params.userId}, ${params.stance}, ${params.body}, ${classification.state}
+    )
     returning id, created_at
   `;
 

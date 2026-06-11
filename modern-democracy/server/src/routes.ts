@@ -17,6 +17,12 @@ import {
   verifyIdentity
 } from "./services/auth.js";
 import { constituencyProfile } from "./services/divisions.js";
+import {
+  castPetitionVote,
+  listPetitions,
+  petitionDetail,
+  postPetitionDebate
+} from "./services/petitions.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 
@@ -168,6 +174,57 @@ export async function registerRoutes(app: FastifyInstance) {
     const profile = await constituencyProfile(sql, constituencyId);
     if (!profile) return reply.code(404).send({ error: "constituency not found" });
     return profile;
+  });
+
+  app.get("/api/petitions", async () => {
+    const petitions = await listPetitions(sql);
+    return { petitions };
+  });
+
+  app.get("/api/petitions/:id", async (request, reply) => {
+    const petitionId = Number((request.params as { id: string }).id);
+    const user = await publicUserFromToken(sql, bearer(request.headers as Record<string, unknown>));
+    const detail = await petitionDetail(sql, petitionId, user?.id ?? null);
+    if (!detail) return reply.code(404).send({ error: "petition not found" });
+    return detail;
+  });
+
+  app.post("/api/petitions/:id/vote", async (request, reply) => {
+    const petitionId = Number((request.params as { id: string }).id);
+    const user = await publicUserFromToken(sql, bearer(request.headers as Record<string, unknown>));
+    if (!user) return reply.code(401).send({ error: "account required" });
+    if (!user.email) return reply.code(403).send({ error: "sign up to vote on petitions" });
+    const body = (request.body ?? {}) as { choice?: string };
+    if (!["for", "against", "abstain"].includes(body.choice ?? "")) {
+      return reply.code(400).send({ error: "choice (for|against|abstain) required" });
+    }
+    const result = await castPetitionVote(
+      sql,
+      user.id,
+      petitionId,
+      body.choice as "for" | "against" | "abstain"
+    );
+    if ("error" in result) return reply.code(404).send(result);
+    return result;
+  });
+
+  app.post("/api/petitions/:id/debate", async (request, reply) => {
+    const petitionId = Number((request.params as { id: string }).id);
+    const user = await publicUserFromToken(sql, bearer(request.headers as Record<string, unknown>));
+    if (!user) return reply.code(401).send({ error: "account required" });
+    const body = (request.body ?? {}) as { body?: string; stance?: string };
+    if (!body.body || body.body.trim().length === 0) {
+      return reply.code(400).send({ error: "post body required" });
+    }
+    const stance = ["for", "against", "abstain"].includes(body.stance ?? "") ? body.stance! : null;
+    const result = await postPetitionDebate(sql, {
+      petitionId,
+      userId: user.id,
+      body: body.body.slice(0, 4000),
+      stance
+    });
+    if (result.status === "banned") return reply.code(403).send(result);
+    return { ...result, publicBanCount: await publicBanCount(sql, user.id) };
   });
 
   app.get("/api/postcode/:postcode", async (request, reply) => {
