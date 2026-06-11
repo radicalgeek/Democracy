@@ -23,6 +23,7 @@ import {
   petitionDetail,
   postPetitionDebate
 } from "./services/petitions.js";
+import { newsForSubject } from "./services/news.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 
@@ -94,7 +95,8 @@ export async function registerRoutes(app: FastifyInstance) {
       from checkpoints where bill_id = ${billId} order by id desc limit 1
     `;
     const aggregates = await billAggregates(sql, billId);
-    return { bill, texts, events, analyses, checkpoint: checkpoint ?? null, aggregates };
+    const news = await newsForSubject(sql, { billId });
+    return { bill, texts, events, analyses, checkpoint: checkpoint ?? null, aggregates, news };
   });
 
   app.get("/api/bills/:id/aggregates", async (request) => {
@@ -186,7 +188,8 @@ export async function registerRoutes(app: FastifyInstance) {
     const user = await publicUserFromToken(sql, bearer(request.headers as Record<string, unknown>));
     const detail = await petitionDetail(sql, petitionId, user?.id ?? null);
     if (!detail) return reply.code(404).send({ error: "petition not found" });
-    return detail;
+    const news = await newsForSubject(sql, { petitionId });
+    return { ...detail, news };
   });
 
   app.post("/api/petitions/:id/vote", async (request, reply) => {

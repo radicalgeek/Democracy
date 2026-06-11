@@ -1670,3 +1670,109 @@ button.ghost {
   font-weight: 600;
   margin-top: 10px;
 }
+
+/* --- Onboarding --- */
+
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 33, 38, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 20px;
+}
+
+.onboarding-modal {
+  position: relative;
+  max-width: 640px;
+  width: 100%;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+
+.onboarding-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.onboarding-step {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.onboarding-step h2 {
+  margin: 0;
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.onboarding-bills {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.onboarding-bill {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.onboarding-bill strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.onboarding-bill p {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+
+.quiz-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quiz-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.quiz-item p {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.quiz-scale {
+  display: flex;
+  gap: 6px;
+}
+
+.quiz-scale button {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 8px 0;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.quiz-scale button.selected {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}

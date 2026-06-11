@@ -23,6 +23,7 @@ import { Landing } from "./components/Landing";
 import { MyMP } from "./components/MyMP";
 import { IntegrationBanner } from "./components/IntegrationBanner";
 import { NewsLens } from "./components/NewsLens";
+import { ONBOARDED_KEY, Onboarding } from "./components/Onboarding";
 import { PetitionsPanel } from "./components/PetitionsPanel";
 import { VotePanel } from "./components/VotePanel";
 import { sampleBill, samplePetitions } from "./data/sampleData";
@@ -38,6 +39,7 @@ import {
   checkBackend,
   clearSession,
   currentUser,
+  mapBackendNews,
   fetchBackendBills,
   fetchBillDetail,
   fetchMapBindings,
@@ -82,6 +84,7 @@ export function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [exploring, setExploring] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [selectedTab, setSelectedTab] = useState<Tab>("workspace");
   const [mapMode, setMapMode] = useState<MapMode>("vote");
   const [selectedConstituency, setSelectedConstituency] = useState(sampleBill.constituencies[0].id);
@@ -216,6 +219,13 @@ export function App() {
     }
   }, [user, mapBindings]);
 
+  // First sign-in: launch the intro tour once the user lands in the app.
+  useEffect(() => {
+    if (user && !authMode && !localStorage.getItem(ONBOARDED_KEY)) {
+      setShowOnboarding(true);
+    }
+  }, [user, authMode]);
+
   async function openBackendBill(billId: number) {
     try {
       setBillDetail(await fetchBillDetail(billId));
@@ -341,6 +351,13 @@ export function App() {
 
   return (
     <div className="app-shell">
+      {showOnboarding && user && (
+        <Onboarding
+          user={user}
+          onClose={() => setShowOnboarding(false)}
+          onGoToMyMP={() => setSelectedTab("mymp")}
+        />
+      )}
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">D</div>
@@ -615,7 +632,13 @@ export function App() {
             onRequireAccount={() => setAuthMode("signup")}
           />
         )}
-        {selectedTab === "news" && <NewsLens items={bill.news} />}
+        {selectedTab === "news" && (
+          <NewsLens
+            items={
+              billDetail?.news?.length ? billDetail.news.map(mapBackendNews) : bill.news
+            }
+          />
+        )}
         {selectedTab === "map" && (
           <section className="panel full-map-mode">
             <div className="map-controls">
@@ -713,6 +736,9 @@ export function App() {
                         </button>
                       </>
                     )}
+                    <button className="ghost" onClick={() => setShowOnboarding(true)}>
+                      Retake the intro tour
+                    </button>
                   </>
                 ) : (
                   <>

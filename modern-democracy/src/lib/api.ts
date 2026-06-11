@@ -60,6 +60,7 @@ export type BackendBillDetail = {
     created_at: string;
   } | null;
   aggregates: BackendAggregates;
+  news: BackendNewsItem[];
 };
 
 export type SeatBinding = {
@@ -386,7 +387,46 @@ export type PetitionDetailPayload = {
   votes: { for: number; against: number; abstain: number; total: number };
   myVote: string | null;
   posts: BackendDebatePost[];
+  news: BackendNewsItem[];
 };
+
+export type BackendNewsItem = {
+  id: number;
+  title: string;
+  url: string;
+  source: string | null;
+  publishedAt: string | null;
+  summary: string | null;
+  compass: {
+    x: number;
+    y: number;
+    label: string;
+    rationale: string;
+    model?: string;
+    confidence?: number;
+  } | null;
+};
+
+/** Map a backend news article (±10 compass) onto the UI NewsItem shape (±1). */
+export function mapBackendNews(item: BackendNewsItem): import("../data/types").NewsItem {
+  return {
+    id: String(item.id),
+    source: item.source ?? "Unknown source",
+    title: item.title,
+    type: "reporting",
+    publishedAt: item.publishedAt ?? "",
+    url: item.url,
+    compass: {
+      x: (item.compass?.x ?? 0) / 10,
+      y: (item.compass?.y ?? 0) / 10,
+      label: item.compass?.label ?? "awaiting scoring",
+      confidence: item.compass?.confidence ?? 0,
+      rationale: item.compass?.rationale ?? ""
+    },
+    confidence: item.compass?.confidence ?? 0,
+    summary: item.summary ?? ""
+  };
+}
 
 export function fetchPetitions() {
   return getJson<{ petitions: BackendPetition[] }>("/api/petitions");

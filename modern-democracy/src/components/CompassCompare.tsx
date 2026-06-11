@@ -4,9 +4,11 @@ type CompassCompareProps = {
   compass: CompassComparison;
   mpName: string | null;
   constituencyName: string;
+  you?: { x: number; y: number } | null;
 };
 
 const COLORS = {
+  you: "#bf443e",
   mp: "#147b8e",
   party: "#c9922c",
   constituency: "#168a5a",
@@ -18,7 +20,7 @@ const COLORS = {
  * derived from votes on compass-scored bills) on one chart with proximity
  * scores between them.
  */
-export function CompassCompare({ compass, mpName, constituencyName }: CompassCompareProps) {
+export function CompassCompare({ compass, mpName, constituencyName, you }: CompassCompareProps) {
   const size = 260;
   const padding = 22;
   const mid = size / 2;
@@ -29,6 +31,7 @@ export function CompassCompare({ compass, mpName, constituencyName }: CompassCom
   });
 
   const points = [
+    { key: "you", label: "You (questionnaire)", point: you ? { ...you, sample: 1 } : null },
     { key: "mp", label: mpName ?? "MP", point: compass.mp },
     { key: "party", label: compass.partyName ?? "Party", point: compass.party },
     { key: "constituency", label: constituencyName, point: compass.constituency },
@@ -49,7 +52,15 @@ export function CompassCompare({ compass, mpName, constituencyName }: CompassCom
   }
 
   const proximities = compass.proximities;
+  const youMp =
+    you && compass.mp
+      ? Math.max(
+          0,
+          Math.round(100 * (1 - Math.hypot(you.x - compass.mp.x, you.y - compass.mp.y) / Math.hypot(20, 20)))
+        )
+      : null;
   const bars = [
+    { label: "You ↔ MP", value: youMp },
     { label: `MP ↔ ${constituencyName}`, value: proximities?.mpConstituency },
     { label: "MP ↔ Country", value: proximities?.mpNational },
     { label: `MP ↔ ${compass.partyName ?? "Party"}`, value: proximities?.mpParty },
@@ -85,7 +96,8 @@ export function CompassCompare({ compass, mpName, constituencyName }: CompassCom
             <span className="dot" style={{ background: COLORS[entry.key] }} />
             <span className="legend-label">{entry.label}</span>
             <span className="muted">
-              ({entry.point.x.toFixed(1)}, {entry.point.y.toFixed(1)}) · {entry.point.sample} votes
+              ({entry.point.x.toFixed(1)}, {entry.point.y.toFixed(1)})
+              {entry.key !== "you" && ` · ${entry.point.sample} votes`}
             </span>
           </div>
         ))}

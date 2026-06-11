@@ -43,7 +43,15 @@ export function NewsLens({ items }: NewsLensProps) {
                 <strong>{item.source}</strong>
                 <span>{item.type}</span>
               </header>
-              <h3>{item.title}</h3>
+              <h3>
+                {item.url ? (
+                  <a href={item.url} target="_blank" rel="noreferrer">
+                    {item.title}
+                  </a>
+                ) : (
+                  item.title
+                )}
+              </h3>
               <p>{item.summary}</p>
               <Compass point={item.compass} compact />
             </article>

@@ -14,9 +14,11 @@ import {
 } from "lucide-react";
 import type { Petition, PetitionLive, VoteChoice } from "../data/types";
 import { Compass } from "./Compass";
+import { NewsLens } from "./NewsLens";
 import {
   fetchPetitionDetail,
   fetchPetitions,
+  mapBackendNews,
   submitPetitionDebatePost,
   votePetition,
   type BackendDebatePost,
@@ -338,6 +340,8 @@ function PetitionDetail({
           </section>
         )}
       </div>
+
+      {detail.news?.length > 0 && <NewsLens items={detail.news.map(mapBackendNews)} />}
 
       <section className="workspace-section">
         <div className="section-heading">

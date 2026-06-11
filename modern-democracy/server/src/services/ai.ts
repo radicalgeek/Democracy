@@ -25,7 +25,11 @@ type AnalysisResult = {
   confidence: number;
 };
 
-async function callLlm(system: string, user: string): Promise<Record<string, unknown> | null> {
+/**
+ * One LLM round trip through the proxy, returning the first JSON value
+ * (object or array) found in the response text, or null on any failure.
+ */
+export async function runLlmJson(system: string, user: string): Promise<unknown | null> {
   if (!LLM_BASE_URL) return null;
   try {
     const response = await fetch(`${LLM_BASE_URL}/v1/messages`, {
@@ -51,13 +55,27 @@ async function callLlm(system: string, user: string): Promise<Record<string, unk
       content?: Array<{ type: string; text?: string }>;
     };
     const text = payload.content?.find((block) => block.type === "text")?.text ?? "";
-    const jsonStart = text.indexOf("{");
-    const jsonEnd = text.lastIndexOf("}");
-    if (jsonStart === -1 || jsonEnd === -1) return null;
-    return JSON.parse(text.slice(jsonStart, jsonEnd + 1)) as Record<string, unknown>;
+    const objStart = text.indexOf("{");
+    const arrStart = text.indexOf("[");
+    const isArray = arrStart !== -1 && (objStart === -1 || arrStart < objStart);
+    const start = isArray ? arrStart : objStart;
+    const end = isArray ? text.lastIndexOf("]") : text.lastIndexOf("}");
+    if (start === -1 || end === -1) return null;
+    return JSON.parse(text.slice(start, end + 1));
   } catch {
     return null;
   }
+}
+
+export function llmModelName() {
+  return MODEL;
+}
+
+async function callLlm(system: string, user: string): Promise<Record<string, unknown> | null> {
+  const result = await runLlmJson(system, user);
+  return result && typeof result === "object" && !Array.isArray(result)
+    ? (result as Record<string, unknown>)
+    : null;
 }
 
 const ECON_LEFT = ["nationalise", "nationalisation", "public ownership", "redistribution", "welfare", "union", "rent control", "wealth tax", "free at the point of use", "subsidy", "social housing"];

@@ -3,6 +3,7 @@ import { analyzeAndStore } from "./services/ai.js";
 import { castBallot, createSession, issueCredential, runCheckpoint } from "./services/integrity.js";
 import { rebuildSeatBindings } from "./services/mapping.js";
 import { importDivisions } from "./services/divisions.js";
+import { importNews } from "./services/news.js";
 import { analyzePetitions, importPetitions } from "./services/petitions.js";
 import {
   importBills,
@@ -19,7 +20,8 @@ export async function runFullImport() {
   const bindings = await rebuildSeatBindings(sql);
   const analyses = await analyzeImportedBills();
   const petitionAnalyses = await analyzePetitions(sql);
-  return { constituencies, bills, texts, divisions, petitions, bindings, analyses, petitionAnalyses };
+  const news = await importNews(sql);
+  return { constituencies, bills, texts, divisions, petitions, bindings, analyses, petitionAnalyses, news };
 }
 
 /** Generate summary + compass (with provenance) for bills that have source text. */

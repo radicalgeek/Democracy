@@ -287,3 +287,9 @@ create table if not exists news_bill_links (
   bill_id integer not null references bills(id),
   primary key (news_item_id, bill_id)
 );
+
+create table if not exists news_petition_links (
+  news_item_id bigint not null references news_items(id),
+  petition_id integer not null references petitions(id),
+  primary key (news_item_id, petition_id)
+);

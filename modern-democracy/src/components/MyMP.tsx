@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Compass as CompassIcon, Landmark, Loader2, ScrollText, UserRound, Vote } from "lucide-react";
 import { CompassCompare } from "./CompassCompare";
+import { storedMyCompass } from "./Onboarding";
 import {
   fetchConstituencyProfile,
   storedChoice,
@@ -185,6 +186,7 @@ export function MyMP({ user, onRequireAccount }: MyMPProps) {
               compass={profile.compass}
               mpName={mp?.name ?? null}
               constituencyName={profile.constituency.name}
+              you={storedMyCompass()}
             />
           </div>
         </section>
