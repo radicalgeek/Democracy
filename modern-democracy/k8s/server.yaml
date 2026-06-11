@@ -19,7 +19,7 @@ spec:
         kubernetes.io/arch: arm64
       containers:
         - name: api
-          image: ghcr.io/radicalgeek/democracy-server:d83110dccf29bd77c528ec7e33f55fc970caf414
+          image: ghcr.io/radicalgeek/democracy-server:8554b3e8960f12b0846f5eb4343f0cc94df4f46c
           env:
             - name: PORT
               value: "8787"
@@ -61,7 +61,7 @@ spec:
         kubernetes.io/arch: arm64
       containers:
         - name: worker
-          image: ghcr.io/radicalgeek/democracy-server:d83110dccf29bd77c528ec7e33f55fc970caf414
+          image: ghcr.io/radicalgeek/democracy-server:8554b3e8960f12b0846f5eb4343f0cc94df4f46c
           command: ["node", "dist/worker.js"]
           env:
             - name: DATABASE_URL
