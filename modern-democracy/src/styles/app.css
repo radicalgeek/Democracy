@@ -1776,3 +1776,16 @@ button.ghost {
   border-color: var(--teal);
   color: #fff;
 }
+
+/* Whole-row click affordance for bill and petition lists */
+.bill-row.clickable {
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.bill-row.clickable:hover,
+.bill-row.clickable:focus-visible {
+  border-color: var(--teal);
+  background: rgba(20, 123, 142, 0.05);
+  outline: none;
+}

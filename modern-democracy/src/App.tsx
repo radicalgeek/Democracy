@@ -482,20 +482,36 @@ export function App() {
               </div>
             </div>
             <div className="bills-grid">
-              <article className="bill-row selected">
+              <article
+                className="bill-row clickable selected"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedTab("workspace")}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") setSelectedTab("workspace");
+                }}
+              >
                 <div>
                   <strong>{bill.title}</strong>
                   <span>
                     {bill.house} · {bill.stage} · {totalPublic.toLocaleString()} public votes
                   </span>
                 </div>
-                <button onClick={() => setSelectedTab("workspace")}>Open workspace</button>
               </article>
               {backendBills
                 .filter((item) => item.id !== liveBillId)
                 .slice(0, 12)
                 .map((item) => (
-                  <article className="bill-row" key={item.id}>
+                  <article
+                    className="bill-row clickable"
+                    key={item.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openBackendBill(item.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") openBackendBill(item.id);
+                    }}
+                  >
                     <div>
                       <strong>{item.short_title}</strong>
                       <span>
@@ -507,7 +523,6 @@ export function App() {
                             : "imported"}
                       </span>
                     </div>
-                    <button onClick={() => openBackendBill(item.id)}>Open workspace</button>
                   </article>
                 ))}
               {backendBills.length === 0 && liveBills.slice(1, 8).map((liveBill) => (

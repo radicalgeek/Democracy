@@ -134,8 +134,14 @@ export function PetitionsPanel({
         <div className="bills-grid petition-list-scroll">
           {backendPetitions.map((petition) => (
             <article
-              className={petition.id === selectedId ? "bill-row selected" : "bill-row"}
+              className={petition.id === selectedId ? "bill-row clickable selected" : "bill-row clickable"}
               key={petition.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedId(petition.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") setSelectedId(petition.id);
+              }}
             >
               <div>
                 <strong>{petition.action}</strong>
@@ -145,9 +151,6 @@ export function PetitionsPanel({
                   {petition.debate_count} debate posts
                 </span>
               </div>
-              <button onClick={() => setSelectedId(petition.id)}>
-                {petition.id === selectedId ? "Open" : "Select"}
-              </button>
             </article>
           ))}
         </div>
