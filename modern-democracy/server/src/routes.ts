@@ -30,7 +30,7 @@ import {
   partySummaries,
   representativeDetail
 } from "./services/representatives.js";
-import { ballotMajorities, constituencyLeans, mediaCompass } from "./services/insights.js";
+import { ballotMajorities, constituencyLeans, mediaCompass, nationalCompass } from "./services/insights.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 import { getUserEngagementStats, computeEngagementStatsForUser } from "./services/learning.js";
@@ -41,6 +41,8 @@ import {
   listCivicSources,
   localCivicOverview
 } from "./services/civic-data.js";
+import { memberInterests } from "./services/interests.js";
+import { departmentProfile, listDepartments } from "./services/departments.js";
 
 function bearer(headers: Record<string, unknown>) {
   const value = headers.authorization;
@@ -127,7 +129,14 @@ export async function registerRoutes(app: FastifyInstance) {
       select b.id, b.short_title, b.long_title, b.current_house, b.current_stage,
              b.bill_type, b.is_act, b.is_defeated, b.last_updated, b.source_url,
              exists(select 1 from bill_texts t where t.bill_id = b.id and t.text_content is not null) as has_text,
-             (select count(*)::int from anonymous_ballots ab where ab.bill_id = b.id) as ballots
+             (select count(*)::int from anonymous_ballots ab where ab.bill_id = b.id) as ballots,
+             (select count(*)::int from divisions d where d.bill_id = b.id) as divisions,
+             (select count(*)::int from debate_posts dp where dp.bill_id = b.id and dp.moderation_state <> 'blocked') as debate_posts,
+             (select count(*)::int from bill_debates bd where bd.bill_id = b.id) as hansard_debates,
+             (select count(*)::int from news_bill_links nl where nl.bill_id = b.id) as news_items,
+             exists(select 1 from ai_analyses a where a.subject_type = 'bill' and a.subject_id = b.id::text and a.kind = 'summary') as has_summary,
+             exists(select 1 from ai_analyses a where a.subject_type = 'bill' and a.subject_id = b.id::text and a.kind = 'compass') as has_compass,
+             exists(select 1 from ai_analyses a where a.subject_type = 'bill' and a.subject_id = b.id::text and a.kind = 'debate-summary') as has_debate_summary
       from bills b
       order by b.last_updated desc nulls last
       limit ${take}
@@ -152,8 +161,14 @@ export async function registerRoutes(app: FastifyInstance) {
     const analyses = await sql`
       select distinct on (kind) kind, model, prompt_version, output, citations, confidence, review_state, generated_at
       from ai_analyses
-      where subject_type = 'bill' and subject_id = ${String(billId)} and kind in ('summary', 'compass')
+      where subject_type = 'bill' and subject_id = ${String(billId)}
+        and kind in ('summary', 'compass', 'debate-summary')
       order by kind, id desc
+    `;
+    const debates = await sql`
+      select id, ext_id, title, house, sitting_date, contributions, speakers, source_url
+      from bill_debates where bill_id = ${billId}
+      order by sitting_date desc nulls last
     `;
     const [checkpoint] = await sql`
       select merkle_root, ballot_count, checkpoint_hash, created_at
@@ -161,7 +176,7 @@ export async function registerRoutes(app: FastifyInstance) {
     `;
     const aggregates = await billAggregates(sql, billId);
     const news = await newsForSubject(sql, { billId });
-    return { bill, texts, events, analyses, checkpoint: checkpoint ?? null, aggregates, news };
+    return { bill, texts, events, analyses, debates, checkpoint: checkpoint ?? null, aggregates, news };
   });
 
   app.get("/api/bills/:id/aggregates", async (request) => {
@@ -260,6 +275,27 @@ export async function registerRoutes(app: FastifyInstance) {
     return detail;
   });
 
+  app.get("/api/representatives/:id/interests", async (request, reply) => {
+    const memberId = Number((request.params as { id: string }).id);
+    if (!Number.isFinite(memberId)) return reply.code(400).send({ error: "bad member id" });
+    try {
+      return await memberInterests(sql, memberId);
+    } catch {
+      return reply.code(502).send({ error: "interests api unavailable" });
+    }
+  });
+
+  app.get("/api/departments", async () => {
+    return { departments: listDepartments() };
+  });
+
+  app.get("/api/departments/:slug", async (request, reply) => {
+    const slug = (request.params as { slug: string }).slug;
+    const profile = await departmentProfile(sql, slug);
+    if (!profile) return reply.code(404).send({ error: "unknown department" });
+    return { department: profile };
+  });
+
   app.get("/api/parties", async () => {
     return { parties: await partySummaries(sql) };
   });
@@ -271,6 +307,10 @@ export async function registerRoutes(app: FastifyInstance) {
 
   app.get("/api/insights/media", async () => {
     return mediaCompass(sql);
+  });
+
+  app.get("/api/insights/national-compass", async () => {
+    return nationalCompass(sql);
   });
 
   app.get("/api/insights/ballots", async (request) => {

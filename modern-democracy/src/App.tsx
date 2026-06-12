@@ -16,6 +16,7 @@ import {
   Vote
 } from "lucide-react";
 import { AuthScreen, type AuthMode } from "./components/AuthScreen";
+import { BillListRow } from "./components/BillListRow";
 import { BillView } from "./components/BillView";
 import { ConstituencyMap, MAP_MODE_META } from "./components/ConstituencyMap";
 import { CivicDataPanel, CivicSourcesPanel } from "./components/CivicDataPanel";
@@ -575,28 +576,7 @@ export function App() {
                 .filter((item) => item.id !== liveBillId)
                 .slice(0, 12)
                 .map((item) => (
-                  <article
-                    className="bill-row clickable"
-                    key={item.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => openBackendBill(item.id)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") openBackendBill(item.id);
-                    }}
-                  >
-                    <div>
-                      <strong>{item.short_title}</strong>
-                      <span>
-                        {item.current_house ?? "—"} · {item.current_stage ?? "—"} ·{" "}
-                        {item.ballots > 0
-                          ? `${item.ballots.toLocaleString()} anonymous ballots`
-                          : item.has_text
-                            ? "source text imported"
-                            : "imported"}
-                      </span>
-                    </div>
-                  </article>
+                  <BillListRow key={item.id} bill={item} onOpen={() => openBackendBill(item.id)} />
                 ))}
               {backendBills.length === 0 && liveBills.slice(1, 8).map((liveBill) => (
                 <article className="bill-row" key={liveBill.id}>

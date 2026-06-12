@@ -1,4 +1,4 @@
-import { ArrowLeft, HelpCircle } from "lucide-react";
+import { ArrowLeft, ExternalLink, HelpCircle, Landmark, ThumbsDown, ThumbsUp } from "lucide-react";
 import type { Bill, VoteChoice } from "../data/types";
 import { mapBackendNews, type BackendBillDetail, type MapBindings } from "../lib/api";
 import { Compass } from "./Compass";
@@ -167,6 +167,8 @@ export function BillView({
         </aside>
       </div>
 
+      <HansardSection billDetail={billDetail} />
+
       <DebatePanel
         posts={bill.debate}
         liveBillId={liveBillId}
@@ -179,5 +181,104 @@ export function BillView({
         <NewsLens items={billDetail!.news.map(mapBackendNews)} />
       )}
     </>
+  );
+}
+
+/**
+ * What was said in Parliament: the AI summary of the Hansard debates on this
+ * bill — main points and the strongest arguments each way — with links to the
+ * official transcripts it was built from.
+ */
+function HansardSection({ billDetail }: { billDetail: BackendBillDetail | null }) {
+  const analysis = billDetail?.analyses.find((item) => item.kind === "debate-summary");
+  const debates = billDetail?.debates ?? [];
+  if (!analysis && debates.length === 0) return null;
+
+  const output = (analysis?.output ?? {}) as {
+    summary?: string;
+    mainPoints?: string[];
+    forArguments?: string[];
+    againstArguments?: string[];
+  };
+
+  return (
+    <section className="workspace-section hansard-section">
+      <div className="section-heading">
+        <Landmark size={20} />
+        <div>
+          <h2>What was said in Parliament</h2>
+          <p>
+            AI summary of the official Hansard debate record
+            {analysis ? ` (model: ${analysis.model})` : ""} — check the transcripts below.
+          </p>
+        </div>
+      </div>
+
+      {output.summary && <p className="hansard-summary">{output.summary}</p>}
+
+      {(output.mainPoints?.length ?? 0) > 0 && (
+        <div className="panel hansard-points">
+          <h3>Main points argued</h3>
+          <ul>
+            {output.mainPoints!.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {((output.forArguments?.length ?? 0) > 0 || (output.againstArguments?.length ?? 0) > 0) && (
+        <div className="hansard-arguments">
+          {(output.forArguments?.length ?? 0) > 0 && (
+            <div className="panel argument-card for">
+              <h3>
+                <ThumbsUp size={16} /> Argued in favour
+              </h3>
+              <ul>
+                {output.forArguments!.map((argument) => (
+                  <li key={argument}>{argument}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {(output.againstArguments?.length ?? 0) > 0 && (
+            <div className="panel argument-card against">
+              <h3>
+                <ThumbsDown size={16} /> Argued against
+              </h3>
+              <ul>
+                {output.againstArguments!.map((argument) => (
+                  <li key={argument}>{argument}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {debates.length > 0 && (
+        <div className="hansard-debate-list">
+          {debates.map((debate) => (
+            <a
+              key={debate.ext_id}
+              className="hansard-debate-row"
+              href={debate.source_url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <div>
+                <strong>
+                  {debate.house} · {debate.sitting_date ? new Date(debate.sitting_date).toLocaleDateString("en-GB") : "date unknown"}
+                </strong>
+                <span>
+                  {debate.contributions} contributions from {debate.speakers} speakers
+                </span>
+              </div>
+              <ExternalLink size={15} />
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

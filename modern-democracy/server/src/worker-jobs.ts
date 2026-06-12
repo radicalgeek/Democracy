@@ -7,6 +7,7 @@ import { importNews } from "./services/news.js";
 import { analyzePetitions, importPetitions } from "./services/petitions.js";
 import { computeEngagementStatsForUser } from "./services/learning.js";
 import { importCivicData } from "./services/civic-data.js";
+import { analyzeBillDebates, importBillDebates } from "./services/hansard.js";
 import {
   importBills,
   importBillTexts,
@@ -22,9 +23,24 @@ export async function runFullImport() {
   const petitions = await importPetitions(sql);
   const bindings = await rebuildSeatBindings(sql);
   const analyses = await analyzeImportedBills();
+  const hansardDebates = await importBillDebates(sql);
+  const debateSummaries = await analyzeBillDebates(sql);
   const petitionAnalyses = await analyzePetitions(sql);
   const news = await importNews(sql);
-  return { civicData, constituencies, bills, texts, divisions, petitions, bindings, analyses, petitionAnalyses, news };
+  return {
+    civicData,
+    constituencies,
+    bills,
+    texts,
+    divisions,
+    petitions,
+    bindings,
+    analyses,
+    hansardDebates,
+    debateSummaries,
+    petitionAnalyses,
+    news
+  };
 }
 
 /** Generate summary + compass (with provenance) for bills that have source text. */

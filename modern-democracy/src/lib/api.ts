@@ -13,10 +13,28 @@ export type BackendBill = {
   source_url: string;
   has_text: boolean;
   ballots: number;
+  divisions: number;
+  debate_posts: number;
+  hansard_debates: number;
+  news_items: number;
+  has_summary: boolean;
+  has_compass: boolean;
+  has_debate_summary: boolean;
+};
+
+export type BillDebate = {
+  id: number;
+  ext_id: string;
+  title: string;
+  house: string | null;
+  sitting_date: string | null;
+  contributions: number;
+  speakers: number;
+  source_url: string;
 };
 
 export type BackendAnalysis = {
-  kind: "summary" | "compass";
+  kind: "summary" | "compass" | "debate-summary";
   model: string;
   prompt_version: string;
   output: Record<string, unknown>;
@@ -53,6 +71,7 @@ export type BackendBillDetail = {
   }>;
   events: Array<{ stage: string | null; house: string | null; happened_on: string | null }>;
   analyses: BackendAnalysis[];
+  debates: BillDebate[];
   checkpoint: {
     merkle_root: string;
     ballot_count: number;
@@ -664,6 +683,48 @@ export function fetchRepresentativeDetail(memberId: number) {
   return getJson<RepDetail>(`/api/representatives/${memberId}`);
 }
 
+export type MemberInterests = {
+  memberId: number;
+  total: number;
+  registerUrl: string;
+  categories: Array<{
+    name: string;
+    interests: Array<{ id: number; summary: string; registered: string | null }>;
+  }>;
+};
+
+export function fetchMemberInterests(memberId: number) {
+  return getJson<MemberInterests>(`/api/representatives/${memberId}/interests`);
+}
+
+export type DepartmentSummary = {
+  slug: string;
+  name: string;
+  abbreviation: string;
+  spend: string;
+  spendNote: string;
+  riskScore: number | null;
+  riskLevel: string | null;
+};
+
+export type DepartmentProfile = DepartmentSummary & {
+  description: string | null;
+  govukUrl: string;
+  spendNote: string;
+  riskNote: string | null;
+  ministers: Array<{ post: string; name: string; party: string | null; memberId: number | null }>;
+  committee: { name: string; url: string } | null;
+  links: Array<{ label: string; url: string }>;
+};
+
+export function fetchDepartments() {
+  return getJson<{ departments: DepartmentSummary[] }>("/api/departments");
+}
+
+export function fetchDepartmentProfile(slug: string) {
+  return getJson<{ department: DepartmentProfile }>(`/api/departments/${slug}`);
+}
+
 export function fetchParties() {
   return getJson<{ parties: PartySummary[] }>("/api/parties");
 }
@@ -687,6 +748,36 @@ export type MediaCompassPayload = {
 
 export function fetchMediaCompass() {
   return getJson<MediaCompassPayload>("/api/insights/media");
+}
+
+export type NationalCompassVector = { x: number; y: number; sample: number } | null;
+
+export type NationalCompassPayload = {
+  civicWill: NationalCompassVector;
+  discussion: NationalCompassVector;
+  media: { overall: NationalCompassVector; outlets: MediaOutlet[] };
+  government: {
+    party: {
+      name: string;
+      abbreviation: string | null;
+      colour: string | null;
+      seats: number;
+      compass: NationalCompassVector;
+    };
+    legislation: NationalCompassVector;
+  } | null;
+  parties: Array<{
+    name: string;
+    abbreviation: string | null;
+    colour: string | null;
+    seats: number;
+    compass: NationalCompassVector;
+  }>;
+  generatedAt: string;
+};
+
+export function fetchNationalCompass() {
+  return getJson<NationalCompassPayload>("/api/insights/national-compass");
 }
 
 export type BallotMajority = {
