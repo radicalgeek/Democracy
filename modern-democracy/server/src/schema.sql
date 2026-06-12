@@ -452,3 +452,35 @@ create table if not exists aggregate_views (
   metadata jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now()
 );
+
+-- Parliamentary debates pulled from the official Hansard API, linked to the
+-- bill they discuss. text_content holds the cleaned contribution transcript
+-- used as the AI debate-summary source.
+create table if not exists bill_debates (
+  id bigserial primary key,
+  bill_id integer not null references bills(id),
+  ext_id text not null unique,
+  title text not null,
+  house text,
+  sitting_date date,
+  contributions integer not null default 0,
+  speakers integer not null default 0,
+  text_content text,
+  source_url text not null,
+  imported_at timestamptz not null default now()
+);
+create index if not exists bill_debates_bill_idx on bill_debates (bill_id, sitting_date desc);
+
+-- Lazy caches for per-member registered interests (official Interests API)
+-- and department profiles (gov.uk organisations + Members API posts).
+create table if not exists member_interests_cache (
+  member_id integer primary key,
+  payload jsonb not null,
+  fetched_at timestamptz not null default now()
+);
+
+create table if not exists department_cache (
+  slug text primary key,
+  payload jsonb not null,
+  fetched_at timestamptz not null default now()
+);

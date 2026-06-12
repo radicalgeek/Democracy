@@ -9,6 +9,7 @@ import {
   Flame,
   Gamepad2,
   Landmark,
+  Loader2,
   Map,
   MapPinned,
   MessageSquare,
@@ -19,9 +20,13 @@ import {
 } from "lucide-react";
 import { fallbackFiscalCivicOverview, fallbackLocalCivicOverview } from "../data/civicFallback";
 import {
+  fetchDepartmentProfile,
+  fetchDepartments,
   fetchFiscalCivicOverview,
   fetchLocalCivicOverview,
   type AccountUser,
+  type DepartmentProfile,
+  type DepartmentSummary,
   type FiscalCivicOverview,
   type FiscalIndicator,
   type LocalCivicLayer,
@@ -541,37 +546,7 @@ function FiscalPlanView({
         </div>
       </section>
 
-      <section className="workspace-section">
-        <div className="section-heading">
-          <Flame size={20} />
-          <div>
-            <h2>Department waste and delivery risk</h2>
-          </div>
-        </div>
-        <div className="drill-list">
-          {DEPARTMENT_RISK.map((department) => (
-            <DrillRow
-              key={department.department}
-              title={department.department}
-              meta={`${department.spend} annual spend`}
-              visual={
-                <span className="risk-meter drill-bar">
-                  <span style={{ width: `${department.score}%` }} />
-                </span>
-              }
-              aside={<em className="risk-pill">{department.risk}</em>}
-            >
-              <p>{department.waste}.</p>
-              <div className="drill-facts">
-                <span>
-                  <strong>Risk score</strong> {department.score}/100
-                </span>
-              </div>
-              <SourceLink href={department.href} label={department.source} />
-            </DrillRow>
-          ))}
-        </div>
-      </section>
+      <DepartmentsSection />
 
       <section className="workspace-section">
         <div className="section-heading">
@@ -646,6 +621,153 @@ function FiscalPlanView({
         onOpenSources={onOpenSources}
       />
     </>
+  );
+}
+
+/**
+ * Government departments with drill-down: the summary line carries spend and
+ * risk; expanding a department lazily loads its full profile — what it does,
+ * who runs it, which committee scrutinises it, and where to dig further.
+ */
+function DepartmentsSection() {
+  const [departments, setDepartments] = useState<DepartmentSummary[] | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchDepartments()
+      .then((payload) => mounted && setDepartments(payload.departments))
+      .catch(() => mounted && setFailed(true));
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Backend without the departments endpoint yet: fall back to the static
+  // scrutiny scorecard so the section never disappears.
+  if (failed) {
+    return (
+      <section className="workspace-section">
+        <div className="section-heading">
+          <Flame size={20} />
+          <div>
+            <h2>Department waste and delivery risk</h2>
+          </div>
+        </div>
+        <div className="drill-list">
+          {DEPARTMENT_RISK.map((department) => (
+            <DrillRow
+              key={department.department}
+              title={department.department}
+              meta={`${department.spend} annual spend`}
+              visual={
+                <span className="risk-meter drill-bar">
+                  <span style={{ width: `${department.score}%` }} />
+                </span>
+              }
+              aside={<em className="risk-pill">{department.risk}</em>}
+            >
+              <p>{department.waste}.</p>
+              <SourceLink href={department.href} label={department.source} />
+            </DrillRow>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="workspace-section">
+      <div className="section-heading">
+        <Flame size={20} />
+        <div>
+          <h2>Inside each department</h2>
+          <p>Spend, waste risk, ministers and scrutiny — tap a department to open it up.</p>
+        </div>
+      </div>
+      <div className="drill-list">
+        {(departments ?? []).map((department) => (
+          <DrillRow
+            key={department.slug}
+            title={department.name}
+            meta={`${department.spend} · ${department.spendNote}`}
+            visual={
+              department.riskScore != null ? (
+                <span className="risk-meter drill-bar">
+                  <span style={{ width: `${department.riskScore}%` }} />
+                </span>
+              ) : undefined
+            }
+            aside={
+              department.riskLevel ? (
+                <em className="risk-pill">{department.riskLevel}</em>
+              ) : undefined
+            }
+          >
+            <DepartmentDetail slug={department.slug} />
+          </DrillRow>
+        ))}
+        {departments == null && skeletonCards(3)}
+      </div>
+    </section>
+  );
+}
+
+function DepartmentDetail({ slug }: { slug: string }) {
+  const [profile, setProfile] = useState<DepartmentProfile | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchDepartmentProfile(slug)
+      .then((payload) => mounted && setProfile(payload.department))
+      .catch(() => mounted && setFailed(true));
+    return () => {
+      mounted = false;
+    };
+  }, [slug]);
+
+  if (failed) return <p className="muted">Could not load this department right now.</p>;
+  if (!profile) {
+    return (
+      <p className="muted">
+        <Loader2 size={14} className="spin" /> Loading department profile…
+      </p>
+    );
+  }
+
+  return (
+    <div className="department-detail">
+      {profile.description && <p>{profile.description}</p>}
+      {profile.riskNote && (
+        <div className="drill-facts">
+          <span>
+            <strong>Waste / delivery risk</strong> {profile.riskNote}
+            {profile.riskScore != null && ` (${profile.riskScore}/100)`}
+          </span>
+        </div>
+      )}
+      {profile.ministers.length > 0 && (
+        <div className="department-ministers">
+          <strong>Who runs it</strong>
+          <ul>
+            {profile.ministers.slice(0, 6).map((minister) => (
+              <li key={`${minister.post}-${minister.name}`}>
+                <b>{minister.name}</b>
+                {minister.party ? ` (${minister.party})` : ""} — {minister.post}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div className="department-links">
+        {profile.committee && <SourceLink href={profile.committee.url} label={`Scrutinised by the ${profile.committee.name}`} />}
+        <SourceLink href={profile.govukUrl} label="Department on gov.uk" />
+        {profile.links.map((link) => (
+          <SourceLink key={link.url} href={link.url} label={link.label} />
+        ))}
+      </div>
+    </div>
   );
 }
 

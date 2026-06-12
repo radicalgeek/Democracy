@@ -160,3 +160,152 @@ export async function constituencyLeans(sql: Sql) {
     }))
   };
 }
+
+/**
+ * The direction of the country, from everything the platform stores:
+ *  - civicWill: mean signed compass vector of bill/petition positions, signed
+ *    by how people actually voted on them (national civic majorities);
+ *  - discussion: the same subjects weighted by debate activity and signed by
+ *    the stance balance of the posts — where the conversation is pushing;
+ *  - media: average outlet coverage position (influence on the narrative);
+ *  - government: the governing party's revealed position plus the mean
+ *    position of current legislation — the direction it is taking things;
+ *  - parties: every major party's revealed position from division votes.
+ */
+export async function nationalCompass(sql: Sql) {
+  const scoredBills = await sql`
+    select distinct on (a.subject_id) (a.subject_id)::int as bill_id,
+           (a.output->>'x')::float as x, (a.output->>'y')::float as y
+    from ai_analyses a
+    where a.subject_type = 'bill' and a.kind = 'compass' and a.output->>'x' is not null
+    order by a.subject_id, a.id desc
+  `;
+  const billVectors = new Map(
+    scoredBills.map((row) => [row.bill_id as number, { x: row.x as number, y: row.y as number }])
+  );
+  const scoredPetitions = await sql`
+    select distinct on (a.subject_id) (a.subject_id)::int as petition_id,
+           (a.output->>'x')::float as x, (a.output->>'y')::float as y
+    from ai_analyses a
+    where a.subject_type = 'petition' and a.kind = 'compass' and a.output->>'x' is not null
+    order by a.subject_id, a.id desc
+  `;
+  const petitionVectors = new Map(
+    scoredPetitions.map((row) => [row.petition_id as number, { x: row.x as number, y: row.y as number }])
+  );
+
+  // --- Civic will: votes on bills and petitions, signed by majority ---
+  const billTallies = await sql`
+    select bill_id,
+           count(*) filter (where choice = 'for')::int as for_count,
+           count(*) filter (where choice = 'against')::int as against_count,
+           count(*)::int as total
+    from anonymous_ballots group by bill_id
+  `;
+  const petitionTallies = await sql`
+    select petition_id,
+           count(*) filter (where choice = 'for')::int as for_count,
+           count(*) filter (where choice = 'against')::int as against_count,
+           count(*)::int as total
+    from petition_votes group by petition_id
+  `;
+  const willPoints: Array<{ x: number; y: number }> = [];
+  for (const row of billTallies) {
+    const vector = billVectors.get(row.bill_id as number);
+    if (!vector || (row.total as number) < PRIVACY_THRESHOLD) continue;
+    if ((row.for_count as number) === (row.against_count as number)) continue;
+    const sign = (row.for_count as number) > (row.against_count as number) ? 1 : -1;
+    willPoints.push({ x: sign * vector.x, y: sign * vector.y });
+  }
+  for (const row of petitionTallies) {
+    const vector = petitionVectors.get(row.petition_id as number);
+    if (!vector || (row.total as number) < PRIVACY_THRESHOLD) continue;
+    if ((row.for_count as number) === (row.against_count as number)) continue;
+    const sign = (row.for_count as number) > (row.against_count as number) ? 1 : -1;
+    willPoints.push({ x: sign * vector.x, y: sign * vector.y });
+  }
+  const mean = (points: Array<{ x: number; y: number }>, weights?: number[]) => {
+    if (points.length === 0) return null;
+    const totalWeight = weights ? weights.reduce((sum, w) => sum + w, 0) : points.length;
+    if (totalWeight === 0) return null;
+    const sumX = points.reduce((sum, p, i) => sum + p.x * (weights ? weights[i] : 1), 0);
+    const sumY = points.reduce((sum, p, i) => sum + p.y * (weights ? weights[i] : 1), 0);
+    return {
+      x: Math.round((sumX / totalWeight) * 100) / 100,
+      y: Math.round((sumY / totalWeight) * 100) / 100,
+      sample: points.length
+    };
+  };
+  const civicWill = mean(willPoints);
+
+  // --- Discussion: debate-post stance balance per subject, weighted by activity ---
+  const postStances = await sql`
+    select bill_id, petition_id,
+           count(*) filter (where stance = 'for')::int as for_count,
+           count(*) filter (where stance = 'against')::int as against_count,
+           count(*)::int as total
+    from debate_posts
+    where moderation_state not in ('hidden', 'blocked')
+    group by bill_id, petition_id
+  `;
+  const discussionPoints: Array<{ x: number; y: number }> = [];
+  const discussionWeights: number[] = [];
+  for (const row of postStances) {
+    const vector = row.bill_id
+      ? billVectors.get(row.bill_id as number)
+      : row.petition_id
+        ? petitionVectors.get(row.petition_id as number)
+        : null;
+    if (!vector) continue;
+    if ((row.for_count as number) === (row.against_count as number)) continue;
+    const sign = (row.for_count as number) > (row.against_count as number) ? 1 : -1;
+    discussionPoints.push({ x: sign * vector.x, y: sign * vector.y });
+    discussionWeights.push(row.total as number);
+  }
+  const discussion = mean(discussionPoints, discussionWeights);
+
+  // --- Media influence: average coverage position ---
+  const media = await mediaCompass(sql);
+
+  // --- Government: governing party position + direction of current legislation ---
+  const { partySummaries } = await import("./representatives.js");
+  const parties = await partySummaries(sql);
+  const major = parties
+    .filter((party) => party.compass != null && party.seats >= 3)
+    .map((party) => ({
+      name: party.name,
+      abbreviation: party.abbreviation,
+      colour: party.colour,
+      seats: party.seats,
+      compass: party.compass
+    }));
+  const governing = [...parties].sort((a, b) => b.seats - a.seats)[0] ?? null;
+
+  const recentBills = await sql`
+    select id from bills order by last_updated desc nulls last limit 20
+  `;
+  const legislationPoints = recentBills
+    .map((row) => billVectors.get(row.id as number))
+    .filter((vector): vector is { x: number; y: number } => Boolean(vector));
+  const legislation = mean(legislationPoints);
+
+  return {
+    civicWill,
+    discussion,
+    media: { overall: media.overall, outlets: media.outlets.slice(0, 6) },
+    government: governing
+      ? {
+          party: {
+            name: governing.name,
+            abbreviation: governing.abbreviation,
+            colour: governing.colour,
+            seats: governing.seats,
+            compass: governing.compass
+          },
+          legislation
+        }
+      : null,
+    parties: major,
+    generatedAt: new Date().toISOString()
+  };
+}

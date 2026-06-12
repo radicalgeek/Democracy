@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   BadgeAlert,
+  ChevronRight,
   ExternalLink,
   Landmark,
   Loader2,
@@ -14,10 +15,12 @@ import {
 } from "lucide-react";
 import {
   fetchConstituencyElections,
+  fetchMemberInterests,
   fetchParties,
   fetchRepresentativeDetail,
   fetchRepresentatives,
   type ConstituencyElection,
+  type MemberInterests,
   type PartySummary,
   type RepDetail,
   type RepListMember
@@ -411,6 +414,8 @@ function RepresentativeDetail({
         </section>
       )}
 
+      <InterestsSection memberId={memberId} memberName={member.name} />
+
       <section className="workspace-section">
         <div className="section-heading">
           <ScrollText size={20} />
@@ -464,5 +469,96 @@ function RepresentativeDetail({
         </div>
       </section>
     </>
+  );
+}
+
+/**
+ * Register of Members' Financial Interests, live from the official Interests
+ * API — grouped by category, collapsed by default, with a link to the full
+ * register entry.
+ */
+function InterestsSection({ memberId, memberName }: { memberId: number; memberName: string }) {
+  const [interests, setInterests] = useState<MemberInterests | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    setInterests(null);
+    setFailed(false);
+    fetchMemberInterests(memberId)
+      .then((payload) => mounted && setInterests(payload))
+      .catch(() => mounted && setFailed(true));
+    return () => {
+      mounted = false;
+    };
+  }, [memberId]);
+
+  if (failed) return null;
+
+  return (
+    <section className="workspace-section">
+      <div className="section-heading">
+        <BadgeAlert size={20} />
+        <div>
+          <h2>Register of financial interests</h2>
+          <p>
+            {interests
+              ? interests.total === 0
+                ? `${memberName} has no current entries in the register.`
+                : `${interests.total} declared interest${interests.total === 1 ? "" : "s"} — official register, self-reported.`
+              : "Loading the official register…"}
+          </p>
+        </div>
+      </div>
+      {interests && interests.categories.length > 0 && (
+        <div className="drill-list">
+          {interests.categories.map((category) => {
+            const open = openCategory === category.name;
+            return (
+              <article className={open ? "drill open" : "drill"} key={category.name}>
+                <button
+                  type="button"
+                  className="drill-summary"
+                  aria-expanded={open}
+                  onClick={() => setOpenCategory(open ? null : category.name)}
+                >
+                  <span className="drill-copy">
+                    <strong>{category.name}</strong>
+                    <small>
+                      {category.interests.length} entr{category.interests.length === 1 ? "y" : "ies"}
+                    </small>
+                  </span>
+                  <ChevronRight size={15} className="drill-chevron" />
+                </button>
+                {open && (
+                  <div className="drill-body">
+                    <ul className="interest-list">
+                      {category.interests.map((interest) => (
+                        <li key={interest.id}>
+                          {interest.summary}
+                          {interest.registered && (
+                            <em>
+                              {" "}
+                              · registered{" "}
+                              {new Date(interest.registered).toLocaleDateString("en-GB")}
+                            </em>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+      {interests && (
+        <a className="civic-source-link" href={interests.registerUrl} target="_blank" rel="noreferrer">
+          Full register entry on parliament.uk <ChevronRight size={14} />
+        </a>
+      )}
+    </section>
   );
 }

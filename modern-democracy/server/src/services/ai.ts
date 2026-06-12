@@ -14,7 +14,7 @@ export type Citation = { label: string; url: string };
 type AnalysisRequest = {
   subjectType: "bill" | "debate_post" | "news_item" | "petition";
   subjectId: string;
-  kind: "summary" | "compass" | "moderation";
+  kind: "summary" | "compass" | "moderation" | "debate-summary";
   text: string;
   citations?: Citation[];
 };
@@ -113,6 +113,15 @@ function heuristicSummary(text: string) {
   };
 }
 
+function heuristicDebateSummary(text: string) {
+  return {
+    ...heuristicSummary(text),
+    mainPoints: [],
+    forArguments: [],
+    againstArguments: []
+  };
+}
+
 async function generate(request: AnalysisRequest): Promise<AnalysisResult> {
   if (request.kind === "summary") {
     const result = await callLlm(
@@ -121,6 +130,19 @@ async function generate(request: AnalysisRequest): Promise<AnalysisResult> {
     );
     if (result) return { output: result, model: MODEL, confidence: 0.85 };
     return { output: heuristicSummary(request.text), model: "heuristic-extractive-v0", confidence: 0.3 };
+  }
+
+  if (request.kind === "debate-summary") {
+    const result = await callLlm(
+      'You summarise UK parliamentary debates (Hansard transcripts) for the general public. Be strictly neutral and only report arguments that were actually made, attributing nothing to people who did not speak. Respond with JSON only: {"summary": string (3-5 plain-English sentences on what the debate was about and how it went), "mainPoints": string[] (4-7 key points actually argued), "forArguments": string[] (2-4 strongest arguments made in favour), "againstArguments": string[] (2-4 strongest arguments made against)}.',
+      request.text.slice(0, 30_000)
+    );
+    if (result) return { output: result, model: MODEL, confidence: 0.8 };
+    return {
+      output: heuristicDebateSummary(request.text),
+      model: "heuristic-extractive-v0",
+      confidence: 0.2
+    };
   }
 
   if (request.kind === "compass") {

@@ -20,6 +20,7 @@ import { Compass } from "./Compass";
 import { CompassCompare } from "./CompassCompare";
 import { LocalAreaMap } from "./LocalAreaMap";
 import { MediaLandscape } from "./MediaLandscape";
+import { NationalCompass } from "./NationalCompass";
 import { storedMyCompass } from "./Onboarding";
 import { HelpTrigger } from "./HelpTrigger";
 import { getHelpViewedCountGlobal, markHelpViewedGlobal } from "../lib/useHelpTracking";
@@ -455,12 +456,29 @@ export function Dashboard({
         />
       </section>
 
+      <section className="workspace-section">
+        <div className="section-heading">
+          <CompassIcon size={20} />
+          <div>
+            <h2>The direction of the country</h2>
+            <p>
+              Everything the platform measures on one compass: the public will from civic votes,
+              the pull of discussion, average media influence, every major party, and the
+              government with the direction its current legislation is heading.
+            </p>
+          </div>
+        </div>
+        <div className="panel">
+          <NationalCompass you={myCompass ? { x: myCompass.x, y: myCompass.y } : null} />
+        </div>
+      </section>
+
       {media && media.outlets.length > 0 && (
         <section className="workspace-section">
           <div className="section-heading">
             <Newspaper size={20} />
             <div>
-              <h2>You vs the media</h2>
+              <h2>You vs media influence</h2>
               <p>
                 Every ingested article is compass-scored — this is where each outlet's recent
                 politics coverage sits, and how close it is to you.

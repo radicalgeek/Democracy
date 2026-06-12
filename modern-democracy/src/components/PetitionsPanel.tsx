@@ -161,27 +161,49 @@ export function PetitionsPanel({
         </div>
       </div>
       <div className="bills-grid">
-        {backendPetitions.map((petition) => (
-          <article
-            className="bill-row clickable"
-            key={petition.id}
-            role="button"
-            tabIndex={0}
-            onClick={() => setSelectedId(petition.id)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") setSelectedId(petition.id);
-            }}
-          >
-            <div>
-              <strong>{petition.action}</strong>
-              <span>
-                {petition.signature_count.toLocaleString()} signatures ·{" "}
-                {petition.for_count + petition.against_count + petition.abstain_count} civic votes ·{" "}
-                {petition.debate_count} debate posts
-              </span>
-            </div>
-          </article>
-        ))}
+        {backendPetitions.map((petition) => {
+          const civicTotal = petition.for_count + petition.against_count + petition.abstain_count;
+          const decisive = petition.for_count + petition.against_count;
+          const forShare = decisive > 0 ? Math.round((petition.for_count / decisive) * 100) : null;
+          return (
+            <article
+              className="bill-row rich clickable"
+              key={petition.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setSelectedId(petition.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") setSelectedId(petition.id);
+              }}
+            >
+              <div className="bill-row-copy">
+                <strong>{petition.action}</strong>
+                <span className="bill-row-meta">
+                  {petition.signature_count.toLocaleString()} official signatures
+                  {petition.opened_at &&
+                    ` · opened ${new Date(petition.opened_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
+                  {` · ${stateLabel(petition.state).toLowerCase()}`}
+                </span>
+                <div className="bill-chip-row">
+                  {civicTotal > 0 && (
+                    <span className="bill-chip strong">{civicTotal.toLocaleString()} civic votes</span>
+                  )}
+                  {forShare != null && (
+                    <span className="petition-split" title={`${petition.for_count} for · ${petition.against_count} against`}>
+                      <i className="for" style={{ width: `${forShare}%` }} />
+                      <em>{forShare}% for</em>
+                    </span>
+                  )}
+                  {petition.debate_count > 0 && (
+                    <span className="bill-chip">
+                      {petition.debate_count} debate post{petition.debate_count === 1 ? "" : "s"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
