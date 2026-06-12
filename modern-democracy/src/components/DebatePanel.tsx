@@ -6,6 +6,7 @@ import {
   type BackendDebatePost
 } from "../lib/api";
 import { HelpTrigger } from "./HelpTrigger";
+import { formatCompassPoint } from "../lib/compassLabel";
 import type { DebatePost, VoteChoice } from "../data/types";
 
 type DebatePanelProps = {
@@ -160,6 +161,11 @@ export function DebatePanel({
                   <p>{post.body ?? "Content withheld by moderation."}</p>
                   <footer>
                     <span>{post.stance ?? "no stance"}</span>
+                    {post.compass_x != null && post.compass_y != null && (
+                      <span className="post-compass">
+                        {formatCompassPoint(post.compass_x, post.compass_y)}
+                      </span>
+                    )}
                     <span>{new Date(post.created_at).toLocaleString()}</span>
                   </footer>
                 </article>

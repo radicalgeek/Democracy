@@ -13,6 +13,7 @@ import {
   Users
 } from "lucide-react";
 import type { Petition, PetitionLive, VoteChoice } from "../data/types";
+import { formatCompassPoint } from "../lib/compassLabel";
 import { Compass } from "./Compass";
 import { NewsLens } from "./NewsLens";
 import {
@@ -447,6 +448,11 @@ function PetitionDetail({
                 <p>{post.body ?? "Content withheld by moderation."}</p>
                 <footer>
                   <span>{post.stance ?? "no stance"}</span>
+                  {post.compass_x != null && post.compass_y != null && (
+                    <span className="post-compass">
+                      {formatCompassPoint(post.compass_x, post.compass_y)}
+                    </span>
+                  )}
                   <span>{new Date(post.created_at).toLocaleString()}</span>
                 </footer>
               </article>

@@ -7,6 +7,7 @@ import { importNews } from "./services/news.js";
 import { analyzePetitions, importPetitions } from "./services/petitions.js";
 import { computeEngagementStatsForUser } from "./services/learning.js";
 import { importCivicData } from "./services/civic-data.js";
+import { compassDebatePosts } from "./services/discussion-compass.js";
 import { analyzeBillDebates, importBillDebates } from "./services/hansard.js";
 import {
   importBills,
@@ -26,9 +27,11 @@ export async function runFullImport() {
   const hansardDebates = await importBillDebates(sql);
   const debateSummaries = await analyzeBillDebates(sql);
   const petitionAnalyses = await analyzePetitions(sql);
+  const postCompass = await compassDebatePosts(sql);
   const news = await importNews(sql);
   return {
     civicData,
+    postCompass,
     constituencies,
     bills,
     texts,
@@ -43,8 +46,13 @@ export async function runFullImport() {
   };
 }
 
-/** Generate summary + compass (with provenance) for bills that have source text. */
+/**
+ * Generate summary + compass (with provenance) for bills. Every bill should
+ * carry a compass position: unanalyzed bills come first so coverage reaches
+ * 100% over import cycles, then division-linked bills refresh.
+ */
 export async function analyzeImportedBills() {
+  const limit = Number(process.env.ANALYZE_BILLS_LIMIT ?? 40);
   const bills = await sql`
     select b.id, b.short_title, b.long_title, b.source_url,
            t.text_content, t.source_url as text_url, t.title as text_title
@@ -54,9 +62,13 @@ export async function analyzeImportedBills() {
       where bill_id = b.id and text_content is not null
       order by id limit 1
     ) t on true
-    order by exists (select 1 from divisions d where d.bill_id = b.id) desc,
+    order by exists (
+               select 1 from ai_analyses a
+               where a.subject_type = 'bill' and a.subject_id = b.id::text and a.kind = 'compass'
+             ) asc,
+             exists (select 1 from divisions d where d.bill_id = b.id) desc,
              b.last_updated desc nulls last
-    limit 12
+    limit ${limit}
   `;
 
   let generated = 0;

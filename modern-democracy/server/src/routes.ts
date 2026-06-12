@@ -486,9 +486,17 @@ export async function registerRoutes(app: FastifyInstance) {
              case when dp.moderation_state in ('hidden', 'blocked')
                   then null else dp.body end as body,
              u.display_name as author,
-             (select count(*)::int from temporary_bans tb where tb.user_id = dp.user_id) as public_ban_count
+             (select count(*)::int from temporary_bans tb where tb.user_id = dp.user_id) as public_ban_count,
+             c.x as compass_x, c.y as compass_y
       from debate_posts dp
       join users u on u.id = dp.user_id
+      left join lateral (
+        select (output->>'x')::float as x, (output->>'y')::float as y
+        from ai_analyses
+        where subject_type = 'debate_post' and subject_id = dp.id::text
+          and kind = 'compass' and output->>'x' is not null
+        order by id desc limit 1
+      ) c on true
       where dp.bill_id = ${billId} and dp.moderation_state <> 'blocked'
       order by dp.id desc
       limit 100

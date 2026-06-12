@@ -233,6 +233,8 @@ export type BackendDebatePost = {
   body: string | null;
   author: string;
   public_ban_count: number;
+  compass_x: number | null;
+  compass_y: number | null;
 };
 
 async function getJson<T>(path: string): Promise<T> {

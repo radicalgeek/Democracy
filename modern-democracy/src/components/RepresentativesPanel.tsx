@@ -3,9 +3,11 @@ import {
   ArrowLeft,
   BadgeAlert,
   ChevronRight,
+  Compass as CompassIcon,
   ExternalLink,
   Landmark,
   Loader2,
+  ReceiptText,
   ScrollText,
   Search,
   TrendingUp,
@@ -13,6 +15,8 @@ import {
   Users,
   Vote
 } from "lucide-react";
+import { Compass } from "./Compass";
+import { formatCompassPoint } from "../lib/compassLabel";
 import {
   fetchConstituencyElections,
   fetchMemberInterests,
@@ -35,6 +39,17 @@ function partyColour(colour: string | null | undefined) {
 /** Official public page for a Commons division — ids are the Votes API's own. */
 export function divisionUrl(divisionId: number) {
   return `https://votes.parliament.uk/Votes/Commons/Division/${divisionId}`;
+}
+
+/** IPSA's per-MP costs page slug: honorifics stripped, name kebab-cased. */
+function ipsaSlug(name: string) {
+  return name
+    .replace(/\b(Rt Hon|Sir|Dame|Dr|Mr|Mrs|Ms|MP)\b\.?/g, " ")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 type RepresentativesPanelProps = {
@@ -122,6 +137,11 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
               <strong>{party.abbreviation ?? party.name}</strong>
               <span>{party.seats} seats</span>
               {party.discipline != null && <em>{party.discipline}% discipline</em>}
+              {party.compass && (
+                <small className="party-compass">
+                  {formatCompassPoint(party.compass.x, party.compass.y)}
+                </small>
+              )}
             </button>
           ))}
         </div>
@@ -247,7 +267,7 @@ function RepresentativeDetail({
     );
   }
 
-  const { member, stats, latestElection, biography, votingRecord } = detail;
+  const { member, stats, latestElection, biography, votingRecord, compass } = detail;
   const candidates = (latestElection?.candidates ?? [])
     .slice()
     .sort((a, b) => b.votes - a.votes)
@@ -304,6 +324,63 @@ function RepresentativeDetail({
         </div>
         {member.synopsis && <p className="rep-synopsis">{member.synopsis}</p>}
       </section>
+
+      <div className="petition-grid">
+        <section className="panel">
+          <h3>
+            <CompassIcon size={16} /> Political position
+          </h3>
+          {compass ? (
+            <>
+              <Compass
+                compact
+                point={{
+                  x: compass.x / 10,
+                  y: compass.y / 10,
+                  label: member.name,
+                  confidence: 1,
+                  rationale: ""
+                }}
+              />
+              <p className="muted">
+                {formatCompassPoint(compass.x, compass.y)} — revealed preference from{" "}
+                {compass.sample} division vote{compass.sample === 1 ? "" : "s"} on compass-scored
+                bills, not a self-description.
+              </p>
+            </>
+          ) : (
+            <p className="muted">
+              No position yet — it appears once this MP has voted in divisions on compass-scored
+              bills.
+            </p>
+          )}
+        </section>
+        <section className="panel">
+          <h3>
+            <ReceiptText size={16} /> Staffing and business costs
+          </h3>
+          <p className="muted">
+            Every MP's office, staffing, travel and accommodation claims are published by IPSA, the
+            independent expenses regulator.
+          </p>
+          <a
+            className="civic-source-link"
+            href={`https://www.theipsa.org.uk/mp-staffing-business-costs/your-mp/${ipsaSlug(member.name)}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {member.name}'s published costs on theipsa.org.uk <ChevronRight size={14} />
+          </a>
+          <a
+            className="civic-source-link"
+            href="https://www.theipsa.org.uk/mp-staffing-business-costs/annual-publication"
+            target="_blank"
+            rel="noreferrer"
+          >
+            IPSA annual publications <ChevronRight size={14} />
+          </a>
+        </section>
+      </div>
 
       {(posts.length > 0 || seatHistory.length > 0) && (
         <div className="petition-grid">
