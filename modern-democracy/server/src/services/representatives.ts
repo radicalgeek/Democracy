@@ -24,14 +24,33 @@ export async function listRepresentatives(
   const skip = options.skip ?? 0;
   const search = options.search ? `%${options.search.toLowerCase()}%` : null;
   const rows = await sql`
+    with scored as (
+      select distinct on (a.subject_id) (a.subject_id)::int as bill_id,
+             (a.output->>'x')::float as x, (a.output->>'y')::float as y
+      from ai_analyses a
+      where a.subject_type = 'bill' and a.kind = 'compass' and a.output->>'x' is not null
+      order by a.subject_id, a.id desc
+    ),
+    member_compass as (
+      select dv.member_id,
+             round(avg((case when dv.vote = 'aye' then 1 else -1 end) * s.x)::numeric, 2)::float as x,
+             round(avg((case when dv.vote = 'aye' then 1 else -1 end) * s.y)::numeric, 2)::float as y,
+             count(*)::int as sample
+      from division_votes dv
+      join divisions d on d.id = dv.division_id
+      join scored s on s.bill_id = d.bill_id
+      group by dv.member_id
+    )
     select r.id, r.name, r.gender, r.thumbnail_url,
            p.name as party, p.abbreviation as party_abbreviation, p.background_colour as party_colour,
            c.id as constituency_id, c.name as constituency,
            (select count(*)::int from division_votes dv where dv.member_id = r.id) as division_votes,
+           mc.x as compass_x, mc.y as compass_y, mc.sample as compass_sample,
            count(*) over ()::int as total
     from representatives r
     left join parties p on p.id = r.party_id
     left join constituencies c on c.id = r.constituency_id
+    left join member_compass mc on mc.member_id = r.id
     where (${search}::text is null or lower(r.name) like ${search} or lower(c.name) like ${search})
       and (${options.party ?? null}::text is null or p.name = ${options.party ?? null})
     order by r.name
@@ -246,6 +265,13 @@ export async function representativeDetail(sql: Sql, memberId: number) {
         }
       : null;
 
+  // Party position as a proxy when the MP has no personal scored votes yet —
+  // the client labels which one it is showing.
+  const partyPositions = await partyCompassPositions(sql);
+  const partyCompass = member.party_id
+    ? partyPositions.get(member.party_id as number) ?? null
+    : null;
+
   return {
     member: {
       id: member.id,
@@ -271,6 +297,7 @@ export async function representativeDetail(sql: Sql, memberId: number) {
           : null
     },
     compass,
+    partyCompass,
     votingRecord: record.slice(0, 25).map((row) => ({
       divisionId: row.id,
       title: row.title,

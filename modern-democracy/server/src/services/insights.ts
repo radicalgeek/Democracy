@@ -334,3 +334,33 @@ export async function nationalCompass(sql: Sql) {
     generatedAt: new Date().toISOString()
   };
 }
+
+/** Latest compass-scored articles across all outlets, for the media page. */
+export async function mediaArticles(sql: Sql, take = 40) {
+  const articles = await sql`
+    select n.id, n.title, n.url, n.published_at, s.name as source,
+           c.x, c.y, c.label
+    from news_items n
+    left join news_sources s on s.id = n.source_id
+    join lateral (
+      select (output->>'x')::float as x, (output->>'y')::float as y,
+             output->>'label' as label
+      from ai_analyses
+      where subject_type = 'news_item' and subject_id = n.id::text
+        and kind = 'compass' and output->>'x' is not null
+      order by id desc limit 1
+    ) c on true
+    order by n.published_at desc nulls last
+    limit ${take}
+  `;
+  return {
+    articles: articles.map((row) => ({
+      id: row.id as number,
+      title: row.title as string,
+      url: row.url as string,
+      publishedAt: row.published_at as string | null,
+      source: (row.source as string) ?? "Unknown source",
+      compass: { x: row.x as number, y: row.y as number, label: (row.label as string) ?? "scored" }
+    }))
+  };
+}

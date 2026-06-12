@@ -603,6 +603,9 @@ export type RepListMember = {
   constituency_id: number | null;
   constituency: string | null;
   division_votes: number;
+  compass_x: number | null;
+  compass_y: number | null;
+  compass_sample: number | null;
 };
 
 export type PartySummary = {
@@ -649,6 +652,7 @@ export type RepDetail = {
   } | null;
   stats: { divisionsVoted: number; rebellions: number; partyLinePercent: number | null };
   compass: { x: number; y: number; sample: number } | null;
+  partyCompass: { x: number; y: number; sample: number } | null;
   votingRecord: Array<{
     divisionId: number;
     title: string;
@@ -780,6 +784,19 @@ export type NationalCompassPayload = {
 
 export function fetchNationalCompass() {
   return getJson<NationalCompassPayload>("/api/insights/national-compass");
+}
+
+export type MediaArticle = {
+  id: number;
+  title: string;
+  url: string;
+  publishedAt: string | null;
+  source: string;
+  compass: { x: number; y: number; label: string };
+};
+
+export function fetchMediaArticles(take = 40) {
+  return getJson<{ articles: MediaArticle[] }>(`/api/insights/media-articles?take=${take}`);
 }
 
 export type BallotMajority = {

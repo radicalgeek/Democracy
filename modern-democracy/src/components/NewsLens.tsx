@@ -7,6 +7,24 @@ type NewsLensProps = {
 };
 
 export function NewsLens({ items }: NewsLensProps) {
+  if (items.length === 0) {
+    return (
+      <section className="workspace-section">
+        <div className="section-heading">
+          <Newspaper size={20} />
+          <div>
+            <h2>Democracy.News lens</h2>
+            <p>
+              No scored coverage has been linked to this yet — articles attach automatically as
+              they are ingested. See the <a href="#/media">Media page</a> for the wider influence
+              landscape.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="workspace-section">
       <div className="section-heading">

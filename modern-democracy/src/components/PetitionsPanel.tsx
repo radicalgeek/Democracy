@@ -380,7 +380,7 @@ function PetitionDetail({
         )}
       </div>
 
-      {detail.news?.length > 0 && <NewsLens items={detail.news.map(mapBackendNews)} />}
+      <NewsLens items={(detail.news ?? []).map(mapBackendNews)} />
 
       <section className="workspace-section">
         <div className="section-heading">

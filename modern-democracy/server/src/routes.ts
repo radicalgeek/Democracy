@@ -30,7 +30,13 @@ import {
   partySummaries,
   representativeDetail
 } from "./services/representatives.js";
-import { ballotMajorities, constituencyLeans, mediaCompass, nationalCompass } from "./services/insights.js";
+import {
+  ballotMajorities,
+  constituencyLeans,
+  mediaArticles,
+  mediaCompass,
+  nationalCompass
+} from "./services/insights.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 import { getUserEngagementStats, computeEngagementStatsForUser } from "./services/learning.js";
@@ -311,6 +317,11 @@ export async function registerRoutes(app: FastifyInstance) {
 
   app.get("/api/insights/national-compass", async () => {
     return nationalCompass(sql);
+  });
+
+  app.get("/api/insights/media-articles", async (request) => {
+    const take = Math.min(Number((request.query as { take?: string }).take ?? 40), 100);
+    return mediaArticles(sql, take);
   });
 
   app.get("/api/insights/ballots", async (request) => {

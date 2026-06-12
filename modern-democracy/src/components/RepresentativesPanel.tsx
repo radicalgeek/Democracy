@@ -2,14 +2,19 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   BadgeAlert,
+  Banknote,
+  Building2,
   ChevronRight,
   Compass as CompassIcon,
   ExternalLink,
+  HandCoins,
   Landmark,
   Loader2,
   ReceiptText,
+  Scale,
   ScrollText,
   Search,
+  ShieldQuestion,
   TrendingUp,
   UserRound,
   Users,
@@ -63,6 +68,7 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
   const [members, setMembers] = useState<RepListMember[]>([]);
   const [total, setTotal] = useState(0);
   const [parties, setParties] = useState<PartySummary[]>([]);
+  const [selectedParty, setSelectedParty] = useState<PartySummary | null>(null);
   const [search, setSearch] = useState("");
   const [partyFilter, setPartyFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -132,7 +138,11 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
               key={party.id}
               className={partyFilter === party.name ? "party-card selected" : "party-card"}
               style={{ borderTopColor: partyColour(party.colour) }}
-              onClick={() => setPartyFilter(partyFilter === party.name ? null : party.name)}
+              onClick={() => {
+                const next = partyFilter === party.name ? null : party.name;
+                setPartyFilter(next);
+                setSelectedParty(next ? party : null);
+              }}
             >
               <strong>{party.abbreviation ?? party.name}</strong>
               <span>{party.seats} seats</span>
@@ -145,6 +155,7 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
             </button>
           ))}
         </div>
+        {selectedParty && <PartyInfluencePanel party={selectedParty} />}
       </section>
 
       <section className="workspace-section">
@@ -195,6 +206,14 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
                 {member.party ?? "Independent"}
               </span>
               <span className="muted">{member.constituency ?? "—"}</span>
+              {member.compass_x != null && member.compass_y != null && (
+                <span
+                  className="rep-compass-chip"
+                  title={`Revealed preference from ${member.compass_sample} division vote${member.compass_sample === 1 ? "" : "s"} on compass-scored bills`}
+                >
+                  {formatCompassPoint(member.compass_x, member.compass_y)}
+                </span>
+              )}
             </article>
           ))}
         </div>
@@ -224,12 +243,16 @@ function RepresentativeDetail({
 }) {
   const [detail, setDetail] = useState<RepDetail | null>(null);
   const [elections, setElections] = useState<ConstituencyElection[] | null>(null);
+  const [interests, setInterests] = useState<MemberInterests | null>(null);
+  const [interestsFailed, setInterestsFailed] = useState(false);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     setDetail(null);
     setElections(null);
+    setInterests(null);
+    setInterestsFailed(false);
     fetchRepresentativeDetail(memberId)
       .then((payload) => {
         if (!mounted) return;
@@ -241,6 +264,9 @@ function RepresentativeDetail({
         } else {
           setElections([]);
         }
+        fetchMemberInterests(memberId)
+          .then((result) => mounted && setInterests(result))
+          .catch(() => mounted && setInterestsFailed(true));
       })
       .catch(() => mounted && setFailed(true));
     return () => {
@@ -267,7 +293,7 @@ function RepresentativeDetail({
     );
   }
 
-  const { member, stats, latestElection, biography, votingRecord, compass } = detail;
+  const { member, stats, latestElection, biography, votingRecord, compass, partyCompass } = detail;
   const candidates = (latestElection?.candidates ?? [])
     .slice()
     .sort((a, b) => b.votes - a.votes)
@@ -325,6 +351,15 @@ function RepresentativeDetail({
         {member.synopsis && <p className="rep-synopsis">{member.synopsis}</p>}
       </section>
 
+      <InfluenceSummary
+        member={member}
+        stats={stats}
+        compass={compass}
+        partyCompass={detail.partyCompass}
+        interests={interests}
+        interestsFailed={interestsFailed}
+      />
+
       <div className="petition-grid">
         <section className="panel">
           <h3>
@@ -346,6 +381,24 @@ function RepresentativeDetail({
                 {formatCompassPoint(compass.x, compass.y)} — revealed preference from{" "}
                 {compass.sample} division vote{compass.sample === 1 ? "" : "s"} on compass-scored
                 bills, not a self-description.
+              </p>
+            </>
+          ) : partyCompass ? (
+            <>
+              <Compass
+                compact
+                point={{
+                  x: partyCompass.x / 10,
+                  y: partyCompass.y / 10,
+                  label: member.party ?? "Party",
+                  confidence: 1,
+                  rationale: ""
+                }}
+              />
+              <p className="muted">
+                {formatCompassPoint(partyCompass.x, partyCompass.y)} — {member.party ?? "party"}{" "}
+                position shown as a proxy: this MP has no division votes on compass-scored bills
+                yet.
               </p>
             </>
           ) : (
@@ -373,7 +426,7 @@ function RepresentativeDetail({
           </a>
           <a
             className="civic-source-link"
-            href="https://www.theipsa.org.uk/mp-staffing-business-costs/annual-publication"
+            href="https://www.theipsa.org.uk/mp-staffing-business-costs/annual-publications"
             target="_blank"
             rel="noreferrer"
           >
@@ -491,7 +544,12 @@ function RepresentativeDetail({
         </section>
       )}
 
-      <InterestsSection memberId={memberId} memberName={member.name} />
+      <InterestsSection
+        memberId={memberId}
+        memberName={member.name}
+        initialInterests={interests}
+        initialFailed={interestsFailed}
+      />
 
       <section className="workspace-section">
         <div className="section-heading">
@@ -549,17 +607,281 @@ function RepresentativeDetail({
   );
 }
 
+type InterestStats = {
+  total: number;
+  donorEntries: number;
+  paidEntries: number;
+  assetEntries: number;
+  roleEntries: number;
+  topDonors: string[];
+};
+
+function extractInterestStats(interests: MemberInterests | null): InterestStats {
+  if (!interests) {
+    return { total: 0, donorEntries: 0, paidEntries: 0, assetEntries: 0, roleEntries: 0, topDonors: [] };
+  }
+
+  const donorNames = new Set<string>();
+  let donorEntries = 0;
+  let paidEntries = 0;
+  let assetEntries = 0;
+  let roleEntries = 0;
+
+  for (const category of interests.categories) {
+    for (const interest of category.interests) {
+      const text = `${category.name}\n${interest.summary}`;
+      if (/donor|donation|gift|hospitality|benefit|sponsor|visit/i.test(text)) donorEntries += 1;
+      if (/employment|earnings|payment|payer|salary|role, work|services/i.test(text)) paidEntries += 1;
+      if (/land|property|shareholding|share|asset|trust|company/i.test(text)) assetEntries += 1;
+      if (/director|trustee|chair|adviser|consultant|patron|board/i.test(text)) roleEntries += 1;
+
+      const donor = interest.summary.match(/Name of donor:\s*([^\r\n]+)/i);
+      if (donor?.[1]) donorNames.add(donor[1].trim());
+      const payer = interest.summary.match(/Payer:\s*([^\r\n]+)/i);
+      if (payer?.[1]) donorNames.add(payer[1].trim());
+    }
+  }
+
+  return {
+    total: interests.total,
+    donorEntries,
+    paidEntries,
+    assetEntries,
+    roleEntries,
+    topDonors: [...donorNames].slice(0, 4)
+  };
+}
+
+function InfluenceSummary({
+  member,
+  stats,
+  compass,
+  partyCompass,
+  interests,
+  interestsFailed
+}: {
+  member: RepDetail["member"];
+  stats: RepDetail["stats"];
+  compass: RepDetail["compass"];
+  partyCompass: RepDetail["partyCompass"];
+  interests: MemberInterests | null;
+  interestsFailed: boolean;
+}) {
+  const interestStats = extractInterestStats(interests);
+
+  return (
+    <section className="workspace-section influence-section">
+      <div className="section-heading">
+        <Scale size={20} />
+        <div>
+          <h2>Influence and accountability</h2>
+          <p>
+            A source-labelled view of the money, interests, lobbying signals and compass scores
+            around this MP.
+          </p>
+        </div>
+      </div>
+
+      <div className="influence-grid">
+        <article className="influence-card compass-card">
+          <div className="influence-card-head">
+            <CompassIcon size={17} />
+            <span>Political compass</span>
+            <em className="source-pill official">calculated</em>
+          </div>
+          <strong>{compass ? formatCompassPoint(compass.x, compass.y) : "Awaiting score"}</strong>
+          <small>
+            {compass
+              ? `${compass.sample} scored division vote${compass.sample === 1 ? "" : "s"}`
+              : "Needs votes on compass-scored bills"}
+          </small>
+          <span className="influence-note">
+            Party: {partyCompass ? formatCompassPoint(partyCompass.x, partyCompass.y) : "awaiting score"}
+          </span>
+        </article>
+
+        <article className="influence-card">
+          <div className="influence-card-head">
+            <HandCoins size={17} />
+            <span>Donors and benefits</span>
+            <em className="source-pill self">self-reported</em>
+          </div>
+          <strong>{interests ? interestStats.donorEntries : interestsFailed ? "Unavailable" : "Loading"}</strong>
+          <small>gift, donation, hospitality or sponsor-like entries</small>
+          {interestStats.topDonors.length > 0 && (
+            <span className="influence-note">{interestStats.topDonors.join(" · ")}</span>
+          )}
+        </article>
+
+        <article className="influence-card">
+          <div className="influence-card-head">
+            <Banknote size={17} />
+            <span>Paid interests</span>
+            <em className="source-pill self">self-reported</em>
+          </div>
+          <strong>{interests ? interestStats.paidEntries : interestsFailed ? "Unavailable" : "Loading"}</strong>
+          <small>employment, earnings, payment or services entries</small>
+          <span className="influence-note">
+            {interests ? `${interestStats.total} total register entries` : "Official register fetch"}
+          </span>
+        </article>
+
+        <article className="influence-card">
+          <div className="influence-card-head">
+            <Building2 size={17} />
+            <span>Assets and roles</span>
+            <em className="source-pill self">self-reported</em>
+          </div>
+          <strong>{interests ? interestStats.assetEntries + interestStats.roleEntries : interestsFailed ? "Unavailable" : "Loading"}</strong>
+          <small>property, shareholding, company, trustee or advisory signals</small>
+          <span className="influence-note">
+            {interestStats.assetEntries} asset · {interestStats.roleEntries} role
+          </span>
+        </article>
+
+        <article className="influence-card">
+          <div className="influence-card-head">
+            <ShieldQuestion size={17} />
+            <span>Lobbying exposure</span>
+            <em className="source-pill partial">partial</em>
+          </div>
+          <strong>Not complete</strong>
+          <small>ORCL only covers consultant lobbying of ministers and permanent secretaries</small>
+          <a
+            className="civic-source-link"
+            href="https://registrarofconsultantlobbyists.org.uk/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Search consultant lobbyists <ChevronRight size={14} />
+          </a>
+        </article>
+
+        <article className="influence-card">
+          <div className="influence-card-head">
+            <ReceiptText size={17} />
+            <span>Public costs</span>
+            <em className="source-pill official">official</em>
+          </div>
+          <strong>IPSA</strong>
+          <small>staffing, office, travel and accommodation costs</small>
+          <a
+            className="civic-source-link"
+            href={`https://www.theipsa.org.uk/mp-staffing-business-costs/your-mp/${ipsaSlug(member.name)}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            View MP costs <ChevronRight size={14} />
+          </a>
+        </article>
+      </div>
+
+      <p className="influence-caveat">
+        This is an accountability map, not a misconduct claim. Register entries are published
+        disclosures; lobbying coverage is known to be incomplete until ORCL, ministerial meetings,
+        APPGs and Electoral Commission donations are joined.
+      </p>
+    </section>
+  );
+}
+
+function PartyInfluencePanel({ party }: { party: PartySummary }) {
+  return (
+    <div className="party-influence panel" style={{ borderTopColor: partyColour(party.colour) }}>
+      <div className="party-influence-title">
+        <div>
+          <h3>{party.name} transparency snapshot</h3>
+          <p>
+            Make party influence visible beside seats and discipline; full donor and lobbying
+            imports should join this profile next.
+          </p>
+        </div>
+        <span className="party-chip" style={{ background: partyColour(party.colour) }}>
+          {party.abbreviation ?? party.name}
+        </span>
+      </div>
+      <div className="party-influence-grid">
+        <div>
+          <span>Political compass</span>
+          <strong>{party.compass ? formatCompassPoint(party.compass.x, party.compass.y) : "Awaiting score"}</strong>
+          <em>
+            {party.compass
+              ? `${party.compass.sample} MP vote sample${party.compass.sample === 1 ? "" : "s"}`
+              : "Needs scored divisions"}
+          </em>
+        </div>
+        <div>
+          <span>Party discipline</span>
+          <strong>{party.discipline != null ? `${party.discipline}%` : "Awaiting votes"}</strong>
+          <em>share of MP votes with party majority</em>
+        </div>
+        <div>
+          <span>Known funding source</span>
+          <strong>Electoral Commission</strong>
+          <em>party donations and loans import planned</em>
+        </div>
+        <div>
+          <span>Lobbying source</span>
+          <strong>ORCL + APPGs</strong>
+          <em>partial influence graph planned</em>
+        </div>
+      </div>
+      <div className="party-source-links">
+        <a
+          className="civic-source-link"
+          href="https://search.electoralcommission.org.uk/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Electoral Commission donations <ChevronRight size={14} />
+        </a>
+        <a
+          className="civic-source-link"
+          href="https://registrarofconsultantlobbyists.org.uk/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Consultant Lobbyists Register <ChevronRight size={14} />
+        </a>
+        <a
+          className="civic-source-link"
+          href="https://www.parliament.uk/about/mps-and-lords/members/apg/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          All-Party Parliamentary Groups <ChevronRight size={14} />
+        </a>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Register of Members' Financial Interests, live from the official Interests
  * API — grouped by category, collapsed by default, with a link to the full
  * register entry.
  */
-function InterestsSection({ memberId, memberName }: { memberId: number; memberName: string }) {
-  const [interests, setInterests] = useState<MemberInterests | null>(null);
-  const [failed, setFailed] = useState(false);
+function InterestsSection({
+  memberId,
+  memberName,
+  initialInterests,
+  initialFailed
+}: {
+  memberId: number;
+  memberName: string;
+  initialInterests: MemberInterests | null;
+  initialFailed: boolean;
+}) {
+  const [interests, setInterests] = useState<MemberInterests | null>(initialInterests);
+  const [failed, setFailed] = useState(initialFailed);
   const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   useEffect(() => {
+    if (initialInterests || initialFailed) {
+      setInterests(initialInterests);
+      setFailed(initialFailed);
+      return;
+    }
     let mounted = true;
     setInterests(null);
     setFailed(false);
@@ -569,7 +891,7 @@ function InterestsSection({ memberId, memberName }: { memberId: number; memberNa
     return () => {
       mounted = false;
     };
-  }, [memberId]);
+  }, [memberId, initialInterests, initialFailed]);
 
   if (failed) return null;
 
