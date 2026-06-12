@@ -62,11 +62,20 @@ export async function importPetitions(sql: Sql, pages = 2) {
   }
 }
 
-/** Summary + compass analyses for the most-signed petitions. */
-export async function analyzePetitions(sql: Sql, limit = 6) {
+/**
+ * Summary + compass analyses for petitions — unanalyzed first so every
+ * petition ends up with a compass position over import cycles.
+ */
+export async function analyzePetitions(sql: Sql, limit = 30) {
   const petitions = await sql`
     select id, action, background, additional_details from petitions
-    where state = 'open' order by signature_count desc limit ${limit}
+    where state = 'open'
+    order by exists (
+               select 1 from ai_analyses a
+               where a.subject_type = 'petition' and a.subject_id = petitions.id::text and a.kind = 'compass'
+             ) asc,
+             signature_count desc
+    limit ${limit}
   `;
   let generated = 0;
   for (const petition of petitions) {
@@ -145,9 +154,17 @@ export async function petitionDetail(sql: Sql, petitionId: number, userId: numbe
     select dp.id, dp.stance, dp.moderation_state, dp.created_at,
            case when dp.moderation_state in ('hidden', 'blocked') then null else dp.body end as body,
            u.display_name as author,
-           (select count(*)::int from temporary_bans tb where tb.user_id = dp.user_id) as public_ban_count
+           (select count(*)::int from temporary_bans tb where tb.user_id = dp.user_id) as public_ban_count,
+           c.x as compass_x, c.y as compass_y
     from debate_posts dp
     join users u on u.id = dp.user_id
+    left join lateral (
+      select (output->>'x')::float as x, (output->>'y')::float as y
+      from ai_analyses
+      where subject_type = 'debate_post' and subject_id = dp.id::text
+        and kind = 'compass' and output->>'x' is not null
+      order by id desc limit 1
+    ) c on true
     where dp.petition_id = ${petitionId} and dp.moderation_state <> 'blocked'
     order by dp.id desc
     limit 100

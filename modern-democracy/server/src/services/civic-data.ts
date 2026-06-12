@@ -51,6 +51,21 @@ const sources: SourceSeed[] = [
     caveats: "Declarations are self-reported; categories changed over time."
   },
   {
+    id: "ipsa-expenses",
+    name: "IPSA MPs' staffing and business costs",
+    category: "parliamentary-scrutiny",
+    scope: "House of Commons",
+    owner: "Independent Parliamentary Standards Authority",
+    url: "https://www.theipsa.org.uk/mp-staffing-business-costs/your-mp",
+    licence: "Open Government Licence",
+    officialStatus: "official",
+    refreshCadence: "Published in scheduled releases through the year",
+    newcomerExplanation: "What each MP claims for staff, offices, travel and accommodation — the official expenses record.",
+    compassScorePotential: "Low directly; high for accountability context per MP.",
+    aggregateViewPotential: "Per-MP cost panels, party and regional rollups, claims vs allowances.",
+    caveats: "No public JSON API — per-MP pages render client-side; bulk import needs the published CSV releases."
+  },
+  {
     id: "lobbying-register",
     name: "Register of Consultant Lobbyists",
     category: "parliamentary-scrutiny",

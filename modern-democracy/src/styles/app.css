@@ -4558,3 +4558,21 @@ button.ghost {
     grid-template-columns: 1fr;
   }
 }
+
+/* --- Per-comment compass chips and party leans --- */
+
+.post-compass {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #5b3f76;
+  background: rgba(138, 79, 158, 0.1);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+.party-card .party-compass {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}

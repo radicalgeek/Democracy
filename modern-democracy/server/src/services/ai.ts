@@ -88,7 +88,7 @@ function lexiconScore(text: string, words: string[]) {
   return words.reduce((sum, word) => sum + (lower.includes(word) ? 1 : 0), 0);
 }
 
-function heuristicCompass(text: string) {
+export function heuristicCompass(text: string) {
   const left = lexiconScore(text, ECON_LEFT);
   const right = lexiconScore(text, ECON_RIGHT);
   const auth = lexiconScore(text, AUTH);

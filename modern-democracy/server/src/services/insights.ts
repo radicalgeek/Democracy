@@ -238,31 +238,56 @@ export async function nationalCompass(sql: Sql) {
   };
   const civicWill = mean(willPoints);
 
-  // --- Discussion: debate-post stance balance per subject, weighted by activity ---
-  const postStances = await sql`
-    select bill_id, petition_id,
-           count(*) filter (where stance = 'for')::int as for_count,
-           count(*) filter (where stance = 'against')::int as against_count,
-           count(*)::int as total
-    from debate_posts
-    where moderation_state not in ('hidden', 'blocked')
-    group by bill_id, petition_id
+  // --- Discussion: what people actually say. Prefer per-post compass scores
+  // (every scored comment is a data point); fall back to subject positions
+  // signed by stance balance while post scoring catches up. ---
+  const [postScores] = await sql`
+    with latest as (
+      select distinct on (subject_id) subject_id,
+             (output->>'x')::float as x, (output->>'y')::float as y
+      from ai_analyses
+      where subject_type = 'debate_post' and kind = 'compass' and output->>'x' is not null
+      order by subject_id, id desc
+    )
+    select count(*)::int as sample,
+           round(avg(x)::numeric, 2)::float as x,
+           round(avg(y)::numeric, 2)::float as y
+    from latest
+    where x <> 0 or y <> 0
   `;
-  const discussionPoints: Array<{ x: number; y: number }> = [];
-  const discussionWeights: number[] = [];
-  for (const row of postStances) {
-    const vector = row.bill_id
-      ? billVectors.get(row.bill_id as number)
-      : row.petition_id
-        ? petitionVectors.get(row.petition_id as number)
-        : null;
-    if (!vector) continue;
-    if ((row.for_count as number) === (row.against_count as number)) continue;
-    const sign = (row.for_count as number) > (row.against_count as number) ? 1 : -1;
-    discussionPoints.push({ x: sign * vector.x, y: sign * vector.y });
-    discussionWeights.push(row.total as number);
+  let discussion: { x: number; y: number; sample: number } | null = null;
+  if (postScores && (postScores.sample as number) >= 5) {
+    discussion = {
+      x: postScores.x as number,
+      y: postScores.y as number,
+      sample: postScores.sample as number
+    };
+  } else {
+    const postStances = await sql`
+      select bill_id, petition_id,
+             count(*) filter (where stance = 'for')::int as for_count,
+             count(*) filter (where stance = 'against')::int as against_count,
+             count(*)::int as total
+      from debate_posts
+      where moderation_state not in ('hidden', 'blocked')
+      group by bill_id, petition_id
+    `;
+    const discussionPoints: Array<{ x: number; y: number }> = [];
+    const discussionWeights: number[] = [];
+    for (const row of postStances) {
+      const vector = row.bill_id
+        ? billVectors.get(row.bill_id as number)
+        : row.petition_id
+          ? petitionVectors.get(row.petition_id as number)
+          : null;
+      if (!vector) continue;
+      if ((row.for_count as number) === (row.against_count as number)) continue;
+      const sign = (row.for_count as number) > (row.against_count as number) ? 1 : -1;
+      discussionPoints.push({ x: sign * vector.x, y: sign * vector.y });
+      discussionWeights.push(row.total as number);
+    }
+    discussion = mean(discussionPoints, discussionWeights);
   }
-  const discussion = mean(discussionPoints, discussionWeights);
 
   // --- Media influence: average coverage position ---
   const media = await mediaCompass(sql);
