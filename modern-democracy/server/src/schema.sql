@@ -350,3 +350,105 @@ create table if not exists user_engagement_stats (
 );
 create index if not exists engagement_stats_user_idx on user_engagement_stats (user_id, period_date desc);
 create index if not exists engagement_stats_period_idx on user_engagement_stats (period_date);
+
+-- Civic data expansion spine: source registry, local-government layers,
+-- fiscal/tax explainers, compass scoring, and aggregate views. These tables
+-- intentionally start source-first so every future ingestion can explain
+-- provenance, caveats, newcomer value, compass potential, and aggregate use.
+create table if not exists source_registry (
+  id text primary key,
+  name text not null,
+  category text not null,
+  scope text not null,
+  owner text not null,
+  url text not null,
+  licence text,
+  official_status text not null,
+  refresh_cadence text,
+  newcomer_explanation text not null,
+  compass_score_potential text not null,
+  aggregate_view_potential text not null,
+  caveats text,
+  metadata jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+create index if not exists source_registry_category_idx on source_registry (category);
+
+create table if not exists local_civic_layers (
+  id text primary key,
+  title text not null,
+  layer_type text not null,
+  summary text not null,
+  source_id text references source_registry(id),
+  beginner_label text not null,
+  gamified_action text,
+  compass_potential text,
+  aggregate_view text not null,
+  status text not null default 'planned',
+  sort_order integer not null default 0,
+  metadata jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists fiscal_indicators (
+  id text primary key,
+  title text not null,
+  plain_english text not null,
+  source_id text references source_registry(id),
+  period text,
+  value_label text,
+  trend_label text,
+  why_it_matters text not null,
+  compass_potential text,
+  aggregate_view text not null,
+  status text not null default 'planned',
+  sort_order integer not null default 0,
+  metadata jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists tax_scenarios (
+  id text primary key,
+  title text not null,
+  persona text not null,
+  plain_english text not null,
+  source_ids text[] not null default array[]::text[],
+  visible_pattern text not null,
+  compass_potential text,
+  aggregate_view text not null,
+  status text not null default 'planned',
+  sort_order integer not null default 0,
+  metadata jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists compass_scores (
+  id bigserial primary key,
+  subject_type text not null,
+  subject_id text not null,
+  x numeric(6,2) not null,
+  y numeric(6,2) not null,
+  label text not null,
+  explanation text not null,
+  confidence real not null default 0,
+  source_id text references source_registry(id),
+  method text not null default 'seeded-product-rubric',
+  generated_at timestamptz not null default now(),
+  unique (subject_type, subject_id, method)
+);
+create index if not exists compass_scores_subject_idx on compass_scores (subject_type, subject_id);
+
+create table if not exists aggregate_views (
+  id text primary key,
+  title text not null,
+  view_type text not null,
+  summary text not null,
+  source_ids text[] not null default array[]::text[],
+  beginner_question text not null,
+  compass_lens text,
+  route_hint text,
+  status text not null default 'planned',
+  sort_order integer not null default 0,
+  metadata jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);

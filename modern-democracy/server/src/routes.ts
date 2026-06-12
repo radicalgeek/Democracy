@@ -34,6 +34,13 @@ import { ballotMajorities, constituencyLeans, mediaCompass } from "./services/in
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 import { getUserEngagementStats, computeEngagementStatsForUser } from "./services/learning.js";
+import {
+  civicPostcodeProfile,
+  fiscalCivicOverview,
+  importCivicData,
+  listCivicSources,
+  localCivicOverview
+} from "./services/civic-data.js";
 
 function bearer(headers: Record<string, unknown>) {
   const value = headers.authorization;
@@ -79,13 +86,39 @@ export async function registerRoutes(app: FastifyInstance) {
         (select count(*)::int from anonymous_ballots) as ballots,
         (select count(*)::int from debate_posts) as debate_posts,
         (select count(*)::int from ai_analyses) as ai_analyses,
-        (select count(*)::int from checkpoints) as checkpoints
+        (select count(*)::int from checkpoints) as checkpoints,
+        (select count(*)::int from source_registry) as civic_sources,
+        (select count(*)::int from aggregate_views) as aggregate_views
     `;
     const imports = await sql`
       select kind, status, detail, started_at, finished_at
       from data_import_runs order by id desc limit 8
     `;
     return { counts, imports };
+  });
+
+  app.get("/api/civic/sources", async (request) => {
+    const category = (request.query as { category?: string }).category;
+    return { sources: await listCivicSources(sql, category) };
+  });
+
+  app.get("/api/civic/local", async () => localCivicOverview(sql));
+
+  app.get("/api/civic/fiscal", async () => fiscalCivicOverview(sql));
+
+  app.get("/api/civic/postcode/:postcode", async (request, reply) => {
+    try {
+      const postcode = (request.params as { postcode: string }).postcode;
+      const result = await civicPostcodeProfile(postcode);
+      if ("error" in result) return reply.code(404).send(result);
+      return result;
+    } catch {
+      return reply.code(503).send({ error: "lookup-unavailable" });
+    }
+  });
+
+  app.post("/api/admin/import/civic-data", async () => {
+    return importCivicData(sql);
   });
 
   app.get("/api/bills", async (request) => {

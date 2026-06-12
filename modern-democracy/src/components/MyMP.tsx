@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, Compass as CompassIcon, ExternalLink, Landmark, Loader2, ScrollText, UserRound, Vote } from "lucide-react";
+import {
+  BarChart3,
+  Compass as CompassIcon,
+  ExternalLink,
+  Landmark,
+  Loader2,
+  PieChart,
+  ScrollText,
+  UserRound,
+  Vote
+} from "lucide-react";
 import { CompassCompare } from "./CompassCompare";
 import { divisionUrl } from "./RepresentativesPanel";
 import { storedMyCompass } from "./Onboarding";
@@ -18,6 +28,25 @@ type MyMPProps = {
 
 function percent(value: number, total: number) {
   return total ? Math.round((value / total) * 100) : 0;
+}
+
+function resultLabel(ayes: number, noes: number) {
+  if (ayes === noes) return "Tied";
+  return ayes > noes ? "Ayes carried" : "Noes carried";
+}
+
+function donutStyle(segments: Array<{ value: number; color: string }>) {
+  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
+  if (!total) return { background: "var(--line)" };
+  let cursor = 0;
+  const stops = segments
+    .filter((segment) => segment.value > 0)
+    .map((segment) => {
+      const start = cursor;
+      cursor += (segment.value / total) * 100;
+      return `${segment.color} ${start}% ${cursor}%`;
+    });
+  return { background: `conic-gradient(${stops.join(", ")})` };
 }
 
 export function MyMP({ user, onRequireAccount }: MyMPProps) {
@@ -59,6 +88,25 @@ export function MyMP({ user, onRequireAccount }: MyMPProps) {
       if (mpChoice === mine) matched += 1;
     }
     return { compared, matched };
+  }, [profile]);
+
+  const commonsSummary = useMemo(() => {
+    if (!profile) return null;
+    const records = profile.votingRecord;
+    const votedAye = records.filter((record) => record.vote === "aye").length;
+    const votedNo = records.filter((record) => record.vote === "no").length;
+    const ayes = records.reduce((sum, record) => sum + record.ayeCount, 0);
+    const noes = records.reduce((sum, record) => sum + record.noCount, 0);
+    const withBills = records.filter((record) => record.billId).length;
+    const closest = [...records].sort(
+      (left, right) =>
+        Math.abs(left.ayeCount - left.noCount) - Math.abs(right.ayeCount - right.noCount)
+    )[0];
+    const largestMajority = [...records].sort(
+      (left, right) =>
+        Math.abs(right.ayeCount - right.noCount) - Math.abs(left.ayeCount - left.noCount)
+    )[0];
+    return { records, votedAye, votedNo, ayes, noes, withBills, closest, largestMajority };
   }, [profile]);
 
   if (!user) {
@@ -267,23 +315,162 @@ export function MyMP({ user, onRequireAccount }: MyMPProps) {
         </section>
       )}
 
+      {commonsSummary && commonsSummary.records.length > 0 && (
+        <section className="workspace-section">
+          <div className="section-heading">
+            <PieChart size={20} />
+            <div>
+              <h2>Commons voting data, made readable</h2>
+              <p>
+                The same official division data, but grouped into the bits that matter: how your MP
+                voted, how the Commons split, and which votes were close or decisive.
+              </p>
+            </div>
+          </div>
+          <div className="vote-data-grid">
+            <article className="vote-data-card panel">
+              <div
+                className="vote-donut"
+                style={donutStyle([
+                  { value: commonsSummary.votedAye, color: "var(--green)" },
+                  { value: commonsSummary.votedNo, color: "var(--red)" }
+                ])}
+                aria-label={`${commonsSummary.votedAye} Aye votes and ${commonsSummary.votedNo} No votes`}
+              >
+                <span>{commonsSummary.records.length}</span>
+              </div>
+              <div>
+                <span className="vote-data-kicker">MP votes imported</span>
+                <h3>
+                  {percent(commonsSummary.votedAye, commonsSummary.records.length)}% Aye ·{" "}
+                  {percent(commonsSummary.votedNo, commonsSummary.records.length)}% No
+                </h3>
+                <p>
+                  {commonsSummary.votedAye} Ayes and {commonsSummary.votedNo} Noes across the
+                  latest {commonsSummary.records.length} recorded Commons divisions.
+                </p>
+              </div>
+            </article>
+
+            <article className="vote-data-card panel">
+              <div
+                className="vote-donut commons"
+                style={donutStyle([
+                  { value: commonsSummary.ayes, color: "var(--green)" },
+                  { value: commonsSummary.noes, color: "var(--red)" }
+                ])}
+                aria-label={`${commonsSummary.ayes} total Commons Ayes and ${commonsSummary.noes} total Commons Noes`}
+              >
+                <span>{percent(commonsSummary.ayes, commonsSummary.ayes + commonsSummary.noes)}%</span>
+              </div>
+              <div>
+                <span className="vote-data-kicker">Commons totals across these divisions</span>
+                <h3>{commonsSummary.ayes.toLocaleString()} Ayes · {commonsSummary.noes.toLocaleString()} Noes</h3>
+                <p>
+                  A quick aggregate of the official result counts for the recent divisions shown
+                  below.
+                </p>
+              </div>
+            </article>
+
+            {commonsSummary.closest && (
+              <article className="vote-data-card panel">
+                <div className="vote-data-stat">
+                  <strong>{Math.abs(commonsSummary.closest.ayeCount - commonsSummary.closest.noCount)}</strong>
+                  <span>vote margin</span>
+                </div>
+                <div>
+                  <span className="vote-data-kicker">Closest recent division</span>
+                  <h3>{commonsSummary.closest.title}</h3>
+                  <p>
+                    {resultLabel(commonsSummary.closest.ayeCount, commonsSummary.closest.noCount)} ·
+                    Ayes {commonsSummary.closest.ayeCount}, Noes {commonsSummary.closest.noCount}.
+                  </p>
+                </div>
+              </article>
+            )}
+
+            {commonsSummary.largestMajority && (
+              <article className="vote-data-card panel">
+                <div className="vote-data-stat">
+                  <strong>
+                    {Math.abs(
+                      commonsSummary.largestMajority.ayeCount - commonsSummary.largestMajority.noCount
+                    )}
+                  </strong>
+                  <span>vote margin</span>
+                </div>
+                <div>
+                  <span className="vote-data-kicker">Most decisive recent division</span>
+                  <h3>{commonsSummary.largestMajority.title}</h3>
+                  <p>
+                    {resultLabel(
+                      commonsSummary.largestMajority.ayeCount,
+                      commonsSummary.largestMajority.noCount
+                    )}{" "}
+                    · Ayes {commonsSummary.largestMajority.ayeCount}, Noes{" "}
+                    {commonsSummary.largestMajority.noCount}.
+                  </p>
+                </div>
+              </article>
+            )}
+          </div>
+        </section>
+      )}
+
       <section className="workspace-section">
         <div className="section-heading">
           <ScrollText size={20} />
           <div>
             <h2>{mp ? `${mp.name}'s recent votes in the Commons` : "Recent Commons divisions"}</h2>
-            <p>Live from the official Commons Votes API.</p>
+            <p>Live from the official Commons Votes API, with readable result summaries.</p>
           </div>
         </div>
         <div className="division-list">
           {profile.votingRecord.map((record) => (
-            <article className="division-row" key={record.divisionId}>
+            <article className="division-row division-row-rich" key={record.divisionId}>
               <div>
                 <strong>{record.title}</strong>
                 <span className="muted">
                   {new Date(record.date).toLocaleDateString("en-GB")} · Ayes {record.ayeCount} ·
                   Noes {record.noCount}
                 </span>
+                <span className="division-result-summary">
+                  {resultLabel(record.ayeCount, record.noCount)} by{" "}
+                  {Math.abs(record.ayeCount - record.noCount)} votes
+                </span>
+              </div>
+              <div className="division-result-chart">
+                <div
+                  className="vote-donut mini"
+                  style={donutStyle([
+                    { value: record.ayeCount, color: "var(--green)" },
+                    { value: record.noCount, color: "var(--red)" }
+                  ])}
+                  aria-label={`Ayes ${record.ayeCount}, Noes ${record.noCount}`}
+                >
+                  <span>{percent(record.ayeCount, record.ayeCount + record.noCount)}%</span>
+                </div>
+                <div className="division-result-bars">
+                  <div>
+                    <span>Ayes {percent(record.ayeCount, record.ayeCount + record.noCount)}%</span>
+                    <div className="bar">
+                      <div
+                        className="fill aye"
+                        style={{ width: `${percent(record.ayeCount, record.ayeCount + record.noCount)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <span>Noes {percent(record.noCount, record.ayeCount + record.noCount)}%</span>
+                    <div className="bar">
+                      <div
+                        className="fill no"
+                        style={{ width: `${percent(record.noCount, record.ayeCount + record.noCount)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
               <span className={`division-vote ${record.vote}`}>
                 {record.vote === "aye" ? "Aye" : "No"}

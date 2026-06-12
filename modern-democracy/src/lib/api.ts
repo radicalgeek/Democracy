@@ -63,6 +63,132 @@ export type BackendBillDetail = {
   news: BackendNewsItem[];
 };
 
+export type CivicSource = {
+  id: string;
+  name: string;
+  category: string;
+  scope: string;
+  owner: string;
+  url: string;
+  licence: string | null;
+  official_status: string;
+  refresh_cadence: string | null;
+  newcomer_explanation: string;
+  compass_score_potential: string;
+  aggregate_view_potential: string;
+  caveats: string | null;
+};
+
+export type CompassScoreRecord = {
+  subject_type: string;
+  subject_id: string;
+  x: string | number;
+  y: string | number;
+  label: string;
+  explanation: string;
+  confidence: number;
+  source_id: string | null;
+};
+
+export type AggregateView = {
+  id: string;
+  title: string;
+  view_type: string;
+  summary: string;
+  source_ids: string[];
+  beginner_question: string;
+  compass_lens: string | null;
+  route_hint: string | null;
+  status: string;
+};
+
+export type LocalCivicLayer = {
+  id: string;
+  title: string;
+  layer_type: string;
+  summary: string;
+  source_id: string | null;
+  beginner_label: string;
+  gamified_action: string | null;
+  compass_potential: string | null;
+  aggregate_view: string;
+  status: string;
+  source_name: string | null;
+  source_url: string | null;
+  official_status: string | null;
+};
+
+export type FiscalIndicator = {
+  id: string;
+  title: string;
+  plain_english: string;
+  source_id: string | null;
+  period: string | null;
+  value_label: string | null;
+  trend_label: string | null;
+  why_it_matters: string;
+  compass_potential: string | null;
+  aggregate_view: string;
+  status: string;
+  source_name: string | null;
+  source_url: string | null;
+  official_status: string | null;
+};
+
+export type TaxScenario = {
+  id: string;
+  title: string;
+  persona: string;
+  plain_english: string;
+  source_ids: string[];
+  visible_pattern: string;
+  compass_potential: string | null;
+  aggregate_view: string;
+  status: string;
+};
+
+export type LocalCivicOverview = {
+  promise: string;
+  layers: LocalCivicLayer[];
+  aggregateViews: AggregateView[];
+  compassScores: CompassScoreRecord[];
+};
+
+export type FiscalCivicOverview = {
+  promise: string;
+  indicators: FiscalIndicator[];
+  taxScenarios: TaxScenario[];
+  aggregateViews: AggregateView[];
+  compassScores: CompassScoreRecord[];
+};
+
+export type CivicPostcodeProfile = {
+  postcode: string;
+  location: {
+    latitude: number | null;
+    longitude: number | null;
+    country: string | null;
+    region: string | null;
+  };
+  parliamentary: {
+    constituency: string | null;
+    constituency2024: string | null;
+  };
+  local: {
+    district: string | null;
+    county: string | null;
+    ward: string | null;
+    parish: string | null;
+    ced: string | null;
+    ccg: string | null;
+    policeForce: string | null;
+  };
+  codes: Record<string, string | null>;
+  source: { id: string; name: string; url: string };
+  beginnerExplanation: string;
+  nextActions: string[];
+};
+
 export type SeatBinding = {
   svg_id: string;
   legacy_name: string;
@@ -139,6 +265,23 @@ export function fetchBackendBills(take = 20) {
 
 export function fetchBillDetail(billId: number) {
   return getJson<BackendBillDetail>(`/api/bills/${billId}`);
+}
+
+export function fetchLocalCivicOverview() {
+  return getJson<LocalCivicOverview>("/api/civic/local");
+}
+
+export function fetchFiscalCivicOverview() {
+  return getJson<FiscalCivicOverview>("/api/civic/fiscal");
+}
+
+export function fetchCivicSources(category?: string) {
+  const suffix = category ? `?category=${encodeURIComponent(category)}` : "";
+  return getJson<{ sources: CivicSource[] }>(`/api/civic/sources${suffix}`);
+}
+
+export function fetchCivicPostcodeProfile(postcode: string) {
+  return getJson<CivicPostcodeProfile>(`/api/civic/postcode/${encodeURIComponent(postcode)}`);
 }
 
 export async function fetchMapBindings(): Promise<MapBindings> {

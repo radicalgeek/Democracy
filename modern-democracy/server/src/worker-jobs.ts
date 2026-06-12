@@ -6,6 +6,7 @@ import { importDivisions } from "./services/divisions.js";
 import { importNews } from "./services/news.js";
 import { analyzePetitions, importPetitions } from "./services/petitions.js";
 import { computeEngagementStatsForUser } from "./services/learning.js";
+import { importCivicData } from "./services/civic-data.js";
 import {
   importBills,
   importBillTexts,
@@ -13,6 +14,7 @@ import {
 } from "./services/parliament.js";
 
 export async function runFullImport() {
+  const civicData = await importCivicData(sql);
   const constituencies = await importConstituenciesAndMembers(sql);
   const bills = await importBills(sql);
   const texts = await importBillTexts(sql);
@@ -22,7 +24,7 @@ export async function runFullImport() {
   const analyses = await analyzeImportedBills();
   const petitionAnalyses = await analyzePetitions(sql);
   const news = await importNews(sql);
-  return { constituencies, bills, texts, divisions, petitions, bindings, analyses, petitionAnalyses, news };
+  return { civicData, constituencies, bills, texts, divisions, petitions, bindings, analyses, petitionAnalyses, news };
 }
 
 /** Generate summary + compass (with provenance) for bills that have source text. */

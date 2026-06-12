@@ -194,10 +194,11 @@ export function Dashboard({
   if (!user) {
     return (
       <section className="workspace-section dashboard-welcome">
-        <h1>Welcome to Democracy</h1>
+        <h1>The dashboard of democracy</h1>
         <p className="muted">
-          You're exploring without an account. Create one with your postcode to get a personal
-          dashboard: your MP, your constituency, your compass position, and your voting record.
+          You're exploring without an account. Create one with your postcode to put your MP, your
+          constituency, local problems, public money, your compass position, and your voting record
+          into one civic dashboard.
         </p>
         <button className="primary" onClick={onRequireAccount}>
           Create account <ArrowRight size={16} />
