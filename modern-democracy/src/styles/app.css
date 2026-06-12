@@ -1846,6 +1846,93 @@ button.ghost {
   color: var(--muted);
 }
 
+.influence-section {
+  margin-top: -4px;
+}
+
+.influence-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.influence-card {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-height: 156px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--panel);
+}
+
+.influence-card.compass-card {
+  background: linear-gradient(135deg, #f7fbfb 0%, #eef6f7 100%);
+}
+
+.influence-card-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #435057;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.influence-card-head span {
+  flex: 1;
+}
+
+.influence-card strong {
+  font-size: 22px;
+  line-height: 1.12;
+}
+
+.influence-card small,
+.influence-note,
+.influence-caveat {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.influence-note {
+  display: block;
+  margin-top: 2px;
+}
+
+.influence-caveat {
+  margin: 12px 0 0;
+  max-width: 980px;
+}
+
+.source-pill {
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.source-pill.official {
+  color: #0e5562;
+  background: rgba(20, 123, 142, 0.12);
+}
+
+.source-pill.self {
+  color: #5b3f76;
+  background: rgba(138, 79, 158, 0.12);
+}
+
+.source-pill.partial {
+  color: #82651f;
+  background: #fff2c8;
+}
+
 .comparison-list,
 .civic-vote-list,
 .division-list {
@@ -2409,6 +2496,7 @@ button.ghost {
 .party-card.selected {
   border-color: var(--teal);
   border-top-width: 4px;
+  background: #f4fafb;
 }
 
 .party-card strong {
@@ -2420,6 +2508,67 @@ button.ghost {
   font-size: 12px;
   color: var(--muted);
   font-style: normal;
+}
+
+.party-influence {
+  margin-top: 14px;
+  border-top: 4px solid var(--line);
+}
+
+.party-influence-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.party-influence-title h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.party-influence-title p {
+  margin: 0;
+  max-width: 760px;
+  color: var(--muted);
+}
+
+.party-influence-grid,
+.influence-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.party-influence-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.party-influence-grid div {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  background: #fbfdfd;
+}
+
+.party-influence-grid span,
+.party-influence-grid em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.party-influence-grid strong {
+  font-size: 17px;
+}
+
+.party-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 14px;
 }
 
 .rep-search {
@@ -4361,8 +4510,24 @@ button.ghost {
 }
 
 @media (max-width: 900px) {
+  .influence-grid,
+  .party-influence-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .hansard-arguments {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .influence-grid,
+  .party-influence-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .party-influence-title {
+    flex-direction: column;
   }
 }
 
@@ -4575,4 +4740,60 @@ button.ghost {
   font-size: 10.5px;
   color: var(--muted);
   margin-top: 2px;
+}
+
+/* --- Media page and MP compass chips --- */
+
+.rep-compass-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: #5b3f76;
+  background: rgba(138, 79, 158, 0.1);
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-top: 4px;
+}
+
+.media-article-list {
+  display: grid;
+  gap: 8px;
+}
+
+.media-article-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 11px 14px;
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.media-article-row:hover {
+  border-color: #9cc0ca;
+}
+
+.media-article-row > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.media-article-row strong {
+  display: block;
+  font-size: 14px;
+}
+
+.media-article-row span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.media-article-row .post-compass {
+  flex-shrink: 0;
+  font-style: normal;
+}
+
+.media-vs-will {
+  margin-top: 10px;
 }

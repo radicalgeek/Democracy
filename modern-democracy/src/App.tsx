@@ -10,6 +10,7 @@ import {
   Landmark,
   LayoutDashboard,
   Map,
+  Newspaper,
   ScrollText,
   Shield,
   UserRoundCheck,
@@ -23,6 +24,7 @@ import { CivicDataPanel, CivicSourcesPanel } from "./components/CivicDataPanel";
 import { Dashboard } from "./components/Dashboard";
 import { GlobalSearch } from "./components/GlobalSearch";
 import { Landing } from "./components/Landing";
+import { MediaPanel } from "./components/MediaPanel";
 import { MyMP } from "./components/MyMP";
 import { NationFlags } from "./components/NationFlags";
 import { IntegrationBanner } from "./components/IntegrationBanner";
@@ -59,6 +61,7 @@ type Tab =
   | "petitions"
   | "local"
   | "fiscal"
+  | "media"
   | "map"
   | "representatives"
   | "voice"
@@ -72,6 +75,7 @@ const TABS: Tab[] = [
   "petitions",
   "local",
   "fiscal",
+  "media",
   "map",
   "representatives",
   "voice",
@@ -85,6 +89,7 @@ const navItems: Array<[string, Tab, typeof FileText]> = [
   ["Petitions", "petitions", ScrollText],
   ["Local", "local", Building2],
   ["Fiscal", "fiscal", BadgePercent],
+  ["Media", "media", Newspaper],
   ["Map", "map", Map],
   ["Representatives", "representatives", Vote],
   ["My Voice", "voice", Fingerprint],
@@ -630,6 +635,7 @@ export function App() {
         {selectedTab === "fiscal" && (
           <CivicDataPanel mode="fiscal" onOpenSources={() => setSelectedTab("transparency")} />
         )}
+        {selectedTab === "media" && <MediaPanel />}
         {selectedTab === "map" && (
           <section className="panel full-map-mode">
             <div className="map-controls">

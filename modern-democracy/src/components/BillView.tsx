@@ -177,9 +177,7 @@ export function BillView({
         onRequireAccount={onRequireAccount}
       />
 
-      {(billDetail?.news?.length ?? 0) > 0 && (
-        <NewsLens items={billDetail!.news.map(mapBackendNews)} />
-      )}
+      {billDetail && <NewsLens items={billDetail.news.map(mapBackendNews)} />}
     </>
   );
 }
