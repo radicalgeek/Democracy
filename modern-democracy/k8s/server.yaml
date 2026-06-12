@@ -19,7 +19,7 @@ spec:
         kubernetes.io/arch: arm64
       containers:
         - name: api
-          image: ghcr.io/radicalgeek/democracy-server:953b32ccf0fb3138e98e57da029c920c0db9b937
+          image: ghcr.io/radicalgeek/democracy-server:325f8e6b7310eef2d635625087673f4f1f605b72
           imagePullPolicy: Always
           env:
             - name: PORT
@@ -62,7 +62,7 @@ spec:
         kubernetes.io/arch: arm64
       containers:
         - name: worker
-          image: ghcr.io/radicalgeek/democracy-server:953b32ccf0fb3138e98e57da029c920c0db9b937
+          image: ghcr.io/radicalgeek/democracy-server:325f8e6b7310eef2d635625087673f4f1f605b72
           imagePullPolicy: Always
           command: ["node", "dist/worker.js"]
           env:
@@ -72,6 +72,10 @@ spec:
                   name: democracy-db
                   key: url
             - name: DEMO_SEED
+              value: "true"
+            # One-shot large-scale labelled demo community (users.is_demo) —
+            # guarded so it only ever runs once; see services/demo-community.ts.
+            - name: DEMO_COMMUNITY_SEED
               value: "true"
             - name: LLM_BASE_URL
               value: http://dev-team-litellm-router.dev-team.svc.cluster.local:4000
