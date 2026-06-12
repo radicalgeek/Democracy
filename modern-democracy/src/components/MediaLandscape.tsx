@@ -38,7 +38,7 @@ export function MediaLandscape({ media, you }: MediaLandscapeProps) {
   return (
     <div className="compass-compare">
       <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Media outlets on the political compass">
-        <rect x={padding} y={padding} width={plot} height={plot} rx="8" />
+        <rect className="compass-plot-area" x={padding} y={padding} width={plot} height={plot} rx="8" />
         <line x1={mid} y1={padding} x2={mid} y2={size - padding} />
         <line x1={padding} y1={mid} x2={size - padding} y2={mid} />
         <text x={mid} y={padding - 6} textAnchor="middle">
@@ -58,6 +58,7 @@ export function MediaLandscape({ media, you }: MediaLandscapeProps) {
           return (
             <rect
               key={outlet.name}
+              className="compass-marker compass-marker-diamond"
               x={cx - 5}
               y={cy - 5}
               width={10}
@@ -68,7 +69,9 @@ export function MediaLandscape({ media, you }: MediaLandscapeProps) {
             />
           );
         })}
-        {youPlaced && <circle cx={youPlaced.cx} cy={youPlaced.cy} r={7} fill="#bf443e" />}
+        {youPlaced && (
+          <circle className="compass-marker compass-marker-you" cx={youPlaced.cx} cy={youPlaced.cy} r={7} fill="#bf443e" />
+        )}
       </svg>
       <div className="compass-legend">
         {you && (

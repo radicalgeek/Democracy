@@ -1,75 +1,45 @@
 import { useEffect, useRef, useState } from "react";
 import { cleanLegacySvg } from "./ConstituencyMap";
-import { WelshDragon } from "./NationFlags";
+import { nationFlagAssets } from "./NationFlags";
 
 /**
- * Decorative artwork for the landing page: a woven ribbon of the four
- * nations' flags, and the real constituency cartography re-tinted as a hero
- * piece. Pure SVG so it stays crisp, themeable, and asset-free.
+ * Decorative artwork for the landing page: real flag assets woven into a
+ * background field, plus the constituency cartography re-tinted as a hero
+ * piece.
  */
 
-const RED = "#C8102E";
-const SALTIRE_BLUE = "#005EB8";
-const WELSH_GREEN = "#00B140";
+export function FlagBackdrop() {
+  const flags = [
+    nationFlagAssets[0],
+    ...nationFlagAssets.slice(1)
+  ];
 
-/**
- * Four angled flag panels flowing into each other like bunting fabric —
- * England, Scotland, Wales, Northern Ireland — with the motifs drawn large
- * and cropped so it reads as artwork rather than four rectangles.
- */
-export function FlagRibbon() {
   return (
-    <svg
-      viewBox="0 0 1200 120"
-      className="flag-ribbon"
-      role="img"
-      aria-label="The flags of England, Scotland, Wales, and Northern Ireland"
-      preserveAspectRatio="xMidYMid slice"
-    >
-      <defs>
-        <clipPath id="ribbon-clip">
-          <rect x="0" y="0" width="1200" height="120" rx="16" />
-        </clipPath>
-        <linearGradient id="ribbon-sheen" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.18" />
-          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0" />
-          <stop offset="1" stopColor="#0c1a20" stopOpacity="0.14" />
-        </linearGradient>
-      </defs>
-      <g clipPath="url(#ribbon-clip)">
-        {/* England — St George's cross, off-centre and oversized */}
-        <g>
-          <rect x="-40" y="0" width="380" height="120" fill="#f6f8f9" />
-          <path d="M150,-20 V140 M-40,62 H340" stroke={RED} strokeWidth="34" />
-        </g>
-        {/* Scotland — saltire running through the panel */}
-        <g>
-          <polygon points="340,0 660,0 620,120 300,120" fill={SALTIRE_BLUE} />
-          <path d="M310,-15 L640,135 M650,-15 L320,135" stroke="#ffffff" strokeWidth="30" />
-        </g>
-        {/* Wales — green field rising into white, dragon striding */}
-        <g>
-          <polygon points="660,0 940,0 900,120 620,120" fill="#f6f8f9" />
-          <polygon points="640,60 950,60 900,120 620,120" fill={WELSH_GREEN} />
-          <WelshDragon transform="translate(708,25) scale(1.45)" />
-        </g>
-        {/* Northern Ireland — red cross with the six-pointed star */}
-        <g>
-          <polygon points="940,0 1240,0 1240,120 900,120" fill="#f6f8f9" />
-          <path d="M1070,-20 V140 M900,62 H1240" stroke={RED} strokeWidth="30" />
-          <path
-            d="M1070,28 l9.5,16.5 h19 l-9.5,16.5 l9.5,16.5 h-19 l-9.5,16.5 l-9.5,-16.5 h-19 l9.5,-16.5 l-9.5,-16.5 h19 z"
-            fill="#ffffff"
-            stroke={RED}
-            strokeWidth="3"
-          />
-          <path d="M1064,50.5 h12 v14 q0,6.5 -6,6.5 q-6,0 -6,-6.5 z" fill={RED} />
-        </g>
-        {/* gold seams between the panels, like stitching */}
-        <path d="M340,0 L300,120 M660,0 L620,120 M940,0 L900,120" stroke="#c9922c" strokeWidth="5" />
-        <rect x="0" y="0" width="1200" height="120" fill="url(#ribbon-sheen)" />
-      </g>
-    </svg>
+    <div className="flag-backdrop" aria-hidden="true">
+      {flags.map((flag, index) => (
+        <div key={flag.id} className={`flag-backdrop-card panel-${index + 1}`}>
+          <span className="flag-backdrop-pole" />
+          <span className="flag-backdrop-cloth">
+            <img
+              src={flag.src}
+              alt=""
+              loading="eager"
+            />
+          </span>
+          <span className="flag-backdrop-label">{flag.name}</span>
+        </div>
+      ))}
+      <div className="flag-backdrop-small">
+        {flags.slice(1).map((flag, index) => (
+          <span
+            key={flag.id}
+            className={`flag-backdrop-token token-${index + 1}`}
+          >
+            <img src={flag.src} alt="" loading="eager" />
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 

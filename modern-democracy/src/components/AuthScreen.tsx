@@ -26,7 +26,7 @@ export function AuthScreen({ mode, user, onAuthed, onSwitchMode, onBack }: AuthS
           <div className="brand-mark">D</div>
           <div>
             <strong>Democracy</strong>
-            <span>Represent yourself</span>
+            <span>The dashboard of democracy</span>
           </div>
         </div>
         <button className="ghost" onClick={onBack}>

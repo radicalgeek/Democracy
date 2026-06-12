@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
+  BadgePercent,
+  Building2,
   CheckCircle2,
   FileText,
   Fingerprint,
@@ -16,6 +18,7 @@ import {
 import { AuthScreen, type AuthMode } from "./components/AuthScreen";
 import { BillView } from "./components/BillView";
 import { ConstituencyMap, MAP_MODE_META } from "./components/ConstituencyMap";
+import { CivicDataPanel, CivicSourcesPanel } from "./components/CivicDataPanel";
 import { Dashboard } from "./components/Dashboard";
 import { GlobalSearch } from "./components/GlobalSearch";
 import { Landing } from "./components/Landing";
@@ -53,6 +56,8 @@ type Tab =
   | "bills"
   | "mymp"
   | "petitions"
+  | "local"
+  | "fiscal"
   | "map"
   | "representatives"
   | "voice"
@@ -64,6 +69,8 @@ const TABS: Tab[] = [
   "bills",
   "mymp",
   "petitions",
+  "local",
+  "fiscal",
   "map",
   "representatives",
   "voice",
@@ -75,6 +82,8 @@ const navItems: Array<[string, Tab, typeof FileText]> = [
   ["Bills", "bills", FileText],
   ["My MP", "mymp", Landmark],
   ["Petitions", "petitions", ScrollText],
+  ["Local", "local", Building2],
+  ["Fiscal", "fiscal", BadgePercent],
   ["Map", "map", Map],
   ["Representatives", "representatives", Vote],
   ["My Voice", "voice", Fingerprint],
@@ -424,7 +433,7 @@ export function App() {
           <div className="brand-mark">D</div>
           <div>
             <strong>Democracy</strong>
-            <span>Represent yourself</span>
+            <span>The dashboard of democracy</span>
           </div>
         </div>
         <nav>
@@ -631,6 +640,16 @@ export function App() {
             onOpenPetition={setOpenPetitionId}
           />
         )}
+        {selectedTab === "local" && (
+          <CivicDataPanel
+            mode="local"
+            user={user}
+            onOpenSources={() => setSelectedTab("transparency")}
+          />
+        )}
+        {selectedTab === "fiscal" && (
+          <CivicDataPanel mode="fiscal" onOpenSources={() => setSelectedTab("transparency")} />
+        )}
         {selectedTab === "map" && (
           <section className="panel full-map-mode">
             <div className="map-controls">
@@ -722,6 +741,7 @@ export function App() {
           </section>
         )}
         {selectedTab === "transparency" && (
+          <>
           <section className="workspace-section transparency">
             <div className="section-heading">
               <Gavel size={20} />
@@ -765,6 +785,8 @@ export function App() {
               </div>
             </div>
           </section>
+          <CivicSourcesPanel />
+          </>
         )}
       </main>
     </div>

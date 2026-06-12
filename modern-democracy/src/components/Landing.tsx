@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   Vote
 } from "lucide-react";
-import { FlagRibbon, MapArt } from "./LandingArt";
+import { FlagBackdrop, MapArt } from "./LandingArt";
 import { NationFlags } from "./NationFlags";
 
 type LandingProps = {
@@ -26,7 +26,7 @@ export function Landing({ onCreateAccount, onSignIn, onExplore }: LandingProps) 
           <div className="brand-mark">D</div>
           <div>
             <strong>Democracy</strong>
-            <span>Represent yourself</span>
+            <span>The dashboard of democracy</span>
           </div>
         </div>
         <div className="landing-top-actions">
@@ -40,39 +40,38 @@ export function Landing({ onCreateAccount, onSignIn, onExplore }: LandingProps) 
       </header>
 
       <section className="landing-hero split">
+        <FlagBackdrop />
         <div className="landing-hero-copy">
           <div className="landing-kicker">
             <NationFlags />
             <span>England · Scotland · Wales · Northern Ireland</span>
           </div>
           <h1>
-            Parliament votes on your behalf.
+            The dashboard of democracy.
             <br />
-            Now you can vote too — and see the gap.
+            Built by the people they answer to.
           </h1>
           <p>
-            Democracy lets you cast your own vote on the same bills MPs debate in Westminster,
-            deliberate with other citizens, and compare what your constituency thinks with how your
-            MP actually votes.
+            They promise change, claim accountability, then do what they want. Put Parliament,
+            local power, public money, media framing and the public will on one dashboard — then
+            make the gap impossible to dodge.
           </p>
           <div className="landing-cta">
             <button className="primary" onClick={onCreateAccount}>
-              <Vote size={18} /> Create your account
+              <Vote size={18} /> Join today
             </button>
             <button className="ghost" onClick={onExplore}>
-              Explore first, sign up later
+              Have your say
             </button>
           </div>
           <p className="landing-disclaimer">
             Democracy is an independent civic platform. Votes here are public opinion — they are
-            not official electoral votes and have no legal effect. We exist to make the will of
-            constituents visible, not to replace the ballot box.
+            not official electoral votes and have no legal effect. The point is simple: hold power
+            to account by making public will visible, auditable, and harder to ignore.
           </p>
         </div>
         <MapArt />
       </section>
-
-      <FlagRibbon />
 
       <section className="landing-grid">
         <article>

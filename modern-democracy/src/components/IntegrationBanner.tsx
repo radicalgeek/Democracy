@@ -7,14 +7,23 @@ type IntegrationBannerProps = {
 };
 
 export function IntegrationBanner({ statuses, liveBills }: IntegrationBannerProps) {
+  const liveCount = statuses.filter((status) => status.status === "live").length;
+  const fallbackCount = statuses.filter((status) => status.status === "fallback").length;
+  const checking = statuses.some((status) => status.status === "loading" || status.status === "idle");
+  const sourceSummary = checking
+    ? "Checking public sources"
+    : `${liveCount} public sources live${fallbackCount ? ` · ${fallbackCount} using backup data` : ""}`;
+
   return (
     <section className="integration-banner">
       <DatabaseZap size={19} />
       <div>
-        <strong>Government data integrations</strong>
+        <strong>Live civic data</strong>
         <p>
-          {statuses.map((status) => `${status.source}: ${status.status}`).join(" · ")}
-          {liveBills.length > 0 ? ` · ${liveBills.length} live bills loaded` : " · sample bill active"}
+          {sourceSummary}
+          {liveBills.length > 0
+            ? ` · ${liveBills.length} current bills loaded`
+            : " · showing sample bill while Parliament data catches up"}
         </p>
       </div>
     </section>
