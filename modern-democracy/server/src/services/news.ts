@@ -26,7 +26,7 @@ export const MEDIA_FEEDS = [
 ];
 
 const RECENT_ITEMS_PER_FEED = Number(process.env.NEWS_RECENT_ITEMS_PER_FEED ?? 5);
-const NEWS_SCORE_LIMIT = Number(process.env.NEWS_SCORE_LIMIT ?? 80);
+const NEWS_SCORE_LIMIT = Number(process.env.NEWS_SCORE_LIMIT ?? 320);
 
 const STOPWORDS = new Set([
   "bill", "act", "the", "and", "for", "with", "from", "into", "that", "this",
