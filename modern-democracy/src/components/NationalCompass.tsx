@@ -94,10 +94,11 @@ export function NationalCompass({
                 opacity={0.78}
                 stroke={isGoverning ? "#13232a" : "none"}
                 strokeWidth={isGoverning ? 2.5 : 0}
-              />
-              <text className="party-label" x={cx} y={cy - radius - 4} textAnchor="middle">
-                {party.abbreviation ?? party.name}
-              </text>
+              >
+                <title>
+                  {party.name} {formatPoint(party.compass)}
+                </title>
+              </circle>
             </g>
           );
         })}
@@ -164,64 +165,40 @@ export function NationalCompass({
         <div className="compass-legend-row">
           <span className="dot" style={{ background: "#147b8e" }} />
           <span className="legend-label">The public will</span>
-          <span className="muted">
-            {formatPoint(payload.civicWill)} · how people vote on bills and petitions here
-            {payload.civicWill && ` (${payload.civicWill.sample} subjects)`}
-          </span>
+          <span className="muted">{formatPoint(payload.civicWill)} · how people vote here</span>
         </div>
         <div className="compass-legend-row">
           <span className="dot ring" />
           <span className="legend-label">Public discussion</span>
-          <span className="muted">
-            {formatPoint(payload.discussion)} · stance balance of the debate threads
-          </span>
+          <span className="muted">{formatPoint(payload.discussion)} · the debate</span>
         </div>
         <div className="compass-legend-row">
           <span className="dot cross" style={{ color: "#c97a1b" }} />
           <span className="legend-label">National polling</span>
-          <span className="muted">
-            {formatPoint(payload.polling)} · party support (poll of polls) weighted onto each party's
-            position — a derived mood point, not a measured public compass
-          </span>
+          <span className="muted">{formatPoint(payload.polling)} · voting intention, weighted</span>
         </div>
         <div className="compass-legend-row">
           <span className="dot diamond" style={{ background: "#8a4f9e" }} />
           <span className="legend-label">Media influence</span>
-          <span className="muted">
-            {formatPoint(payload.media.overall)} · average coverage position
-            {payload.media.overall && ` across ${payload.media.overall.sample} scored articles`}
-          </span>
+          <span className="muted">{formatPoint(payload.media.overall)} · coverage average</span>
         </div>
         {government && (
           <div className="compass-legend-row">
             <span className="dot" style={{ background: partyColour(government.party.colour), boxShadow: "0 0 0 2px #13232a inset" }} />
             <span className="legend-label">Government ({government.party.abbreviation ?? government.party.name})</span>
-            <span className="muted">
-              {formatPoint(government.party.compass)} from division votes · arrow shows the direction
-              of current legislation {formatPoint(government.legislation)}
-            </span>
+            <span className="muted">{formatPoint(government.party.compass)} · arrow = where its bills point</span>
           </div>
         )}
         {youPlaced && you && (
           <div className="compass-legend-row">
             <span className="dot" style={{ background: "#bf443e" }} />
             <span className="legend-label">You</span>
-            <span className="muted">{formatPoint(you)} · your questionnaire position</span>
+            <span className="muted">{formatPoint(you)} · your position</span>
           </div>
         )}
-        <div className="national-party-strip">
-          {payload.parties.map((party) => (
-            <span key={party.name} className="national-party-chip">
-              <i style={{ background: partyColour(party.colour) }} />
-              {party.abbreviation ?? party.name} {formatPoint(party.compass)}
-            </span>
-          ))}
-        </div>
-        <p className="muted">
-          Positions are revealed preference, not labels: parties and government from how they vote
-          in divisions on compass-scored bills, the public from civic ballots, discussion from
-          debate-post stances, media from scored coverage framing. National polling is the one
-          external layer — current voting intention weighted onto party positions, for comparison.
+        <p className="muted national-compass-note">
+          Revealed preference, not labels — parties hover for their position. The parties you share
+          the most ground with are listed on the right.
         </p>
       </div>
     </div>

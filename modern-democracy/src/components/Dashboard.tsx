@@ -164,7 +164,6 @@ export function Dashboard({
           </div>
           {myCompass ? (
             <Compass
-              compact
               point={{
                 x: myCompass.x / 10,
                 y: myCompass.y / 10,

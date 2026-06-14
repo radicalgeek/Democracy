@@ -5391,6 +5391,12 @@ button.ghost {
   border: 2.5px dashed #147b8e;
 }
 
+.national-compass-note {
+  font-size: 12px;
+  margin: 10px 0 0;
+  line-height: 1.4;
+}
+
 .national-party-strip {
   display: flex;
   flex-wrap: wrap;

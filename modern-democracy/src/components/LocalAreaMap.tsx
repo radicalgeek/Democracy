@@ -64,7 +64,7 @@ export function LocalAreaMap({
 }: LocalAreaMapProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [svgMarkup, setSvgMarkup] = useState("");
-  const [mode, setMode] = useState<LocalMode>("party");
+  const [mode, setMode] = useState<LocalMode>("lean");
   const [inspected, setInspected] = useState<SeatBinding | null>(null);
   const [homeSeatFound, setHomeSeatFound] = useState(true);
 
@@ -114,7 +114,7 @@ export function LocalAreaMap({
     const box = seatCoreBBox(svg, home);
     const cx = box.x + box.width / 2;
     const cy = box.y + box.height / 2;
-    const half = Math.min(250, Math.max(25, Math.max(box.width, box.height) * 3.2));
+    const half = Math.min(720, Math.max(150, Math.max(box.width, box.height) * 7));
     svg.setAttribute("viewBox", `${cx - half} ${cy - half} ${half * 2} ${half * 2}`);
     svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
 
