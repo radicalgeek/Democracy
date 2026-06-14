@@ -1,7 +1,16 @@
 import { ArrowLeft, ExternalLink, HelpCircle, Landmark, ThumbsDown, ThumbsUp } from "lucide-react";
 import type { Bill, VoteChoice } from "../data/types";
-import { mapBackendNews, type BackendBillDetail, type MapBindings } from "../lib/api";
+import {
+  mapBackendNews,
+  type AccountUser,
+  type BackendBillDetail,
+  type Constituency,
+  type MapBindings
+} from "../lib/api";
+import { BillProgress } from "./BillProgress";
 import { Compass } from "./Compass";
+import { ConstituencyInspector } from "./ConstituencyInspector";
+import { DebateSpeakers } from "./DebateSpeakers";
 import { ConstituencyMap, MAP_MODE_META } from "./ConstituencyMap";
 import { DebatePanel } from "./DebatePanel";
 import { HelpTrigger } from "./HelpTrigger";
@@ -25,14 +34,14 @@ type BillViewProps = {
     number,
     { for: number; against: number; abstain: number; total: number }
   > | null;
+  constituencies: Constituency[];
+  nationalView: boolean;
+  onSetNationalView: (value: boolean) => void;
+  user: AccountUser | null;
   signedIn: boolean;
   onRequireAccount: () => void;
   onBack: () => void;
 };
-
-function percent(value: number, total: number) {
-  return total ? Math.round((value / total) * 100) : 0;
-}
 
 /**
  * One bill as a page: everything bill-scoped lives here — summary and vote,
@@ -50,19 +59,21 @@ export function BillView({
   setSelectedConstituency,
   mapBindings,
   billAggregatesBySeat,
+  constituencies,
+  nationalView,
+  onSetNationalView,
+  user,
   signedIn,
   onRequireAccount,
   onBack
 }: BillViewProps) {
   const selectedSeatConstituencyId =
     mapBindings?.bySvgId[selectedConstituency]?.constituency_id ?? null;
-  const selectedMetric =
-    bill.constituencies.find((constituency) => constituency.id === selectedConstituency) ??
-    bill.constituencies[0];
-  const representative = bill.representatives.find(
-    (mp) => mp.constituencyId === selectedMetric.id
-  );
-
+  // Clicking a seat on the map also pins the inspector to that seat.
+  const selectSeatFromMap = (svgId: string) => {
+    onSetNationalView(false);
+    setSelectedConstituency(svgId);
+  };
   return (
     <>
       <button className="ghost back-link" onClick={onBack}>
@@ -83,6 +94,12 @@ export function BillView({
           </div>
           <h1>{bill.title}</h1>
           <p>{bill.summary}</p>
+          <BillProgress
+            title={bill.title}
+            house={bill.house}
+            stage={bill.stage}
+            events={billDetail?.events ?? []}
+          />
           <div className="citation-row">
             {bill.citations.map((citation) => (
               <a key={citation.url} href={citation.url} target="_blank" rel="noreferrer">
@@ -125,34 +142,23 @@ export function BillView({
             constituencies={bill.constituencies}
             mode={mapMode}
             selectedId={selectedConstituency}
-            onSelect={setSelectedConstituency}
+            onSelect={selectSeatFromMap}
             bindings={mapBindings}
             aggregates={billAggregatesBySeat}
           />
         </section>
 
         <aside className="inspector">
-          <section className="panel">
-            <h3>{selectedMetric.name}</h3>
-            <div className="metric-stack">
-              <div>
-                <span>For</span>
-                <strong>
-                  {percent(selectedMetric.publicVote.for, selectedMetric.publicVote.turnout)}%
-                </strong>
-              </div>
-              <div>
-                <span>Against</span>
-                <strong>
-                  {percent(selectedMetric.publicVote.against, selectedMetric.publicVote.turnout)}%
-                </strong>
-              </div>
-              <div>
-                <span>MP voted</span>
-                <strong>{representative?.recentVote ?? selectedMetric.mpVote}</strong>
-              </div>
-            </div>
-          </section>
+          <ConstituencyInspector
+            billDetail={billDetail}
+            mapBindings={mapBindings}
+            constituencies={constituencies}
+            selectedSvgId={selectedConstituency}
+            onSelectSvgId={setSelectedConstituency}
+            nationalView={nationalView}
+            onSetNationalView={onSetNationalView}
+            user={user}
+          />
 
           <section className="panel">
             <h3>
@@ -257,23 +263,25 @@ function HansardSection({ billDetail }: { billDetail: BackendBillDetail | null }
       {debates.length > 0 && (
         <div className="hansard-debate-list">
           {debates.map((debate) => (
-            <a
-              key={debate.ext_id}
-              className="hansard-debate-row"
-              href={debate.source_url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <div>
-                <strong>
-                  {debate.house} · {debate.sitting_date ? new Date(debate.sitting_date).toLocaleDateString("en-GB") : "date unknown"}
-                </strong>
-                <span>
-                  {debate.contributions} contributions from {debate.speakers} speakers
-                </span>
-              </div>
-              <ExternalLink size={15} />
-            </a>
+            <div key={debate.ext_id} className="hansard-debate-item">
+              <a
+                className="hansard-debate-row"
+                href={debate.source_url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <div>
+                  <strong>
+                    {debate.house} · {debate.sitting_date ? new Date(debate.sitting_date).toLocaleDateString("en-GB") : "date unknown"}
+                  </strong>
+                  <span>
+                    {debate.contributions} contributions from {debate.speakers} speakers
+                  </span>
+                </div>
+                <ExternalLink size={15} />
+              </a>
+              <DebateSpeakers speakers={debate.speakers_detail} />
+            </div>
           ))}
         </div>
       )}

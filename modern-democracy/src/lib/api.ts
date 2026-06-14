@@ -22,6 +22,22 @@ export type BackendBill = {
   has_debate_summary: boolean;
 };
 
+export type DebateSpeaker = {
+  memberId: number;
+  name: string;
+  contributions: number;
+  words: number;
+  party: string | null;
+  partyAbbreviation: string | null;
+  partyColour: string | null;
+  constituency: string | null;
+  house: string | null;
+  compass: { x: number; y: number; sample: number } | null;
+  compassFromParty: boolean;
+  interestsTotal: number | null;
+  registerUrl: string;
+};
+
 export type BillDebate = {
   id: number;
   ext_id: string;
@@ -31,6 +47,7 @@ export type BillDebate = {
   contributions: number;
   speakers: number;
   source_url: string;
+  speakers_detail: DebateSpeaker[];
 };
 
 export type BackendAnalysis = {
@@ -59,6 +76,15 @@ export type BackendAggregates = {
   suppressedConstituencies: number;
 };
 
+export type BillMpVote = {
+  constituency_id: number;
+  member_id: number;
+  mp_name: string;
+  party_abbreviation: string | null;
+  party_colour: string | null;
+  vote: "aye" | "no";
+};
+
 export type BackendBillDetail = {
   bill: BackendBill & { imported_at: string };
   texts: Array<{
@@ -72,6 +98,7 @@ export type BackendBillDetail = {
   events: Array<{ stage: string | null; house: string | null; happened_on: string | null }>;
   analyses: BackendAnalysis[];
   debates: BillDebate[];
+  mpVotes: BillMpVote[];
   checkpoint: {
     merkle_root: string;
     ballot_count: number;
@@ -317,6 +344,18 @@ export async function fetchMapBindings(): Promise<MapBindings> {
 
 export function fetchDebate(billId: number) {
   return getJson<{ posts: BackendDebatePost[] }>(`/api/bills/${billId}/debate`);
+}
+
+export type Constituency = {
+  id: number;
+  name: string;
+  mp_name: string | null;
+  party_name: string | null;
+};
+
+export async function fetchConstituencies(): Promise<Constituency[]> {
+  const payload = await getJson<{ constituencies: Constituency[] }>("/api/constituencies");
+  return payload.constituencies;
 }
 
 const SESSION_KEY = "democracy.sessionToken";
@@ -745,7 +784,7 @@ export function fetchPetitions() {
   return getJson<{ petitions: BackendPetition[] }>("/api/petitions");
 }
 
-export type MediaOutlet = { name: string; x: number; y: number; sample: number };
+export type MediaOutlet = { name: string; x: number | null; y: number | null; sample: number };
 
 export type MediaCompassPayload = {
   outlets: MediaOutlet[];

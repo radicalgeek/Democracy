@@ -582,6 +582,112 @@ h3 {
   gap: 8px;
 }
 
+/* Bill-scoped seat inspector (constituency selector + MP vote) */
+.scope-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scope-head h3 {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scope-yours {
+  flex: none;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--teal);
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 3px 10px;
+  cursor: pointer;
+}
+
+.scope-yours:hover {
+  border-color: #9cc0ca;
+}
+
+.scope-select {
+  width: 100%;
+  margin: 10px 0 4px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.scope-empty {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+
+.scope-mp {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.scope-mp p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.scope-mp-label {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 8px;
+}
+
+.scope-mp-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.scope-mp-name .party-chip {
+  font-size: 10.5px;
+  padding: 1px 8px;
+}
+
+.scope-mp-vote {
+  margin-top: 6px !important;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.scope-mp-vote strong {
+  color: var(--ink);
+}
+
+/* Party-derived compass marker note on speaker cards */
+.speaker-compass {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.speaker-compass-note {
+  font-size: 9.5px;
+  color: #8a4f9e;
+  font-weight: 600;
+}
+
 .compass.compact {
   grid-template-columns: 86px 1fr;
   align-items: center;
@@ -1902,6 +2008,47 @@ button.ghost {
   margin-top: 2px;
 }
 
+.interest-preview-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.interest-preview-row {
+  display: grid;
+  gap: 2px;
+  padding: 7px 9px;
+  border: 1px solid #dfe8eb;
+  border-radius: 8px;
+  background: #f8fbfc;
+  color: inherit;
+  text-decoration: none;
+}
+
+.interest-preview-row:hover,
+.interest-preview-row:focus-visible {
+  border-color: var(--teal);
+  background: #f3fafb;
+  outline: none;
+}
+
+.interest-preview-row strong {
+  font-size: 13px;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interest-preview-row span {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .influence-caveat {
   margin: 12px 0 0;
   max-width: 980px;
@@ -2334,6 +2481,57 @@ button.ghost {
   background: var(--teal);
 }
 
+.outlet-row-list {
+  display: grid;
+  gap: 10px;
+}
+
+.outlet-row {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #fbfdfd;
+}
+
+.outlet-row.awaiting {
+  background: #f8fafb;
+  border-style: dashed;
+}
+
+.outlet-row.awaiting .mini-compass-area {
+  fill: #f3f6f7;
+}
+
+.outlet-row .mini-compass {
+  width: 96px;
+  height: 96px;
+}
+
+.outlet-row .mini-compass text {
+  display: none;
+}
+
+.outlet-row-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.outlet-row-copy strong {
+  font-size: 15px;
+}
+
+.outlet-row-copy span,
+.outlet-row-copy em {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-style: normal;
+}
+
 .petition-list-scroll {
   max-height: 420px;
   overflow-y: auto;
@@ -2510,6 +2708,18 @@ button.ghost {
   font-style: normal;
 }
 
+.party-card .mini-compass {
+  width: 68px;
+  height: 68px;
+  margin-top: 4px;
+}
+
+.party-card .mini-compass text,
+.rep-card .mini-compass text,
+.party-influence-grid .mini-compass text {
+  display: none;
+}
+
 .party-influence {
   margin-top: 14px;
   border-top: 4px solid var(--line);
@@ -2564,6 +2774,11 @@ button.ghost {
   font-size: 17px;
 }
 
+.party-influence-grid .mini-compass {
+  width: 116px;
+  height: 116px;
+}
+
 .party-source-links {
   display: flex;
   flex-wrap: wrap;
@@ -2606,6 +2821,12 @@ button.ghost {
 
 .rep-card .muted {
   font-size: 12px;
+}
+
+.rep-card .mini-compass {
+  width: 72px;
+  height: 72px;
+  margin-top: 4px;
 }
 
 .rep-photo {
@@ -3202,6 +3423,106 @@ button.ghost {
   margin-top: 4px;
   font-size: 26px;
   line-height: 1;
+}
+
+.local-score-strip .media-compass-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.local-score-strip .media-compass-card > span {
+  display: block;
+}
+
+.local-score-strip .media-compass-card strong {
+  margin-top: 0;
+  font-size: 22px;
+  line-height: 1.12;
+}
+
+.mini-compass-frame {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mini-compass-frame.with-key {
+  width: max-content;
+  max-width: 100%;
+}
+
+.mini-compass {
+  width: 132px;
+  height: 132px;
+  flex-shrink: 0;
+}
+
+.mini-compass-area {
+  fill: #f7fbfb;
+  stroke: var(--line);
+}
+
+.mini-compass line {
+  stroke: #d8e3e7;
+  stroke-width: 1;
+}
+
+.mini-compass text {
+  fill: var(--muted);
+  font-size: 7.5px;
+  font-weight: 700;
+}
+
+.mini-compass .mini-compass-link {
+  stroke: #53666d;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.mini-compass-marker {
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 1px 2px rgba(12, 21, 26, 0.25));
+}
+
+.mini-compass-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.mini-compass-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mini-compass-key i {
+  width: 9px;
+  height: 9px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 2px rgba(12, 21, 26, 0.24);
+  flex-shrink: 0;
+}
+
+.mini-compass-key .circle {
+  border-radius: 50%;
+}
+
+.mini-compass-key .diamond {
+  transform: rotate(45deg);
 }
 
 .tax-story-grid {
@@ -4509,6 +4830,174 @@ button.ghost {
   color: var(--muted);
 }
 
+/* Per-debate speaker breakdown — who spoke and how much of the floor they took */
+.hansard-debate-item {
+  display: grid;
+  gap: 10px;
+}
+
+.debate-speakers {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px 16px;
+  background: #fafcfd;
+}
+
+.debate-speakers-head h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.debate-speakers-head p {
+  margin: 3px 0 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.debate-speakers-head strong {
+  color: var(--ink);
+}
+
+.speaker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.speaker-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--panel);
+}
+
+.speaker-card[data-rank="top"] {
+  border-color: #d8b25a;
+  box-shadow: 0 0 0 1px rgba(201, 146, 44, 0.25);
+}
+
+.speaker-card-head {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+
+.speaker-rank {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #eef3f5;
+  color: #4d5b61;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.speaker-card[data-rank="top"] .speaker-rank {
+  background: var(--gold);
+  color: #fff;
+}
+
+.speaker-id {
+  min-width: 0;
+}
+
+.speaker-id strong {
+  display: block;
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+
+.speaker-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.speaker-meta .party-chip {
+  font-size: 10.5px;
+  padding: 1px 7px;
+}
+
+.speaker-share-bar {
+  height: 7px;
+  border-radius: 4px;
+  background: #e3eaed;
+  overflow: hidden;
+}
+
+.speaker-share-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--teal);
+}
+
+.speaker-card[data-rank="top"] .speaker-share-bar span {
+  background: var(--gold);
+}
+
+.speaker-share-label {
+  display: block;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.speaker-share-label strong {
+  color: var(--ink);
+}
+
+.speaker-extra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.speaker-nocompass {
+  flex: 1;
+  font-size: 10.5px;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+.speaker-interests {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #4d5b61;
+  background: #eef3f5;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.speaker-interests.has-interests {
+  color: #8a5a0e;
+  background: rgba(201, 146, 44, 0.14);
+}
+
+.speaker-interests:hover {
+  filter: brightness(0.97);
+}
+
+.speaker-toggle {
+  margin-top: 12px;
+  font-size: 12.5px;
+}
+
 @media (max-width: 900px) {
   .influence-grid,
   .party-influence-grid {
@@ -4517,6 +5006,10 @@ button.ghost {
 
   .hansard-arguments {
     grid-template-columns: 1fr;
+  }
+
+  .outlet-row {
+    grid-template-columns: 88px minmax(0, 1fr);
   }
 }
 
@@ -4528,6 +5021,16 @@ button.ghost {
 
   .party-influence-title {
     flex-direction: column;
+  }
+
+  .outlet-row {
+    grid-template-columns: 72px minmax(0, 1fr);
+    padding: 9px;
+  }
+
+  .outlet-row .mini-compass {
+    width: 64px;
+    height: 64px;
   }
 }
 
@@ -4576,6 +5079,199 @@ button.ghost {
 .bill-chip.ai {
   color: #5b3f76;
   background: rgba(138, 79, 158, 0.1);
+}
+
+/* Bill progress — compact segmented bar for list rows */
+.bill-progress-mini {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.bpm-seg {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: #e3eaed;
+}
+
+.bpm-done {
+  background: var(--teal);
+}
+
+.bpm-current {
+  background: var(--gold);
+}
+
+/* Bill progress — full labelled stepper for the bill page */
+.bill-progress {
+  margin: 16px 0 4px;
+  padding: 16px 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.bill-progress-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.bill-progress-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.bill-progress-now {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--teal);
+}
+
+.bill-progress-track {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.bp-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 5 1 0;
+  min-width: 0;
+}
+
+.bp-phase.milestone {
+  flex: 2 1 0;
+}
+
+.bp-phase-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Milestone bands are narrow — shrink the label so it never collides */
+.bp-phase.milestone > .bp-phase-name {
+  font-size: 9.5px;
+  letter-spacing: 0;
+}
+
+.bp-phase.bp-done > .bp-phase-name {
+  color: var(--teal);
+  border-bottom-color: var(--teal);
+}
+
+.bp-phase.bp-current > .bp-phase-name {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.bp-stages {
+  display: flex;
+  align-items: flex-start;
+}
+
+.bp-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  min-width: 0;
+  text-align: center;
+}
+
+/* Connector line running into each node from the one before it */
+.bp-stage::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: var(--line);
+  z-index: 0;
+}
+
+.bp-phase:first-child .bp-stage:first-child::before {
+  display: none;
+}
+
+.bp-stage.bp-done::before,
+.bp-stage.bp-current::before {
+  background: var(--teal);
+}
+
+.bp-node {
+  position: relative;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  color: #fff;
+}
+
+.bp-stage.bp-done .bp-node {
+  background: var(--teal);
+  border-color: var(--teal);
+}
+
+.bp-stage.bp-current .bp-node {
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(201, 146, 44, 0.18);
+}
+
+.bp-stage-label {
+  font-size: 10.5px;
+  line-height: 1.25;
+  color: var(--muted);
+}
+
+.bp-stage.bp-done .bp-stage-label,
+.bp-stage.bp-current .bp-stage-label {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.bp-stage-date {
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+@media (max-width: 720px) {
+  .bill-progress-track {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .bp-phase,
+  .bp-phase.milestone {
+    flex: 1 1 auto;
+  }
 }
 
 .bill-row-chevron {
@@ -4735,24 +5431,7 @@ button.ghost {
   padding: 2px 9px;
 }
 
-.party-card .party-compass {
-  display: block;
-  font-size: 10.5px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-
 /* --- Media page and MP compass chips --- */
-
-.rep-compass-chip {
-  font-size: 11px;
-  font-weight: 600;
-  color: #5b3f76;
-  background: rgba(138, 79, 158, 0.1);
-  border-radius: 999px;
-  padding: 2px 8px;
-  margin-top: 4px;
-}
 
 .media-article-list {
   display: grid;
@@ -4794,6 +5473,43 @@ button.ghost {
   font-style: normal;
 }
 
-.media-vs-will {
-  margin-top: 10px;
+.article-compass {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.article-compass .mini-compass {
+  width: 58px;
+  height: 58px;
+}
+
+.article-compass .mini-compass text {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .local-score-strip .media-compass-card {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .local-score-strip .media-compass-card strong {
+    font-size: 20px;
+  }
+
+  .mini-compass {
+    width: 76px;
+    height: 76px;
+  }
+
+  .media-article-row {
+    align-items: flex-start;
+  }
+
+  .article-compass {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
 }

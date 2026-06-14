@@ -478,15 +478,15 @@ export function Dashboard({
           <div className="section-heading">
             <Newspaper size={20} />
             <div>
-              <h2>You vs media influence</h2>
+              <h2>Media influence</h2>
               <p>
                 Every ingested article is compass-scored — this is where each outlet's recent
-                politics coverage sits, and how close it is to you.
+                politics coverage sits.
               </p>
             </div>
           </div>
           <div className="panel">
-            <MediaLandscape media={media} you={myCompass ? { x: myCompass.x, y: myCompass.y } : null} />
+            <MediaLandscape media={media} />
           </div>
         </section>
       )}

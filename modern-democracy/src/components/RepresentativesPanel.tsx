@@ -21,7 +21,8 @@ import {
   Vote
 } from "lucide-react";
 import { Compass } from "./Compass";
-import { formatCompassPoint } from "../lib/compassLabel";
+import { MiniCompass } from "./MiniCompass";
+import { compassQuadrant } from "../lib/compassLabel";
 import {
   fetchConstituencyElections,
   fetchMemberInterests,
@@ -148,9 +149,18 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
               <span>{party.seats} seats</span>
               {party.discipline != null && <em>{party.discipline}% discipline</em>}
               {party.compass && (
-                <small className="party-compass">
-                  {formatCompassPoint(party.compass.x, party.compass.y)}
-                </small>
+                <MiniCompass
+                  markers={[
+                    {
+                      x: party.compass.x,
+                      y: party.compass.y,
+                      label: party.name,
+                      color: partyColour(party.colour),
+                      shape: "diamond"
+                    }
+                  ]}
+                  label={`${party.name} position on the political compass`}
+                />
               )}
             </button>
           ))}
@@ -207,12 +217,18 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
               </span>
               <span className="muted">{member.constituency ?? "—"}</span>
               {member.compass_x != null && member.compass_y != null && (
-                <span
-                  className="rep-compass-chip"
-                  title={`Revealed preference from ${member.compass_sample} division vote${member.compass_sample === 1 ? "" : "s"} on compass-scored bills`}
-                >
-                  {formatCompassPoint(member.compass_x, member.compass_y)}
-                </span>
+                <MiniCompass
+                  markers={[
+                    {
+                      x: member.compass_x,
+                      y: member.compass_y,
+                      label: member.name,
+                      color: partyColour(member.party_colour),
+                      shape: "diamond"
+                    }
+                  ]}
+                  label={`${member.name} revealed position on the political compass`}
+                />
               )}
             </article>
           ))}
@@ -378,7 +394,7 @@ function RepresentativeDetail({
                 }}
               />
               <p className="muted">
-                {formatCompassPoint(compass.x, compass.y)} — revealed preference from{" "}
+                {compassQuadrant(compass.x, compass.y)} — revealed preference from{" "}
                 {compass.sample} division vote{compass.sample === 1 ? "" : "s"} on compass-scored
                 bills, not a self-description.
               </p>
@@ -396,7 +412,7 @@ function RepresentativeDetail({
                 }}
               />
               <p className="muted">
-                {formatCompassPoint(partyCompass.x, partyCompass.y)} — {member.party ?? "party"}{" "}
+                {compassQuadrant(partyCompass.x, partyCompass.y)} — {member.party ?? "party"}{" "}
                 position shown as a proxy: this MP has no division votes on compass-scored bills
                 yet.
               </p>
@@ -613,32 +629,113 @@ type InterestStats = {
   paidEntries: number;
   assetEntries: number;
   roleEntries: number;
-  topDonors: string[];
+  donorSummaries: NamedInterest[];
+  paidSummaries: NamedInterest[];
+  assetRoleSummaries: NamedInterest[];
 };
+
+type NamedInterest = {
+  id: number;
+  name: string;
+  detail: string;
+  category: string;
+  registered: string | null;
+};
+
+const donorPatterns = [
+  /Name of donor:\s*([^\r\n;]+)/i,
+  /Donor:\s*([^\r\n;]+)/i,
+  /Provided by:\s*([^\r\n;]+)/i,
+  /Received from:\s*([^\r\n;]+)/i
+];
+
+const paidInterestPatterns = [
+  /Payer:\s*([^\r\n;]+)/i,
+  /Employer:\s*([^\r\n;]+)/i,
+  /Client:\s*([^\r\n;]+)/i,
+  /Name of company or organisation:\s*([^\r\n;]+)/i
+];
+
+const assetRolePatterns = [
+  /Name of company or organisation:\s*([^\r\n;]+)/i,
+  /Name of organisation:\s*([^\r\n;]+)/i,
+  /Company:\s*([^\r\n;]+)/i,
+  /Property:\s*([^\r\n;]+)/i
+];
+
+function compactInterestText(summary: string) {
+  return summary
+    .replace(/\s+/g, " ")
+    .replace(/;\s*/g, "; ")
+    .trim();
+}
+
+function matchInterestName(summary: string, patterns: RegExp[]) {
+  for (const pattern of patterns) {
+    const match = summary.match(pattern);
+    if (match?.[1]) return match[1].replace(/\.$/, "").trim();
+  }
+  const firstClause = compactInterestText(summary).split(/[.;]/)[0]?.trim();
+  return firstClause && firstClause.length <= 90 ? firstClause : "Declared entry";
+}
+
+function namedInterest(
+  interest: MemberInterests["categories"][number]["interests"][number],
+  category: string,
+  patterns: RegExp[]
+): NamedInterest {
+  return {
+    id: interest.id,
+    name: matchInterestName(interest.summary, patterns),
+    detail: compactInterestText(interest.summary),
+    category,
+    registered: interest.registered
+  };
+}
 
 function extractInterestStats(interests: MemberInterests | null): InterestStats {
   if (!interests) {
-    return { total: 0, donorEntries: 0, paidEntries: 0, assetEntries: 0, roleEntries: 0, topDonors: [] };
+    return {
+      total: 0,
+      donorEntries: 0,
+      paidEntries: 0,
+      assetEntries: 0,
+      roleEntries: 0,
+      donorSummaries: [],
+      paidSummaries: [],
+      assetRoleSummaries: []
+    };
   }
 
-  const donorNames = new Set<string>();
   let donorEntries = 0;
   let paidEntries = 0;
   let assetEntries = 0;
   let roleEntries = 0;
+  const donorSummaries: NamedInterest[] = [];
+  const paidSummaries: NamedInterest[] = [];
+  const assetRoleSummaries: NamedInterest[] = [];
 
   for (const category of interests.categories) {
     for (const interest of category.interests) {
       const text = `${category.name}\n${interest.summary}`;
-      if (/donor|donation|gift|hospitality|benefit|sponsor|visit/i.test(text)) donorEntries += 1;
-      if (/employment|earnings|payment|payer|salary|role, work|services/i.test(text)) paidEntries += 1;
-      if (/land|property|shareholding|share|asset|trust|company/i.test(text)) assetEntries += 1;
-      if (/director|trustee|chair|adviser|consultant|patron|board/i.test(text)) roleEntries += 1;
+      const isDonor = /donor|donation|gift|hospitality|benefit|sponsor|visit/i.test(text);
+      const isPaid = /employment|earnings|payment|payer|salary|role, work|services/i.test(text);
+      const isAsset = /land|property|shareholding|share|asset|trust|company/i.test(text);
+      const isRole = /director|trustee|chair|adviser|consultant|patron|board/i.test(text);
 
-      const donor = interest.summary.match(/Name of donor:\s*([^\r\n]+)/i);
-      if (donor?.[1]) donorNames.add(donor[1].trim());
-      const payer = interest.summary.match(/Payer:\s*([^\r\n]+)/i);
-      if (payer?.[1]) donorNames.add(payer[1].trim());
+      if (isDonor) {
+        donorEntries += 1;
+        donorSummaries.push(namedInterest(interest, category.name, donorPatterns));
+      }
+      if (isPaid) {
+        paidEntries += 1;
+        paidSummaries.push(namedInterest(interest, category.name, paidInterestPatterns));
+      }
+      if (isAsset) assetEntries += 1;
+      if (isRole) roleEntries += 1;
+      if (isAsset || isRole) {
+        assetRoleSummaries.push(namedInterest(interest, category.name, assetRolePatterns));
+      }
     }
   }
 
@@ -648,8 +745,50 @@ function extractInterestStats(interests: MemberInterests | null): InterestStats 
     paidEntries,
     assetEntries,
     roleEntries,
-    topDonors: [...donorNames].slice(0, 4)
+    donorSummaries: donorSummaries.slice(0, 4),
+    paidSummaries: paidSummaries.slice(0, 4),
+    assetRoleSummaries: assetRoleSummaries.slice(0, 4)
   };
+}
+
+function InterestPreviewList({
+  entries,
+  empty,
+  registerUrl
+}: {
+  entries: NamedInterest[];
+  empty: string;
+  registerUrl: string | null;
+}) {
+  if (entries.length === 0) {
+    return <span className="influence-note">{empty}</span>;
+  }
+
+  return (
+    <div className="interest-preview-list">
+      {entries.map((entry) => (
+        <a
+          key={`${entry.category}-${entry.id}`}
+          href={registerUrl ?? undefined}
+          target={registerUrl ? "_blank" : undefined}
+          rel={registerUrl ? "noreferrer" : undefined}
+          className="interest-preview-row"
+          title={entry.detail}
+        >
+          <strong>{entry.name}</strong>
+          <span>
+            {entry.category}
+            {entry.registered &&
+              ` · ${new Date(entry.registered).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric"
+              })}`}
+          </span>
+        </a>
+      ))}
+    </div>
+  );
 }
 
 function InfluenceSummary({
@@ -689,14 +828,40 @@ function InfluenceSummary({
             <span>Political compass</span>
             <em className="source-pill official">calculated</em>
           </div>
-          <strong>{compass ? formatCompassPoint(compass.x, compass.y) : "Awaiting score"}</strong>
+          {compass ? (
+            <MiniCompass
+              markers={[
+                ...(partyCompass
+                  ? [
+                      {
+                        x: partyCompass.x,
+                        y: partyCompass.y,
+                        label: "Party",
+                        color: "#8a4f9e"
+                      }
+                    ]
+                  : []),
+                {
+                  x: compass.x,
+                  y: compass.y,
+                  label: "MP",
+                  color: "#147b8e",
+                  shape: "diamond"
+                }
+              ]}
+              connect={Boolean(partyCompass)}
+              label={`${member.name} and party positions on the political compass`}
+            />
+          ) : (
+            <strong>Awaiting score</strong>
+          )}
           <small>
             {compass
               ? `${compass.sample} scored division vote${compass.sample === 1 ? "" : "s"}`
               : "Needs votes on compass-scored bills"}
           </small>
           <span className="influence-note">
-            Party: {partyCompass ? formatCompassPoint(partyCompass.x, partyCompass.y) : "awaiting score"}
+            Party: {partyCompass ? compassQuadrant(partyCompass.x, partyCompass.y) : "awaiting score"}
           </span>
         </article>
 
@@ -706,10 +871,22 @@ function InfluenceSummary({
             <span>Donors and benefits</span>
             <em className="source-pill self">self-reported</em>
           </div>
-          <strong>{interests ? interestStats.donorEntries : interestsFailed ? "Unavailable" : "Loading"}</strong>
-          <small>gift, donation, hospitality or sponsor-like entries</small>
-          {interestStats.topDonors.length > 0 && (
-            <span className="influence-note">{interestStats.topDonors.join(" · ")}</span>
+          <strong>
+            {interests
+              ? `${interestStats.donorEntries} named ${interestStats.donorEntries === 1 ? "entry" : "entries"}`
+              : interestsFailed
+                ? "Unavailable"
+                : "Loading"}
+          </strong>
+          <small>gift, donation, hospitality or sponsor-like register entries</small>
+          {interests ? (
+            <InterestPreviewList
+              entries={interestStats.donorSummaries}
+              empty="No donor, gift, hospitality or sponsor-like entries found."
+              registerUrl={interests.registerUrl}
+            />
+          ) : (
+            <span className="influence-note">Official register fetch</span>
           )}
         </article>
 
@@ -719,11 +896,23 @@ function InfluenceSummary({
             <span>Paid interests</span>
             <em className="source-pill self">self-reported</em>
           </div>
-          <strong>{interests ? interestStats.paidEntries : interestsFailed ? "Unavailable" : "Loading"}</strong>
+          <strong>
+            {interests
+              ? `${interestStats.paidEntries} named ${interestStats.paidEntries === 1 ? "entry" : "entries"}`
+              : interestsFailed
+                ? "Unavailable"
+                : "Loading"}
+          </strong>
           <small>employment, earnings, payment or services entries</small>
-          <span className="influence-note">
-            {interests ? `${interestStats.total} total register entries` : "Official register fetch"}
-          </span>
+          {interests ? (
+            <InterestPreviewList
+              entries={interestStats.paidSummaries}
+              empty="No paid employment, earnings or services entries found."
+              registerUrl={interests.registerUrl}
+            />
+          ) : (
+            <span className="influence-note">Official register fetch</span>
+          )}
         </article>
 
         <article className="influence-card">
@@ -732,11 +921,25 @@ function InfluenceSummary({
             <span>Assets and roles</span>
             <em className="source-pill self">self-reported</em>
           </div>
-          <strong>{interests ? interestStats.assetEntries + interestStats.roleEntries : interestsFailed ? "Unavailable" : "Loading"}</strong>
+          <strong>
+            {interests
+              ? `${interestStats.assetEntries + interestStats.roleEntries} named ${
+                  interestStats.assetEntries + interestStats.roleEntries === 1 ? "entry" : "entries"
+                }`
+              : interestsFailed
+                ? "Unavailable"
+                : "Loading"}
+          </strong>
           <small>property, shareholding, company, trustee or advisory signals</small>
-          <span className="influence-note">
-            {interestStats.assetEntries} asset · {interestStats.roleEntries} role
-          </span>
+          {interests ? (
+            <InterestPreviewList
+              entries={interestStats.assetRoleSummaries}
+              empty="No asset, company or outside-role entries found."
+              registerUrl={interests.registerUrl}
+            />
+          ) : (
+            <span className="influence-note">Official register fetch</span>
+          )}
         </article>
 
         <article className="influence-card">
@@ -803,7 +1006,22 @@ function PartyInfluencePanel({ party }: { party: PartySummary }) {
       <div className="party-influence-grid">
         <div>
           <span>Political compass</span>
-          <strong>{party.compass ? formatCompassPoint(party.compass.x, party.compass.y) : "Awaiting score"}</strong>
+          {party.compass ? (
+            <MiniCompass
+              markers={[
+                {
+                  x: party.compass.x,
+                  y: party.compass.y,
+                  label: party.name,
+                  color: partyColour(party.colour),
+                  shape: "diamond"
+                }
+              ]}
+              label={`${party.name} position on the political compass`}
+            />
+          ) : (
+            <strong>Awaiting score</strong>
+          )}
           <em>
             {party.compass
               ? `${party.compass.sample} MP vote sample${party.compass.sample === 1 ? "" : "s"}`

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, Newspaper } from "lucide-react";
 import { MediaLandscape } from "./MediaLandscape";
-import { storedMyCompass } from "./Onboarding";
-import { formatCompassPoint } from "../lib/compassLabel";
+import { MiniCompass } from "./MiniCompass";
 import {
   fetchMediaArticles,
   fetchMediaCompass,
@@ -39,15 +38,18 @@ export function MediaPanel() {
     };
   }, []);
 
-  const myCompass = storedMyCompass();
-  const you = myCompass ? { x: myCompass.x, y: myCompass.y } : null;
-
   const overall = media?.overall ?? null;
   const civicWill = national?.civicWill ?? null;
-  const mediaVsWill =
+  const mediaMarker = overall
+    ? [{ x: overall.x, y: overall.y, label: "Average media influence", color: "#147b8e", shape: "diamond" as const }]
+    : [];
+  const willAndMediaMarkers =
     overall && civicWill
-      ? Math.round(Math.hypot(overall.x - civicWill.x, overall.y - civicWill.y) * 10) / 10
-      : null;
+      ? [
+          { x: civicWill.x, y: civicWill.y, label: "Public will", color: "#bf443e" },
+          { x: overall.x, y: overall.y, label: "Average media influence", color: "#147b8e", shape: "diamond" as const }
+        ]
+      : [];
 
   if (failed) {
     return (
@@ -71,9 +73,13 @@ export function MediaPanel() {
           </div>
         </div>
         <div className="local-score-strip">
-          <div>
+          <div className="media-compass-card">
             <span>Average influence</span>
-            <strong>{overall ? formatCompassPoint(overall.x, overall.y) : "—"}</strong>
+            {overall ? (
+              <MiniCompass markers={mediaMarker} label="Average media influence on the political compass" />
+            ) : (
+              <strong>—</strong>
+            )}
           </div>
           <div>
             <span>Outlets tracked</span>
@@ -83,18 +89,19 @@ export function MediaPanel() {
             <span>Scored articles</span>
             <strong>{overall?.sample ?? "—"}</strong>
           </div>
-          <div>
+          <div className="media-compass-card">
             <span>Distance from public will</span>
-            <strong>{mediaVsWill != null ? `${mediaVsWill} compass units` : "—"}</strong>
+            {willAndMediaMarkers.length > 0 ? (
+              <MiniCompass
+                markers={willAndMediaMarkers}
+                connect
+                label="Distance between public will and average media influence on the political compass"
+              />
+            ) : (
+              <strong>—</strong>
+            )}
           </div>
         </div>
-        {overall && civicWill && (
-          <p className="muted media-vs-will">
-            The public will sits at {formatCompassPoint(civicWill.x, civicWill.y)}; average media
-            coverage sits at {formatCompassPoint(overall.x, overall.y)}. The gap is the influence
-            story.
-          </p>
-        )}
       </section>
 
       <section className="workspace-section">
@@ -107,7 +114,7 @@ export function MediaPanel() {
         </div>
         <div className="panel">
           {media ? (
-            <MediaLandscape media={media} you={you} />
+            <MediaLandscape media={media} />
           ) : (
             <p className="muted">Loading the outlet landscape…</p>
           )}
@@ -139,7 +146,12 @@ export function MediaPanel() {
                     ` · ${new Date(article.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
                 </span>
               </div>
-              <em className="post-compass">{formatCompassPoint(article.compass.x, article.compass.y)}</em>
+              <div className="article-compass">
+                <MiniCompass
+                  markers={[{ x: article.compass.x, y: article.compass.y, label: article.title, color: "#8a4f9e", shape: "diamond" }]}
+                  label={`Compass position for ${article.title}`}
+                />
+              </div>
               <ExternalLink size={14} />
             </a>
           ))}
