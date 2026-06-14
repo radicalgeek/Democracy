@@ -180,7 +180,7 @@ export async function importNews(sql: Sql) {
     // Score the backlog, not just this sweep's new items — earlier batches can
     // fail partially (the LLM occasionally returns an incomplete array).
     const unscored = await sql`
-      select distinct n.id from news_items n
+      select n.id from news_items n
       where not exists (
           select 1 from ai_analyses a
           where a.subject_type = 'news_item' and a.kind = 'compass' and a.subject_id = n.id::text
