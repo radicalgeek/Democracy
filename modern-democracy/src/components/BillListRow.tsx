@@ -31,7 +31,11 @@ export function BillListRow({
       }}
     >
       <div className="bill-row-copy">
-        <strong>{bill.short_title}</strong>
+        <strong>
+          {bill.short_title}
+          {bill.is_act && <span className="bill-status-badge pass">Became law</span>}
+          {bill.is_defeated && <span className="bill-status-badge fail">Defeated</span>}
+        </strong>
         <span className="bill-row-meta">
           {bill.current_house ?? "—"} · {bill.current_stage ?? "stage unknown"}
           {updated && ` · updated ${updated}`}

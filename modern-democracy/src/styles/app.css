@@ -5737,3 +5737,253 @@ button.ghost {
 .leader-approval-card strong {
   font-size: 17px;
 }
+
+/* --- Bills statistics --- */
+.bills-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bills-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.bills-stat-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bills-stat-card.pass {
+  border-top: 3px solid var(--green);
+}
+
+.bills-stat-card.fail {
+  border-top: 3px solid var(--red);
+}
+
+.bills-stat-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.bills-stat-card strong {
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.bills-stat-card em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.bills-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.bills-stats-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.bills-stats-panel.wide {
+  grid-column: 1 / -1;
+}
+
+.bills-stats-panel h4 {
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.bills-engagement-head {
+  margin-top: 16px !important;
+}
+
+.stage-funnel,
+.house-split {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stage-bar,
+.house-row {
+  display: grid;
+  grid-template-columns: 132px 1fr 34px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.stage-label,
+.house-label {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stage-bar .bar,
+.house-row .bar {
+  height: 13px;
+  background: var(--bg);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.stage-bar .fill,
+.house-row .fill {
+  height: 100%;
+  border-radius: 7px;
+  background: var(--teal);
+}
+
+.stage-bar .fill.pass {
+  background: var(--green);
+}
+
+.house-row .fill.commons {
+  background: var(--green);
+}
+
+.house-row .fill.lords {
+  background: var(--blue);
+}
+
+.stage-bar strong,
+.house-row strong {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.bills-engagement {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.bills-engagement span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.throughput-chart {
+  width: 100%;
+  height: auto;
+}
+
+.throughput-chart .chart-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.throughput-chart .chart-axis {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
+.throughput-area {
+  fill: rgba(20, 123, 142, 0.14);
+}
+
+.throughput-line {
+  fill: none;
+  stroke: var(--teal);
+  stroke-width: 2;
+}
+
+.recent-acts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recent-act {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.recent-act:hover:not(:disabled) {
+  border-color: var(--green);
+}
+
+.recent-act:disabled {
+  cursor: default;
+}
+
+.recent-act svg {
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.recent-act-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.bills-list-heading {
+  margin-top: 28px;
+}
+
+.bills-filter {
+  margin-bottom: 14px;
+}
+
+.bill-status-badge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.bill-status-badge.pass {
+  background: rgba(22, 138, 90, 0.14);
+  color: var(--green);
+}
+
+.bill-status-badge.fail {
+  background: rgba(191, 68, 62, 0.14);
+  color: var(--red);
+}
+
+@media (max-width: 880px) {
+  .bills-stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .bills-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

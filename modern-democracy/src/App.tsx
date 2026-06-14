@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { AuthScreen, type AuthMode } from "./components/AuthScreen";
 import { BillListRow } from "./components/BillListRow";
+import { BillsStats } from "./components/BillsStats";
 import { BillView } from "./components/BillView";
 import { ConstituencyMap, MAP_MODE_META, type MrpSeat } from "./components/ConstituencyMap";
 import { CivicDataPanel, CivicSourcesPanel } from "./components/CivicDataPanel";
@@ -111,6 +112,7 @@ export function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [selectedTab, setSelectedTab] = useState<Tab>("home");
   const [billOpen, setBillOpen] = useState(false);
+  const [billFilter, setBillFilter] = useState<"all" | "progress" | "act" | "defeated">("all");
   const [openPetitionId, setOpenPetitionId] = useState<number | null>(null);
   const [mapMode, setMapMode] = useState<MapMode>("vote");
   const [selectedConstituency, setSelectedConstituency] = useState(sampleBill.constituencies[0].id);
@@ -210,7 +212,7 @@ export function App() {
 
       try {
         const [billsPayload, bindings, constituencyList] = await Promise.all([
-          fetchBackendBills(20),
+          fetchBackendBills(50),
           fetchMapBindings(),
           fetchConstituencies()
         ]);
@@ -590,36 +592,80 @@ export function App() {
         {selectedTab === "bills" && !billOpen && (
           <section className="workspace-section">
             <div className="section-heading">
+              <BarChart3 size={20} />
+              <div>
+                <h2>Bills at a glance</h2>
+                <p>
+                  How legislation is moving — what's progressing, what became law, what fell — across
+                  every tracked bill.
+                </p>
+              </div>
+            </div>
+            <BillsStats onOpenBill={openBackendBill} />
+
+            <div className="section-heading bills-list-heading">
               <FileText size={20} />
               <div>
-                <h2>Active bills</h2>
+                <h2>Browse bills</h2>
                 <p>Live Parliament data where available, enriched by civic voting and AI analysis.</p>
               </div>
             </div>
+            <div className="segmented bills-filter">
+              {([
+                ["all", "All"],
+                ["progress", "In progress"],
+                ["act", "Became law"],
+                ["defeated", "Defeated"]
+              ] as Array<[typeof billFilter, string]>).map(([value, label]) => (
+                <button
+                  key={value}
+                  className={billFilter === value ? "selected" : ""}
+                  onClick={() => setBillFilter(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <div className="bills-grid">
-              <article
-                className="bill-row clickable selected"
-                role="button"
-                tabIndex={0}
-                onClick={() => setBillOpen(true)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") setBillOpen(true);
-                }}
-              >
-                <div>
-                  <strong>{bill.title}</strong>
-                  <span>
-                    {bill.house} · {bill.stage} · {totalPublic.toLocaleString()} public votes
-                  </span>
-                </div>
-              </article>
+              {billFilter === "all" && (
+                <article
+                  className="bill-row clickable selected"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setBillOpen(true)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") setBillOpen(true);
+                  }}
+                >
+                  <div>
+                    <strong>{bill.title}</strong>
+                    <span>
+                      {bill.house} · {bill.stage} · {totalPublic.toLocaleString()} public votes
+                    </span>
+                  </div>
+                </article>
+              )}
               {backendBills
                 .filter((item) => item.id !== liveBillId)
-                .slice(0, 12)
+                .filter((item) => {
+                  if (billFilter === "act") return item.is_act;
+                  if (billFilter === "defeated") return item.is_defeated;
+                  if (billFilter === "progress") return !item.is_act && !item.is_defeated;
+                  return true;
+                })
+                .slice(0, 30)
                 .map((item) => (
                   <BillListRow key={item.id} bill={item} onOpen={() => openBackendBill(item.id)} />
                 ))}
-              {backendBills.length === 0 && liveBills.slice(1, 8).map((liveBill) => (
+              {backendBills.filter((item) => {
+                if (billFilter === "act") return item.is_act;
+                if (billFilter === "defeated") return item.is_defeated;
+                if (billFilter === "progress") return !item.is_act && !item.is_defeated;
+                return true;
+              }).length === 0 && billFilter !== "all" && (
+                <p className="muted">No bills in this category in the imported window.</p>
+              )}
+              {billFilter === "all" && backendBills.length === 0 && liveBills.slice(1, 8).map((liveBill) => (
                 <article className="bill-row" key={liveBill.id}>
                   <div>
                     <strong>{liveBill.title}</strong>
@@ -632,7 +678,7 @@ export function App() {
                   </a>
                 </article>
               ))}
-              {liveBills.length === 0 &&
+              {billFilter === "all" && liveBills.length === 0 && backendBills.length === 0 &&
                 ["Planning and Infrastructure Bill", "Data Use and Access Bill", "Border Security Bill"].map(
                   (title) => (
                     <article className="bill-row" key={title}>

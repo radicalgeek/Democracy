@@ -42,6 +42,7 @@ import {
   pollingTrend
 } from "./services/insights.js";
 import { importMrp } from "./services/polling.js";
+import { billStats } from "./services/bills-stats.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 import { getUserEngagementStats, computeEngagementStatsForUser } from "./services/learning.js";
@@ -133,6 +134,10 @@ export async function registerRoutes(app: FastifyInstance) {
 
   app.post("/api/admin/import/civic-data", async () => {
     return importCivicData(sql);
+  });
+
+  app.get("/api/bills/stats", async () => {
+    return billStats(sql);
   });
 
   app.get("/api/bills", async (request) => {

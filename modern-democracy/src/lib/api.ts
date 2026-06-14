@@ -9,6 +9,8 @@ export type BackendBill = {
   current_house: string | null;
   current_stage: string | null;
   bill_type: string | null;
+  is_act: boolean;
+  is_defeated: boolean;
   last_updated: string | null;
   source_url: string;
   has_text: boolean;
@@ -309,6 +311,28 @@ export async function checkBackend(): Promise<IntegrationStatus> {
 
 export function fetchBackendBills(take = 20) {
   return getJson<{ bills: BackendBill[] }>(`/api/bills?take=${take}`);
+}
+
+export type BillStats = {
+  totals: {
+    total: number;
+    acts: number;
+    defeated: number;
+    inProgress: number;
+    commons: number;
+    lords: number;
+  };
+  passRate: number | null;
+  failRate: number | null;
+  byStage: Array<{ stage: string; count: number }>;
+  engagement: { ballots: number; divisions: number; posts: number; hansard: number };
+  throughput: Array<{ month: string; events: number }>;
+  recentActs: Array<{ id: number; title: string; house: string | null; lastUpdated: string | null }>;
+  generatedAt: string;
+};
+
+export function fetchBillStats() {
+  return getJson<BillStats>("/api/bills/stats");
 }
 
 export function fetchBillDetail(billId: number) {
