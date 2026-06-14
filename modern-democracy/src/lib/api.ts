@@ -800,6 +800,7 @@ export type NationalCompassVector = { x: number; y: number; sample: number } | n
 export type NationalCompassPayload = {
   civicWill: NationalCompassVector;
   discussion: NationalCompassVector;
+  polling: NationalCompassVector;
   media: { overall: NationalCompassVector; outlets: MediaOutlet[] };
   government: {
     party: {
@@ -860,6 +861,77 @@ export type ConstituencyLean = {
 
 export function fetchConstituencyLeans() {
   return getJson<{ privacyThreshold: number; leans: ConstituencyLean[] }>("/api/insights/leans");
+}
+
+// --- Public polling (free sources: BritPolls CC BY 4.0, Wikipedia CC BY-SA) ---
+
+export type PollPartyShare = { code: string; label: string; percent: number; colour?: string | null };
+
+export type PollsterPoll = {
+  pollster: string;
+  date: string;
+  sampleSize: number | null;
+  source: string;
+  parties: Array<{ code: string; percent: number }>;
+};
+
+export type PollingSnapshot = {
+  pollOfPolls: { date: string; method: string | null; parties: PollPartyShare[] } | null;
+  pollsters: PollsterPoll[];
+  spread: Array<{ code: string; label: string; colour: string; min: number; max: number; samples: number }>;
+  attribution: string;
+  generatedAt: string;
+};
+
+export function fetchPollingSnapshot() {
+  return getJson<PollingSnapshot>("/api/insights/polling");
+}
+
+export type PollingTrend = {
+  parties: Array<{ code: string; label: string; colour: string }>;
+  points: Array<{ date: string } & Record<string, number>>;
+  attribution: string;
+};
+
+export function fetchPollingTrend(weeks = 26) {
+  return getJson<PollingTrend>(`/api/insights/polling/trend?weeks=${weeks}`);
+}
+
+export type LeaderApproval = {
+  leaders: Array<{
+    leader: string;
+    partyCode: string | null;
+    colour: string | null;
+    approve: number | null;
+    disapprove: number | null;
+    net: number | null;
+    asOf: string;
+  }>;
+  attribution: string;
+};
+
+export function fetchLeaderApproval() {
+  return getJson<LeaderApproval>("/api/insights/leader-approval");
+}
+
+export type MrpProjection = {
+  source: string | null;
+  releasedOn: string | null;
+  seats: Array<{
+    constituencyId: number;
+    constituencyName: string;
+    partyCode: string;
+    partyLabel: string;
+    colour: string | null;
+    percent: number;
+  }>;
+  available: Array<{ source: string; releasedOn: string; seats: number }>;
+  caveat?: string;
+};
+
+export function fetchMrpProjection(source?: string) {
+  const suffix = source ? `?source=${encodeURIComponent(source)}` : "";
+  return getJson<MrpProjection>(`/api/insights/mrp${suffix}`);
 }
 
 export async function fetchPetitionDetail(petitionId: number) {

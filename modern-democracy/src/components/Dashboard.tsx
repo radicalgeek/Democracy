@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
+  BarChart3,
   Compass as CompassIcon,
   FileText,
   Flame,
@@ -21,6 +22,7 @@ import { CompassCompare } from "./CompassCompare";
 import { LocalAreaMap } from "./LocalAreaMap";
 import { MediaLandscape } from "./MediaLandscape";
 import { NationalCompass } from "./NationalCompass";
+import { PollingSnapshot } from "./PollingSnapshot";
 import { storedMyCompass } from "./Onboarding";
 import { HelpTrigger } from "./HelpTrigger";
 import { getHelpViewedCountGlobal, markHelpViewedGlobal } from "../lib/useHelpTracking";
@@ -454,6 +456,23 @@ export function Dashboard({
           homeConstituencyName={user.constituencyName}
           onOpenFullMap={() => onGoToTab("map")}
         />
+      </section>
+
+      <section className="workspace-section">
+        <div className="section-heading">
+          <BarChart3 size={20} />
+          <div>
+            <h2>What the country is telling pollsters</h2>
+            <p>
+              National voting intention from free, openly-licensed polling — a snapshot of public
+              mood to set beside your community's actual civic votes below. A poll is a sample, not a
+              vote.
+            </p>
+          </div>
+        </div>
+        <div className="panel">
+          <PollingSnapshot />
+        </div>
       </section>
 
       <section className="workspace-section">

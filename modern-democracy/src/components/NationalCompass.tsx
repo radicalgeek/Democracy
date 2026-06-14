@@ -43,6 +43,7 @@ export function NationalCompass({ you }: { you: { x: number; y: number } | null 
   const legislationPlaced = government?.legislation ? place(government.legislation) : null;
   const willPlaced = payload.civicWill ? place(payload.civicWill) : null;
   const discussionPlaced = payload.discussion ? place(payload.discussion) : null;
+  const pollingPlaced = payload.polling ? place(payload.polling) : null;
   const mediaPlaced = payload.media.overall ? place(payload.media.overall) : null;
   const youPlaced = you ? place(you) : null;
 
@@ -131,6 +132,14 @@ export function NationalCompass({ you }: { you: { x: number; y: number } | null 
           <circle cx={discussionPlaced.cx} cy={discussionPlaced.cy} r={7} fill="none" stroke="#147b8e" strokeWidth={2.5} strokeDasharray="3 3" />
         )}
 
+        {/* national polling — support-weighted public mood */}
+        {pollingPlaced && (
+          <g>
+            <line x1={pollingPlaced.cx - 7} y1={pollingPlaced.cy} x2={pollingPlaced.cx + 7} y2={pollingPlaced.cy} stroke="#c97a1b" strokeWidth={2.5} />
+            <line x1={pollingPlaced.cx} y1={pollingPlaced.cy - 7} x2={pollingPlaced.cx} y2={pollingPlaced.cy + 7} stroke="#c97a1b" strokeWidth={2.5} />
+          </g>
+        )}
+
         {/* civic will — the headline marker */}
         {willPlaced && (
           <g>
@@ -156,6 +165,14 @@ export function NationalCompass({ you }: { you: { x: number; y: number } | null 
           <span className="legend-label">Public discussion</span>
           <span className="muted">
             {formatPoint(payload.discussion)} · stance balance of the debate threads
+          </span>
+        </div>
+        <div className="compass-legend-row">
+          <span className="dot cross" style={{ color: "#c97a1b" }} />
+          <span className="legend-label">National polling</span>
+          <span className="muted">
+            {formatPoint(payload.polling)} · party support (poll of polls) weighted onto each party's
+            position — a derived mood point, not a measured public compass
           </span>
         </div>
         <div className="compass-legend-row">
@@ -194,7 +211,8 @@ export function NationalCompass({ you }: { you: { x: number; y: number } | null 
         <p className="muted">
           Positions are revealed preference, not labels: parties and government from how they vote
           in divisions on compass-scored bills, the public from civic ballots, discussion from
-          debate-post stances, media from scored coverage framing.
+          debate-post stances, media from scored coverage framing. National polling is the one
+          external layer — current voting intention weighted onto party positions, for comparison.
         </p>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { importNews } from "./services/news.js";
 import { analyzePetitions, importPetitions } from "./services/petitions.js";
 import { computeEngagementStatsForUser } from "./services/learning.js";
 import { importCivicData } from "./services/civic-data.js";
+import { importPolling } from "./services/polling.js";
 import { compassDebatePosts } from "./services/discussion-compass.js";
 import {
   analyzeBillDebates,
@@ -36,9 +37,11 @@ export async function runFullImport() {
   const petitionAnalyses = await analyzePetitions(sql);
   const postCompass = await compassDebatePosts(sql);
   const news = await importNews(sql);
+  const polling = await importPolling(sql);
   return {
     civicData,
     postCompass,
+    polling,
     constituencies,
     bills,
     texts,

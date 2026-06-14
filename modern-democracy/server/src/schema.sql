@@ -503,3 +503,69 @@ create table if not exists member_party_cache (
   house text,
   fetched_at timestamptz not null default now()
 );
+
+-- Public opinion polling from free, openly-licensed sources (BritPolls CC BY
+-- 4.0, Wikipedia CC BY-SA). Ingested on every worker cycle; each poll upserts
+-- by (pollster, fieldwork_end, scope) so re-fetching the stable source URLs
+-- accumulates a time-series rather than overwriting. Polling is a SEPARATE,
+-- clearly-labelled comparison layer — it is never merged into the
+-- anonymous-ballot civic will, which is revealed preference.
+create table if not exists polls (
+  id bigserial primary key,
+  source text not null,
+  pollster text not null,
+  fieldwork_end date not null,
+  sample_size integer,
+  method text,
+  scope text not null default 'GB',
+  is_poll_of_polls boolean not null default false,
+  source_url text,
+  fetched_at timestamptz not null default now(),
+  unique (pollster, fieldwork_end, scope)
+);
+create index if not exists polls_fieldwork_idx on polls (fieldwork_end desc);
+create index if not exists polls_pop_idx on polls (is_poll_of_polls, fieldwork_end desc);
+
+create table if not exists poll_results (
+  poll_id bigint not null references polls(id) on delete cascade,
+  party_code text not null,
+  party_label text not null,
+  percent numeric(5,2) not null,
+  primary key (poll_id, party_code)
+);
+
+create table if not exists leader_approval (
+  id bigserial primary key,
+  leader text not null,
+  party_code text,
+  approve numeric(5,2),
+  disapprove numeric(5,2),
+  net numeric(6,2),
+  as_of date not null,
+  source text not null,
+  source_url text,
+  fetched_at timestamptz not null default now(),
+  unique (leader, as_of, source)
+);
+
+-- Modelled MRP constituency projections (Survation, More in Common, Focaldata,
+-- Ipsos, YouGov). Imported semi-automatically via the admin endpoint — there is
+-- no free stable feed, so these refresh when a new MRP is published, captioned
+-- as modelled estimates. Names matched to current constituencies via the same
+-- normalization the SVG bindings use; unmatched rows are kept, not hidden.
+create table if not exists mrp_estimates (
+  id bigserial primary key,
+  constituency_id integer references constituencies(id),
+  constituency_name text not null,
+  source text not null,
+  released_on date not null,
+  party_code text not null,
+  party_label text not null,
+  percent numeric(5,2),
+  projected_winner boolean not null default false,
+  match_status text not null default 'unmatched',
+  fetched_at timestamptz not null default now(),
+  unique (source, released_on, constituency_name, party_code)
+);
+create index if not exists mrp_constituency_idx on mrp_estimates (constituency_id);
+create index if not exists mrp_release_idx on mrp_estimates (source, released_on desc);

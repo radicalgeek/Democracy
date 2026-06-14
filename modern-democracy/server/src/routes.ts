@@ -33,10 +33,15 @@ import {
 import {
   ballotMajorities,
   constituencyLeans,
+  leaderApproval,
   mediaArticles,
   mediaCompass,
-  nationalCompass
+  mrpProjection,
+  nationalCompass,
+  pollingSnapshot,
+  pollingTrend
 } from "./services/insights.js";
+import { importMrp } from "./services/polling.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 import { getUserEngagementStats, computeEngagementStatsForUser } from "./services/learning.js";
@@ -369,6 +374,24 @@ export async function registerRoutes(app: FastifyInstance) {
     return constituencyLeans(sql);
   });
 
+  app.get("/api/insights/polling", async () => {
+    return pollingSnapshot(sql);
+  });
+
+  app.get("/api/insights/polling/trend", async (request) => {
+    const weeks = Math.min(Math.max(Number((request.query as { weeks?: string }).weeks ?? 26), 4), 260);
+    return pollingTrend(sql, weeks);
+  });
+
+  app.get("/api/insights/leader-approval", async () => {
+    return leaderApproval(sql);
+  });
+
+  app.get("/api/insights/mrp", async (request) => {
+    const source = (request.query as { source?: string }).source;
+    return mrpProjection(sql, source);
+  });
+
   app.get("/api/petitions", async () => {
     const petitions = await listPetitions(sql);
     return { petitions };
@@ -577,6 +600,16 @@ export async function registerRoutes(app: FastifyInstance) {
 
   app.post("/api/admin/import/news", async () => {
     return importNews(sql);
+  });
+
+  // Import a published MRP projection (semi-automated; no free auto feed).
+  // Body: { source, releasedOn: "YYYY-MM-DD", rows: [{ constituency, winner?, parties }] }
+  app.post("/api/admin/import/mrp", async (request, reply) => {
+    try {
+      return await importMrp(sql, request.body as Parameters<typeof importMrp>[1]);
+    } catch (error) {
+      return reply.code(400).send({ error: error instanceof Error ? error.message : "import failed" });
+    }
   });
 
   // Learning & gamification endpoints

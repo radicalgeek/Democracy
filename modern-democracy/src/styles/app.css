@@ -5513,3 +5513,227 @@ button.ghost {
     gap: 4px;
   }
 }
+
+/* --- Public polling enrichment --- */
+.polling-snapshot {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.polling-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.polling-asof {
+  font-size: 13px;
+}
+
+.polling-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.polling-bar {
+  display: grid;
+  grid-template-columns: 150px 1fr 56px;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.polling-bar-label {
+  color: var(--muted);
+}
+
+.polling-bar .bar {
+  height: 14px;
+  background: var(--bg);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.polling-bar .fill {
+  height: 100%;
+  border-radius: 7px;
+  transition: width 0.4s ease;
+}
+
+.polling-bar strong {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.polling-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.polling-spread-note {
+  font-size: 12.5px;
+  margin: 0 0 8px;
+}
+
+.polling-spread {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  font-size: 13px;
+}
+
+.polling-spread-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.polling-spread-row i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.polling-trend {
+  width: 100%;
+  height: auto;
+}
+
+.polling-trend .polling-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.polling-trend .polling-axis {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
+.leader-approval {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.leader-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.leader-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.leader-name i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.leader-row .net,
+.leader-approval-card .net {
+  font-variant-numeric: tabular-nums;
+}
+
+.net.positive {
+  color: var(--green);
+}
+
+.net.negative {
+  color: var(--red);
+}
+
+.polling-attribution {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.party-poll-share {
+  color: var(--teal);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* compass cross marker for the national-polling layer */
+.compass-legend-row .dot.cross {
+  border-radius: 0;
+  background: transparent;
+  position: relative;
+}
+
+.compass-legend-row .dot.cross::before,
+.compass-legend-row .dot.cross::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+
+.compass-legend-row .dot.cross::before {
+  left: 0;
+  right: 0;
+  top: 5px;
+  height: 2px;
+}
+
+.compass-legend-row .dot.cross::after {
+  top: 0;
+  bottom: 0;
+  left: 5px;
+  width: 2px;
+}
+
+/* Leader approval strip on the Representatives page */
+.leader-approval-strip {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.leader-approval-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.leader-approval-head em {
+  font-weight: 400;
+  font-size: 13px;
+}
+
+.leader-approval-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.leader-approval-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.leader-approval-card strong {
+  font-size: 17px;
+}

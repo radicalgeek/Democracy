@@ -19,7 +19,7 @@ import {
 import { AuthScreen, type AuthMode } from "./components/AuthScreen";
 import { BillListRow } from "./components/BillListRow";
 import { BillView } from "./components/BillView";
-import { ConstituencyMap, MAP_MODE_META } from "./components/ConstituencyMap";
+import { ConstituencyMap, MAP_MODE_META, type MrpSeat } from "./components/ConstituencyMap";
 import { CivicDataPanel, CivicSourcesPanel } from "./components/CivicDataPanel";
 import { Dashboard } from "./components/Dashboard";
 import { GlobalSearch } from "./components/GlobalSearch";
@@ -48,6 +48,7 @@ import {
   fetchBillDetail,
   fetchConstituencies,
   fetchMapBindings,
+  fetchMrpProjection,
   storedChoice,
   type AccountUser,
   type BackendBill,
@@ -68,7 +69,7 @@ type Tab =
   | "representatives"
   | "voice"
   | "transparency";
-type MapMode = "vote" | "alignment" | "compass" | "debate";
+type MapMode = "vote" | "alignment" | "compass" | "debate" | "polling";
 
 const TABS: Tab[] = [
   "home",
@@ -125,6 +126,8 @@ export function App() {
   const [billDetail, setBillDetail] = useState<BackendBillDetail | null>(null);
   const [repOpenMemberId, setRepOpenMemberId] = useState<number | null>(null);
   const [mapBindings, setMapBindings] = useState<MapBindings | null>(null);
+  const [mrp, setMrp] = useState<Record<number, MrpSeat> | null>(null);
+  const [mrpMeta, setMrpMeta] = useState<{ source: string | null; releasedOn: string | null } | null>(null);
   const [constituencies, setConstituencies] = useState<Constituency[]>([]);
   // Inspector scope: national totals vs. a single seat. Defaults to the user's
   // own seat once known (see the home-seat effect), else the national view.
@@ -215,6 +218,24 @@ export function App() {
         setBackendBills(billsPayload.bills);
         setMapBindings(bindings);
         setConstituencies(constituencyList);
+
+        // MRP seat projection for the map's polling layer (empty until an MRP
+        // is imported via /api/admin/import/mrp).
+        fetchMrpProjection()
+          .then((projection) => {
+            if (!mounted) return;
+            const byId: Record<number, MrpSeat> = {};
+            for (const seat of projection.seats) {
+              byId[seat.constituencyId] = {
+                colour: seat.colour,
+                partyLabel: seat.partyLabel,
+                percent: seat.percent
+              };
+            }
+            setMrp(byId);
+            setMrpMeta({ source: projection.source, releasedOn: projection.releasedOn });
+          })
+          .catch(() => {});
 
         // If the URL already names a bill, the hash router is loading it —
         // picking a default here would race it and open the wrong bill.
@@ -554,6 +575,8 @@ export function App() {
             setSelectedConstituency={setSelectedConstituency}
             mapBindings={mapBindings}
             billAggregatesBySeat={billAggregatesBySeat}
+            mrp={mrp}
+            mrpMeta={mrpMeta}
             constituencies={constituencies}
             nationalView={nationalView}
             onSetNationalView={setNationalView}
@@ -657,7 +680,7 @@ export function App() {
                 <p>{MAP_MODE_META[mapMode].description}</p>
               </div>
               <div className="segmented">
-                {(["vote", "alignment", "compass", "debate"] as MapMode[]).map((mode) => (
+                {(["vote", "alignment", "compass", "debate", "polling"] as MapMode[]).map((mode) => (
                   <button
                     key={mode}
                     className={mapMode === mode ? "selected" : ""}
@@ -675,6 +698,8 @@ export function App() {
               onSelect={setSelectedConstituency}
               bindings={mapBindings}
               aggregates={billAggregatesBySeat}
+              mrp={mrp}
+              mrpMeta={mrpMeta}
               autoFocus={Boolean(user?.constituencyId)}
             />
           </section>
