@@ -78,30 +78,22 @@ export function NationalCompass({
           Right
         </text>
 
-        {/* major parties, sized by seats */}
-        {payload.parties.map((party) => {
-          if (!party.compass) return null;
-          const { cx, cy } = place(party.compass);
-          const radius = 4 + Math.sqrt(party.seats) * 0.55;
-          const isGoverning = government?.party.name === party.name;
-          return (
-            <g key={party.name}>
-              <circle
-                cx={cx}
-                cy={cy}
-                r={radius}
-                fill={partyColour(party.colour)}
-                opacity={0.78}
-                stroke={isGoverning ? "#13232a" : "none"}
-                strokeWidth={isGoverning ? 2.5 : 0}
-              >
-                <title>
-                  {party.name} {formatPoint(party.compass)}
-                </title>
-              </circle>
-            </g>
-          );
-        })}
+        {/* government — the only party marker shown, and it is keyed in the legend */}
+        {govPlaced && government && (
+          <circle
+            cx={govPlaced.cx}
+            cy={govPlaced.cy}
+            r={8}
+            fill={partyColour(government.party.colour)}
+            opacity={0.85}
+            stroke="#13232a"
+            strokeWidth={2.5}
+          >
+            <title>
+              Government: {government.party.name} {formatPoint(government.party.compass)}
+            </title>
+          </circle>
+        )}
 
         {/* direction of current legislation: arrow from governing party */}
         {govPlaced && legislationPlaced && (
