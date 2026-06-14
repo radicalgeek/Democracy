@@ -278,6 +278,49 @@ export async function refreshMediaLens(sql: Sql) {
   return { ...assessed, ...reliability, ...narratives };
 }
 
+/**
+ * Who owns each outlet — public, trust, private company or independent. Factual,
+ * concise, and neutral; shown so readers can weigh coverage in context.
+ */
+const OWNERSHIP: Record<string, { owner: string; type: string }> = {
+  "BBC News": { owner: "BBC — public corporation, licence-fee funded", type: "public" },
+  "The Guardian": { owner: "Guardian Media Group, owned by the Scott Trust", type: "trust" },
+  "Sky News": { owner: "Sky Group (Comcast)", type: "private" },
+  "The Independent": { owner: "Independent Digital News & Media", type: "private" },
+  "Daily Express": { owner: "Reach plc", type: "private" },
+  "Daily Mirror": { owner: "Reach plc", type: "private" },
+  "Daily Mail": { owner: "DMG Media (Daily Mail & General Trust)", type: "private" },
+  "Evening Standard": { owner: "Lebedev family", type: "private" },
+  "The Telegraph": { owner: "Telegraph Media Group (ownership in transition)", type: "private" },
+  "Politics.co.uk": { owner: "Senate Media", type: "private" },
+  Holyrood: { owner: "Holyrood Communications", type: "private" },
+  "Nation.Cymru": { owner: "Corgi Cymru — independent, reader-funded", type: "independent" },
+  "Slugger O'Toole": { owner: "Independent — Northern Ireland commentary", type: "independent" },
+  "Civil Service World": { owner: "Dods Group", type: "private" },
+  ConservativeHome: { owner: "Independent, Conservative-aligned", type: "independent" },
+  LabourList: { owner: "Independent, Labour-aligned", type: "independent" }
+};
+function ownershipFor(name: string) {
+  return OWNERSHIP[name] ?? { owner: "Ownership not recorded", type: "unknown" };
+}
+
+/** Reasons a story is flagged for closer reading (not a verdict on its truth). */
+function flagReasons(row: {
+  bias: number | null;
+  framing: string | null;
+  sensational: number | null;
+  factual_label: string | null;
+  corroborating_outlets: number | null;
+}): string[] {
+  const reasons: string[] = [];
+  if (row.factual_label === "single-source") reasons.push("single source");
+  if (row.factual_label === "contested") reasons.push("contested");
+  if ((row.sensational ?? 0) >= 0.5) reasons.push("sensational language");
+  if (Math.abs(row.bias ?? 0) >= 6) reasons.push(`heavy ${(row.bias ?? 0) < 0 ? "left" : "right"} framing`);
+  if (row.framing === "allegation" && (row.corroborating_outlets ?? 0) === 0) reasons.push("uncorroborated allegation");
+  return reasons;
+}
+
 /** Payload for the redesigned media-influence view. */
 export async function mediaInfluence(sql: Sql) {
   const outlets = await sql`
@@ -309,6 +352,22 @@ export async function mediaInfluence(sql: Sql) {
     )
     select round(avg(x)::numeric,2)::float as x, round(avg(y)::numeric,2)::float as y, count(*)::int as sample from latest
   `;
+  // Per-outlet assessment stats (sensationalism + factual-label breakdown).
+  const stats = await sql`
+    select s.name,
+           round(avg(na.sensational)::numeric, 2)::float as sensational,
+           round(avg(na.bias)::numeric, 2)::float as bias,
+           count(*) filter (where na.factual_label = 'well-corroborated')::int as corroborated,
+           count(*) filter (where na.factual_label = 'contested')::int as contested,
+           count(*) filter (where na.factual_label = 'single-source')::int as single_source,
+           count(*) filter (where na.factual_label = 'opinion')::int as opinion
+    from news_assessments na
+    join news_items n on n.id = na.news_item_id
+    join news_sources s on s.id = n.source_id
+    group by s.name
+  `;
+  const statsByName = new Map(stats.map((r) => [r.name as string, r]));
+
   const narratives = await sql`
     select narrative, summary, lean_x::float as x, lean_y::float as y, factual_label, outlets, article_count
     from media_narratives order by article_count desc
@@ -322,15 +381,61 @@ export async function mediaInfluence(sql: Sql) {
     from news_assessments
   `;
 
+  // Stories worth a closer read — heavy bias, sensational language, single-source
+  // or uncorroborated allegations. Flagged for scrutiny, not declared false.
+  const flaggedRows = await sql`
+    select n.id, n.title, n.url, n.published_at, s.name as source,
+           na.bias::float as bias, na.framing, na.sensational::float as sensational,
+           na.factual_label, na.corroborating_outlets
+    from news_items n
+    join news_assessments na on na.news_item_id = n.id
+    left join news_sources s on s.id = n.source_id
+    where na.factual_label in ('single-source', 'contested')
+       or na.sensational >= 0.5
+       or abs(coalesce(na.bias, 0)) >= 6
+       or (na.framing = 'allegation' and coalesce(na.corroborating_outlets, 0) = 0)
+    order by greatest(
+               coalesce(na.sensational, 0),
+               case when na.factual_label = 'single-source' then 1 else 0 end,
+               abs(coalesce(na.bias, 0)) / 10
+             ) desc, n.published_at desc nulls last
+    limit 24
+  `;
+
   return {
     overall: overall && (overall.sample as number) > 0 ? { x: overall.x, y: overall.y, sample: overall.sample } : null,
-    outlets: outlets.map((o) => ({
-      name: o.name as string,
-      x: o.x as number,
-      y: o.y as number,
-      sample: o.sample as number,
-      reliability: o.reliability as number | null,
-      reliabilitySample: o.reliability_sample as number
+    outlets: outlets.map((o) => {
+      const st = statsByName.get(o.name as string);
+      const own = ownershipFor(o.name as string);
+      return {
+        name: o.name as string,
+        x: o.x as number,
+        y: o.y as number,
+        sample: o.sample as number,
+        reliability: o.reliability as number | null,
+        reliabilitySample: o.reliability_sample as number,
+        owner: own.owner,
+        ownerType: own.type,
+        sensational: (st?.sensational as number) ?? null,
+        bias: (st?.bias as number) ?? null,
+        labels: {
+          corroborated: (st?.corroborated as number) ?? 0,
+          contested: (st?.contested as number) ?? 0,
+          singleSource: (st?.single_source as number) ?? 0,
+          opinion: (st?.opinion as number) ?? 0
+        }
+      };
+    }),
+    flagged: flaggedRows.map((r) => ({
+      id: r.id as number,
+      title: r.title as string,
+      url: r.url as string,
+      source: (r.source as string) ?? "Unknown source",
+      publishedAt: r.published_at as string | null,
+      bias: r.bias as number | null,
+      sensational: r.sensational as number | null,
+      factualLabel: r.factual_label as string | null,
+      reasons: flagReasons(r as never)
     })),
     narratives: narratives.map((n) => ({
       narrative: n.narrative as string,

@@ -900,6 +900,22 @@ export type MediaInfluence = {
     sample: number;
     reliability: number | null;
     reliabilitySample: number;
+    owner: string;
+    ownerType: string;
+    sensational: number | null;
+    bias: number | null;
+    labels: { corroborated: number; contested: number; singleSource: number; opinion: number };
+  }>;
+  flagged: Array<{
+    id: number;
+    title: string;
+    url: string;
+    source: string;
+    publishedAt: string | null;
+    bias: number | null;
+    sensational: number | null;
+    factualLabel: string | null;
+    reasons: string[];
   }>;
   narratives: Array<{
     narrative: string;
