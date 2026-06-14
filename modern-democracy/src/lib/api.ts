@@ -886,6 +886,11 @@ export type MediaArticle = {
   publishedAt: string | null;
   source: string;
   compass: { x: number; y: number; label: string };
+  factualLabel: string | null;
+  factualScore: number | null;
+  corroboratingOutlets: number;
+  sensational: number | null;
+  framing: string | null;
 };
 
 export function fetchMediaArticles(take = 40) {

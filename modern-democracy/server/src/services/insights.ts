@@ -384,9 +384,11 @@ export async function mediaArticles(sql: Sql, take = 40) {
   const flip = await econFlip(sql);
   const articles = await sql`
     select n.id, n.title, n.url, n.published_at, s.name as source,
-           c.x, c.y, c.label
+           c.x, c.y, c.label,
+           na.factual_label, na.factual_score, na.corroborating_outlets, na.sensational, na.framing
     from news_items n
     left join news_sources s on s.id = n.source_id
+    left join news_assessments na on na.news_item_id = n.id
     join lateral (
       select (output->>'x')::float as x, (output->>'y')::float as y,
              output->>'label' as label
@@ -405,7 +407,12 @@ export async function mediaArticles(sql: Sql, take = 40) {
       url: row.url as string,
       publishedAt: row.published_at as string | null,
       source: (row.source as string) ?? "Unknown source",
-      compass: { x: flip * (row.x as number), y: row.y as number, label: (row.label as string) ?? "scored" }
+      compass: { x: flip * (row.x as number), y: row.y as number, label: (row.label as string) ?? "scored" },
+      factualLabel: (row.factual_label as string | null) ?? null,
+      factualScore: (row.factual_score as number | null) ?? null,
+      corroboratingOutlets: (row.corroborating_outlets as number | null) ?? 0,
+      sensational: (row.sensational as number | null) ?? null,
+      framing: (row.framing as string | null) ?? null
     }))
   };
 }
