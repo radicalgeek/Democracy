@@ -56,9 +56,6 @@ export function NationalCompass({
   const mediaPlaced = payload.media.overall ? place(payload.media.overall) : null;
   const youPlaced = you ? place(you) : null;
 
-  const formatPoint = (point: { x: number; y: number } | null) =>
-    point ? `(${point.x.toFixed(1)}, ${point.y.toFixed(1)})` : "—";
-
   return (
     <div className="national-compass">
       <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label="The political direction of the country">
@@ -89,9 +86,7 @@ export function NationalCompass({
             stroke="#13232a"
             strokeWidth={2.5}
           >
-            <title>
-              Government: {government.party.name} {formatPoint(government.party.compass)}
-            </title>
+            <title>Government: {government.party.name}</title>
           </circle>
         )}
 

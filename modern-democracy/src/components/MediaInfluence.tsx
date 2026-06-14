@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Building2, CheckCircle2, HelpCircle, Newspaper } from "lucide-react";
 import { MiniCompass } from "./MiniCompass";
+import { compassQuadrant } from "../lib/compassLabel";
 import { fetchMediaInfluence, type MediaInfluence as MediaInfluenceData } from "../lib/api";
 
 function reliabilityColour(r: number | null) {
@@ -128,7 +129,7 @@ export function MediaInfluence({ detailed = false }: { detailed?: boolean }) {
                 label={`${o.name} coverage lean`}
               />
               <div className="outlet-card-stats">
-                <span>{o.sample} scored · lean ({o.x.toFixed(1)}, {o.y.toFixed(1)})</span>
+                <span>{o.sample} scored · {compassQuadrant(o.x, o.y)}</span>
                 {o.sensational != null && (
                   <span className={o.sensational >= 0.4 ? "warn" : ""}>
                     {Math.round(o.sensational * 100)}% sensational language
@@ -165,7 +166,7 @@ export function MediaInfluence({ detailed = false }: { detailed?: boolean }) {
                     <span className="muted">
                       {f.source}
                       {f.publishedAt && ` · ${new Date(f.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
-                      {f.compass && ` · lean (${f.compass.x.toFixed(1)}, ${f.compass.y.toFixed(1)})`}
+                      {f.compass && ` · ${compassQuadrant(f.compass.x, f.compass.y)}`}
                     </span>
                     <div className="flag-reasons">
                       {f.reasons.map((r) => (
@@ -197,7 +198,7 @@ export function MediaInfluence({ detailed = false }: { detailed?: boolean }) {
                   <p className="muted">{decode(n.summary)}</p>
                   <span className="narrative-meta">
                     {n.articleCount} stories · {n.outlets.length} outlets
-                    {n.lean && ` · lean (${n.lean.x.toFixed(1)}, ${n.lean.y.toFixed(1)})`}
+                    {n.lean && ` · ${compassQuadrant(n.lean.x, n.lean.y)}`}
                   </span>
                 </article>
               );

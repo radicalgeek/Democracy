@@ -1,3 +1,4 @@
+import { compassQuadrant } from "../lib/compassLabel";
 import type { CompassComparison } from "../lib/api";
 
 type ExtraPoint = {
@@ -129,7 +130,7 @@ export function CompassCompare({ compass, mpName, constituencyName, you, extras 
             <span className="dot" style={{ background: COLORS[entry.key] }} />
             <span className="legend-label">{entry.label}</span>
             <span className="muted">
-              ({entry.point.x.toFixed(1)}, {entry.point.y.toFixed(1)})
+              {compassQuadrant(entry.point.x, entry.point.y)}
               {entry.key !== "you" && ` · ${entry.point.sample} votes`}
             </span>
           </div>
@@ -139,7 +140,7 @@ export function CompassCompare({ compass, mpName, constituencyName, you, extras 
             <span className="dot diamond" style={{ background: entry.color }} />
             <span className="legend-label">{entry.label}</span>
             <span className="muted">
-              ({entry.point.x.toFixed(1)}, {entry.point.y.toFixed(1)}) · {entry.point.sample} articles
+              {compassQuadrant(entry.point.x, entry.point.y)} · {entry.point.sample} articles
             </span>
           </div>
         ))}
