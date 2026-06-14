@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, Newspaper } from "lucide-react";
 import { MediaInfluence } from "./MediaInfluence";
+import { MediaMetrics } from "./MediaMetrics";
 import { MiniCompass } from "./MiniCompass";
 import { fetchMediaArticles, type MediaArticle } from "../lib/api";
 
@@ -34,6 +35,9 @@ export function MediaPanel() {
               stories worth scrutiny, and the narratives shaping the conversation — corroboration-led.
             </p>
           </div>
+        </div>
+        <div className="panel">
+          <MediaMetrics />
         </div>
         <div className="panel">
           <MediaInfluence detailed />

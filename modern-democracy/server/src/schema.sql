@@ -608,6 +608,11 @@ create table if not exists news_assessments (
 alter table news_sources add column if not exists factual_reliability numeric(5,2);
 alter table news_sources add column if not exists reliability_sample integer not null default 0;
 
+-- Agenda leadership: an article is an "origin" when it is the earliest in its
+-- cross-outlet corroboration set — i.e. this outlet broke the story others then
+-- followed. Set during reliability computation.
+alter table news_assessments add column if not exists is_origin boolean not null default false;
+
 -- Recurring narratives shaping the conversation, refreshed each run.
 -- Per-MP ideological position, computed to be more genuinely ideological than a
 -- raw revealed-preference axis: rebellions and free/split votes are weighted up

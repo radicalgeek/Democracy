@@ -17,6 +17,7 @@ import {
 import { Compass } from "./Compass";
 import { LocalAreaMap } from "./LocalAreaMap";
 import { MediaInfluence } from "./MediaInfluence";
+import { MediaMetrics } from "./MediaMetrics";
 import { DemocracyHealth } from "./DemocracyHealth";
 import { PollingSnapshot } from "./PollingSnapshot";
 import { storedMyCompass } from "./Onboarding";
@@ -258,6 +259,9 @@ export function Dashboard({
               conversation — corroboration-led, with contested and single-source stories flagged.
             </p>
           </div>
+        </div>
+        <div className="panel">
+          <MediaMetrics compact />
         </div>
         <div className="panel">
           <MediaInfluence />

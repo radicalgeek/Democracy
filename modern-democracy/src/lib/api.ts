@@ -710,6 +710,7 @@ export type PartySummary = {
 export type RepDetail = {
   conduct: ConductScore;
   news: NewsMention[];
+  coverage: CoverageTone;
   member: {
     id: number;
     name: string;
@@ -938,6 +939,60 @@ export type MediaInfluence = {
 
 export function fetchMediaInfluence() {
   return getJson<MediaInfluence>("/api/insights/media-influence");
+}
+
+export type CoverageTone = {
+  articles: number;
+  hostileRate: number | null;
+  allegationRate: number | null;
+  sensational: number | null;
+  reliability: number | null;
+  peerMeanHostile: number | null;
+  vsAverage: "above" | "about" | "below" | null;
+};
+
+export type MediaMetrics = {
+  windowDays: number;
+  shareOfVoice: {
+    parties: Array<{ name: string; colour: string | null; count: number }>;
+    members: Array<{ name: string; colour: string | null; count: number }>;
+  };
+  toneByParty: Array<{
+    name: string;
+    colour: string | null;
+    articles: number;
+    sensational: number;
+    allegationRate: number;
+    hostileRate: number;
+    reliability: number;
+  }>;
+  meanHostileRate: number;
+  ownership: {
+    byOwner: Array<{ owner: string; share: number; outlets: number; articles: number }>;
+    hhi: number;
+    top3Share: number;
+  };
+  reliabilityMix: {
+    total: number;
+    corroborated: number;
+    contested: number;
+    single_source: number;
+    opinion: number;
+    sensational: number;
+  } | null;
+  reliabilityTrend: Array<{ week: string; corroboratedPct: number; sensational: number }>;
+  agendaLeadership: Array<{ outlet: string; origins: number }>;
+  mediaOverall: { x: number; y: number; sample: number } | null;
+  note: string;
+  generatedAt: string;
+};
+
+export function fetchMediaMetrics() {
+  return getJson<MediaMetrics>("/api/insights/media-metrics");
+}
+
+export function fetchPartyCoverage(partyId: number) {
+  return getJson<CoverageTone>(`/api/parties/${partyId}/coverage`);
 }
 
 export function fetchPartyNews(partyId: number) {

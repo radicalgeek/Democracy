@@ -26,17 +26,20 @@ import { MiniCompass } from "./MiniCompass";
 import { NewsMentions } from "./NewsMentions";
 import { PartyPopularity } from "./PartyPopularity";
 import { ConductPanel } from "./ConductPanel";
+import { CoverageToneBlock } from "./CoverageToneBlock";
 import { compassQuadrant } from "../lib/compassLabel";
 import {
   fetchConstituencyElections,
   fetchLeaderApproval,
   fetchMemberInterests,
   fetchParties,
+  fetchPartyCoverage,
   fetchPartyNews,
   fetchPollingSnapshot,
   fetchRepresentativeDetail,
   fetchRepresentatives,
   type ConstituencyElection,
+  type CoverageTone,
   type LeaderApproval,
   type MemberInterests,
   type NewsMention,
@@ -390,7 +393,7 @@ function RepresentativeDetail({
     );
   }
 
-  const { member, stats, latestElection, biography, votingRecord, compass, partyCompass, conduct, news } = detail;
+  const { member, stats, latestElection, biography, votingRecord, compass, partyCompass, conduct, news, coverage } = detail;
   const candidates = (latestElection?.candidates ?? [])
     .slice()
     .sort((a, b) => b.votes - a.votes)
@@ -462,13 +465,10 @@ function RepresentativeDetail({
           <ConductPanel conduct={conduct} subject={member.name} />
         </section>
         <section className="panel">
-          <h3>
-            <Newspaper size={16} /> In the news
+          <CoverageToneBlock tone={coverage} subject={member.name} />
+          <h3 className="rep-news-subhead">
+            <Newspaper size={16} /> Recent coverage
           </h3>
-          <p className="muted rep-news-note">
-            Recent coverage mentioning {member.name}, tagged by factual reliability. Flags help you
-            weigh hostile or single-source stories — they never affect the accountability score.
-          </p>
           <NewsMentions items={news} emptyText="No recent coverage linked to this MP yet." />
         </section>
       </div>
@@ -1087,12 +1087,17 @@ function InfluenceSummary({
 
 function PartyInfluencePanel({ party }: { party: PartySummary }) {
   const [news, setNews] = useState<NewsMention[] | null>(null);
+  const [coverage, setCoverage] = useState<CoverageTone | null>(null);
   useEffect(() => {
     let mounted = true;
     setNews(null);
+    setCoverage(null);
     fetchPartyNews(party.id)
       .then((payload) => mounted && setNews(payload.news))
       .catch(() => mounted && setNews([]));
+    fetchPartyCoverage(party.id)
+      .then((c) => mounted && setCoverage(c))
+      .catch(() => mounted && setCoverage(null));
     return () => {
       mounted = false;
     };
@@ -1123,8 +1128,9 @@ function PartyInfluencePanel({ party }: { party: PartySummary }) {
       </div>
 
       <div className="party-news-block">
-        <h4>
-          <Newspaper size={15} /> In the news
+        {coverage && <CoverageToneBlock tone={coverage} subject={party.name} />}
+        <h4 className="rep-news-subhead">
+          <Newspaper size={15} /> Recent coverage
         </h4>
         {news ? (
           <NewsMentions items={news} emptyText="No recent coverage linked to this party yet." />

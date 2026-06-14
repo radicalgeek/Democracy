@@ -1,6 +1,7 @@
 import type { Sql } from "postgres";
 import { memberConduct, partyConduct } from "./conduct.js";
 import { newsForMember } from "./media-lens.js";
+import { coverageTone } from "./media-metrics.js";
 import { partyIdeology } from "./ideology.js";
 
 const MEMBERS_API = "https://members-api.parliament.uk/api";
@@ -249,10 +250,12 @@ export async function representativeDetail(sql: Sql, memberId: number) {
 
   const conduct = await memberConduct(sql, memberId);
   const news = await newsForMember(sql, memberId);
+  const coverage = await coverageTone(sql, { memberId });
 
   return {
     conduct,
     news,
+    coverage,
     member: {
       id: member.id,
       name: member.name,

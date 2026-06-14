@@ -151,13 +151,18 @@ export async function computeMediaReliability(sql: Sql, windowDays = 45) {
   let updated = 0;
   for (const a of enriched) {
     const corroborators = new Set<number>();
+    let earliest = true; // did this outlet break the story (publish before its corroborators)?
     for (const b of enriched) {
       if (b.id === a.id || b.sourceId === a.sourceId) continue;
       if (a.when && b.when && Math.abs(a.when - b.when) > WINDOW_MS) continue;
       const shared = a.terms.filter((t) => b.terms.includes(t)).length;
-      if (shared >= 2) corroborators.add(b.sourceId);
+      if (shared >= 2) {
+        corroborators.add(b.sourceId);
+        if (a.when && b.when && b.when < a.when) earliest = false;
+      }
     }
     const corrob = corroborators.size;
+    const isOrigin = corrob >= 2 && a.when > 0 && earliest;
     let score = 60;
     if (corrob >= 2) score += 22;
     else if (corrob === 1) score += 6;
@@ -178,7 +183,8 @@ export async function computeMediaReliability(sql: Sql, windowDays = 45) {
 
     await sql`
       update news_assessments
-      set corroborating_outlets = ${corrob}, factual_score = ${score}, factual_label = ${label}
+      set corroborating_outlets = ${corrob}, factual_score = ${score}, factual_label = ${label},
+          is_origin = ${isOrigin}
       where news_item_id = ${a.id}
     `;
     updated += 1;
@@ -301,7 +307,7 @@ const OWNERSHIP: Record<string, { owner: string; type: string }> = {
   ConservativeHome: { owner: "Independent, Conservative-aligned", type: "independent" },
   LabourList: { owner: "Independent, Labour-aligned", type: "independent" }
 };
-function ownershipFor(name: string) {
+export function ownershipFor(name: string) {
   return OWNERSHIP[name] ?? { owner: "Ownership not recorded", type: "unknown" };
 }
 
