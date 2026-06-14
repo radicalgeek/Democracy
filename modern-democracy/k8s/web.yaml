@@ -19,7 +19,7 @@ spec:
         kubernetes.io/arch: arm64
       containers:
         - name: web
-          image: ghcr.io/radicalgeek/democracy-web:90bde1527ace-scored-feed-20260614
+          image: ghcr.io/radicalgeek/democracy-web:09280221b80d-no-coords-20260614
           imagePullPolicy: Always
           ports:
             - containerPort: 4173
