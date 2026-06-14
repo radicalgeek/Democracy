@@ -471,6 +471,13 @@ create table if not exists bill_debates (
 );
 create index if not exists bill_debates_bill_idx on bill_debates (bill_id, sitting_date desc);
 
+-- Per-speaker breakdown of a debate: [{ memberId, name, contributions, words }],
+-- sorted by words desc. Captures who spoke and how much of the floor they took
+-- (Hansard publishes no timecodes, so word share is the "talked out the clock"
+-- signal). Member ids join to representatives, the revealed-preference compass,
+-- and member_interests_cache.
+alter table bill_debates add column if not exists speaker_breakdown jsonb;
+
 -- Lazy caches for per-member registered interests (official Interests API)
 -- and department profiles (gov.uk organisations + Members API posts).
 create table if not exists member_interests_cache (
@@ -482,5 +489,17 @@ create table if not exists member_interests_cache (
 create table if not exists department_cache (
   slug text primary key,
   payload jsonb not null,
+  fetched_at timestamptz not null default now()
+);
+
+-- Party + house for any member id, from the Members API. The representatives
+-- table is Commons-only, so this is how debate speakers who are peers get a
+-- party chip and the right House. Lazy per-member cache, like interests.
+create table if not exists member_party_cache (
+  member_id integer primary key,
+  party_name text,
+  party_abbreviation text,
+  party_colour text,
+  house text,
   fetched_at timestamptz not null default now()
 );

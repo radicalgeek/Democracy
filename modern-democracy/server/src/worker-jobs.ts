@@ -8,7 +8,12 @@ import { analyzePetitions, importPetitions } from "./services/petitions.js";
 import { computeEngagementStatsForUser } from "./services/learning.js";
 import { importCivicData } from "./services/civic-data.js";
 import { compassDebatePosts } from "./services/discussion-compass.js";
-import { analyzeBillDebates, importBillDebates } from "./services/hansard.js";
+import {
+  analyzeBillDebates,
+  importBillDebates,
+  warmDebateSpeakerInterests,
+  warmDebateSpeakerParties
+} from "./services/hansard.js";
 import {
   importBills,
   importBillTexts,
@@ -25,6 +30,8 @@ export async function runFullImport() {
   const bindings = await rebuildSeatBindings(sql);
   const analyses = await analyzeImportedBills();
   const hansardDebates = await importBillDebates(sql);
+  const debateSpeakerInterests = await warmDebateSpeakerInterests(sql);
+  const debateSpeakerParties = await warmDebateSpeakerParties(sql);
   const debateSummaries = await analyzeBillDebates(sql);
   const petitionAnalyses = await analyzePetitions(sql);
   const postCompass = await compassDebatePosts(sql);
@@ -40,6 +47,8 @@ export async function runFullImport() {
     bindings,
     analyses,
     hansardDebates,
+    debateSpeakerInterests,
+    debateSpeakerParties,
     debateSummaries,
     petitionAnalyses,
     news

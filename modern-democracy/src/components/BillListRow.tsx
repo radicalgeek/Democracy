@@ -1,5 +1,6 @@
 import { BookOpenCheck, ChevronRight, Compass, Landmark, MessageSquare, Newspaper, Vote } from "lucide-react";
 import type { BackendBill } from "../lib/api";
+import { BillProgress } from "./BillProgress";
 
 /**
  * One bill in the list, with the data that helps someone choose what to open:
@@ -35,6 +36,12 @@ export function BillListRow({
           {bill.current_house ?? "—"} · {bill.current_stage ?? "stage unknown"}
           {updated && ` · updated ${updated}`}
         </span>
+        <BillProgress
+          title={bill.short_title}
+          house={bill.current_house}
+          stage={bill.current_stage}
+          compact
+        />
         <div className="bill-chip-row">
           {bill.ballots > 0 && (
             <span className="bill-chip strong">

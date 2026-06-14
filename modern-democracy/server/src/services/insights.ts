@@ -1,4 +1,5 @@
 import type { Sql } from "postgres";
+import { MEDIA_FEEDS } from "./news.js";
 
 const PRIVACY_THRESHOLD = Number(process.env.PRIVACY_THRESHOLD ?? 5);
 
@@ -41,13 +42,32 @@ export async function mediaCompass(sql: Sql) {
            round(avg(y)::numeric, 2)::float as y
     from latest
   `;
-  return {
-    outlets: outlets.map((row) => ({
+  const scoredByName = new Map(
+    outlets.map((row) => [
+      row.name as string,
+      {
+        name: row.name as string,
+        x: row.x as number,
+        y: row.y as number,
+        sample: row.sample as number
+      }
+    ])
+  );
+  const configuredOutlets = MEDIA_FEEDS.map((feed) => {
+    const scored = scoredByName.get(feed.name);
+    return scored ?? { name: feed.name, x: null, y: null, sample: 0 };
+  });
+  const extraScored = outlets
+    .filter((row) => !MEDIA_FEEDS.some((feed) => feed.name === row.name))
+    .map((row) => ({
       name: row.name as string,
       x: row.x as number,
       y: row.y as number,
       sample: row.sample as number
-    })),
+    }));
+
+  return {
+    outlets: [...configuredOutlets, ...extraScored],
     overall:
       overall && (overall.sample as number) > 0
         ? { x: overall.x as number, y: overall.y as number, sample: overall.sample as number }

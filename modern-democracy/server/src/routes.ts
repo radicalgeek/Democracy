@@ -23,7 +23,7 @@ import {
   petitionDetail,
   postPetitionDebate
 } from "./services/petitions.js";
-import { newsForSubject } from "./services/news.js";
+import { importNews, newsForSubject } from "./services/news.js";
 import {
   constituencyElections,
   listRepresentatives,
@@ -48,6 +48,7 @@ import {
   localCivicOverview
 } from "./services/civic-data.js";
 import { memberInterests } from "./services/interests.js";
+import { enrichDebateSpeakers, type SpeakerTally } from "./services/hansard.js";
 import { departmentProfile, listDepartments } from "./services/departments.js";
 
 function bearer(headers: Record<string, unknown>) {
@@ -172,17 +173,51 @@ export async function registerRoutes(app: FastifyInstance) {
       order by kind, id desc
     `;
     const debates = await sql`
-      select id, ext_id, title, house, sitting_date, contributions, speakers, source_url
+      select id, ext_id, title, house, sitting_date, contributions, speakers, source_url,
+             coalesce(speaker_breakdown, '[]'::jsonb) as speaker_breakdown
       from bill_debates where bill_id = ${billId}
       order by sitting_date desc nulls last
     `;
+    const enrichedSpeakers = await enrichDebateSpeakers(
+      sql,
+      debates.map((debate) => (debate.speaker_breakdown as SpeakerTally[]) ?? [])
+    );
+    const debatesWithSpeakers = debates.map(({ speaker_breakdown, ...debate }, index) => ({
+      ...debate,
+      speakers_detail: enrichedSpeakers[index]
+    }));
     const [checkpoint] = await sql`
       select merkle_root, ballot_count, checkpoint_hash, created_at
       from checkpoints where bill_id = ${billId} order by id desc limit 1
     `;
+    // How each current MP voted on this bill, by constituency, from the Commons
+    // divisions linked to it (latest division wins per member). Lets the bill
+    // page show "your MP voted X" for the selected seat.
+    const mpVotes = await sql`
+      select distinct on (r.constituency_id)
+             r.constituency_id, r.id as member_id, r.name as mp_name,
+             p.abbreviation as party_abbreviation, p.background_colour as party_colour,
+             dv.vote, d.date
+      from divisions d
+      join division_votes dv on dv.division_id = d.id
+      join representatives r on r.id = dv.member_id
+      left join parties p on p.id = r.party_id
+      where d.bill_id = ${billId} and r.constituency_id is not null
+      order by r.constituency_id, d.date desc nulls last
+    `;
     const aggregates = await billAggregates(sql, billId);
     const news = await newsForSubject(sql, { billId });
-    return { bill, texts, events, analyses, debates, checkpoint: checkpoint ?? null, aggregates, news };
+    return {
+      bill,
+      texts,
+      events,
+      analyses,
+      debates: debatesWithSpeakers,
+      mpVotes,
+      checkpoint: checkpoint ?? null,
+      aggregates,
+      news
+    };
   });
 
   app.get("/api/bills/:id/aggregates", async (request) => {
@@ -538,6 +573,10 @@ export async function registerRoutes(app: FastifyInstance) {
   app.post("/api/admin/import", async () => {
     const summary = await runFullImport();
     return summary;
+  });
+
+  app.post("/api/admin/import/news", async () => {
+    return importNews(sql);
   });
 
   // Learning & gamification endpoints

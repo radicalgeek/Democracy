@@ -6,13 +6,27 @@ import { llmModelName, runLlmJson, storeAnalysis } from "./ai.js";
  * Publisher-provided politics RSS feeds. Deliberately spread across the
  * editorial spectrum so compass-scored coverage is meaningful.
  */
-const FEEDS = [
+export const MEDIA_FEEDS = [
   { name: "BBC News", url: "https://feeds.bbci.co.uk/news/politics/rss.xml" },
   { name: "The Guardian", url: "https://www.theguardian.com/politics/rss" },
   { name: "Sky News", url: "https://feeds.skynews.com/feeds/rss/politics.xml" },
   { name: "The Independent", url: "https://www.independent.co.uk/news/uk/politics/rss" },
-  { name: "Daily Express", url: "https://www.express.co.uk/posts/rss/139/politics" }
+  { name: "Daily Express", url: "https://www.express.co.uk/posts/rss/139/politics" },
+  { name: "Daily Mirror", url: "https://www.mirror.co.uk/news/politics/?service=rss" },
+  { name: "Daily Mail", url: "https://www.dailymail.co.uk/news/politics/index.rss" },
+  { name: "Evening Standard", url: "https://www.standard.co.uk/news/politics/rss" },
+  { name: "The Telegraph", url: "https://www.telegraph.co.uk/politics/rss.xml" },
+  { name: "Politics.co.uk", url: "https://www.politics.co.uk/feed/" },
+  { name: "Holyrood", url: "https://www.holyrood.com/rss.xml" },
+  { name: "Nation.Cymru", url: "https://nation.cymru/category/news/politics/feed/" },
+  { name: "Slugger O'Toole", url: "https://sluggerotoole.com/feed/" },
+  { name: "Civil Service World", url: "https://www.civilserviceworld.com/rss" },
+  { name: "ConservativeHome", url: "https://conservativehome.com/feed/" },
+  { name: "LabourList", url: "https://labourlist.org/feed/" }
 ];
+
+const RECENT_ITEMS_PER_FEED = Number(process.env.NEWS_RECENT_ITEMS_PER_FEED ?? 5);
+const NEWS_SCORE_LIMIT = Number(process.env.NEWS_SCORE_LIMIT ?? 80);
 
 const STOPWORDS = new Set([
   "bill", "act", "the", "and", "for", "with", "from", "into", "that", "this",
@@ -85,7 +99,7 @@ export async function importNews(sql: Sql) {
   `;
   try {
     const feedItems: Array<FeedItem & { source: string }> = [];
-    for (const feed of FEEDS) {
+    for (const feed of MEDIA_FEEDS) {
       try {
         const response = await fetch(feed.url, {
           headers: { accept: "application/rss+xml, application/xml, text/xml", "user-agent": "democracy-civic-platform/0.5 (+https://test.radicalgeek.co.uk)" }
@@ -98,6 +112,11 @@ export async function importNews(sql: Sql) {
         // one dead feed never blocks the sweep
       }
     }
+
+    // Store a small recent slice from every feed even when it is not linked to
+    // a bill/petition. The Media page is an outlet landscape, so it needs broad
+    // current-politics coverage rather than only subject-linked articles.
+    const recentByFeed = new Map<string, number>();
 
     const bills = await sql`
       select id, short_title from bills order by last_updated desc nulls last limit 40
@@ -123,6 +142,13 @@ export async function importNews(sql: Sql) {
       if (row.inserted) newItemIds.push(row.id as number);
       return row.id as number;
     };
+
+    for (const item of feedItems) {
+      const count = recentByFeed.get(item.source) ?? 0;
+      if (count >= RECENT_ITEMS_PER_FEED) continue;
+      await linkItem(item);
+      recentByFeed.set(item.source, count + 1);
+    }
 
     for (const bill of bills) {
       const terms = keyTerms(bill.short_title as string);
@@ -153,13 +179,12 @@ export async function importNews(sql: Sql) {
     // fail partially (the LLM occasionally returns an incomplete array).
     const unscored = await sql`
       select distinct n.id from news_items n
-      where (exists (select 1 from news_bill_links l where l.news_item_id = n.id)
-          or exists (select 1 from news_petition_links l where l.news_item_id = n.id))
-        and not exists (
+      where not exists (
           select 1 from ai_analyses a
           where a.subject_type = 'news_item' and a.kind = 'compass' and a.subject_id = n.id::text
         )
-      limit 32
+      order by n.published_at desc nulls last, n.id desc
+      limit ${NEWS_SCORE_LIMIT}
     `;
     const scored = await scoreNewNewsItems(sql, unscored.map((row) => row.id as number));
 

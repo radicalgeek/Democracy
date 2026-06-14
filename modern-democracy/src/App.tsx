@@ -46,11 +46,13 @@ import {
   currentUser,
   fetchBackendBills,
   fetchBillDetail,
+  fetchConstituencies,
   fetchMapBindings,
   storedChoice,
   type AccountUser,
   type BackendBill,
   type BackendBillDetail,
+  type Constituency,
   type MapBindings
 } from "./lib/api";
 
@@ -123,6 +125,10 @@ export function App() {
   const [billDetail, setBillDetail] = useState<BackendBillDetail | null>(null);
   const [repOpenMemberId, setRepOpenMemberId] = useState<number | null>(null);
   const [mapBindings, setMapBindings] = useState<MapBindings | null>(null);
+  const [constituencies, setConstituencies] = useState<Constituency[]>([]);
+  // Inspector scope: national totals vs. a single seat. Defaults to the user's
+  // own seat once known (see the home-seat effect), else the national view.
+  const [nationalView, setNationalView] = useState(true);
   const [statuses, setStatuses] = useState<IntegrationStatus[]>([
     {
       source: "UK Parliament Bills API",
@@ -200,13 +206,15 @@ export function App() {
       if (status.status !== "live") return;
 
       try {
-        const [billsPayload, bindings] = await Promise.all([
+        const [billsPayload, bindings, constituencyList] = await Promise.all([
           fetchBackendBills(20),
-          fetchMapBindings()
+          fetchMapBindings(),
+          fetchConstituencies()
         ]);
         if (!mounted) return;
         setBackendBills(billsPayload.bills);
         setMapBindings(bindings);
+        setConstituencies(constituencyList);
 
         // If the URL already names a bill, the hash router is loading it —
         // picking a default here would race it and open the wrong bill.
@@ -243,6 +251,7 @@ export function App() {
     );
     if (entry) {
       setSelectedConstituency(entry[0]);
+      setNationalView(false);
       homeSeatApplied.current = true;
     }
   }, [user, mapBindings]);
@@ -545,6 +554,10 @@ export function App() {
             setSelectedConstituency={setSelectedConstituency}
             mapBindings={mapBindings}
             billAggregatesBySeat={billAggregatesBySeat}
+            constituencies={constituencies}
+            nationalView={nationalView}
+            onSetNationalView={setNationalView}
+            user={user}
             signedIn={user != null}
             onRequireAccount={() => setAuthMode("signup")}
             onBack={() => setBillOpen(false)}
