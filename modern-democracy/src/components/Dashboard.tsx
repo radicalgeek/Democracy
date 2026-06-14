@@ -7,27 +7,22 @@ import {
   FileText,
   Flame,
   HelpCircle,
-  Landmark,
   MapPinned,
   Newspaper,
   ScrollText,
-  Scale,
   ShieldCheck,
   Trophy,
-  UserRound,
   Vote
 } from "lucide-react";
 import { Compass } from "./Compass";
-import { CompassCompare } from "./CompassCompare";
 import { LocalAreaMap } from "./LocalAreaMap";
 import { MediaLandscape } from "./MediaLandscape";
-import { NationalCompass } from "./NationalCompass";
+import { DemocracyHealth } from "./DemocracyHealth";
 import { PollingSnapshot } from "./PollingSnapshot";
 import { storedMyCompass } from "./Onboarding";
 import { HelpTrigger } from "./HelpTrigger";
 import { getHelpViewedCountGlobal, markHelpViewedGlobal } from "../lib/useHelpTracking";
 import {
-  fetchBallotMajorities,
   fetchConstituencyLeans,
   fetchConstituencyProfile,
   fetchMediaCompass,
@@ -36,7 +31,6 @@ import {
   type AccountUser,
   type BackendBill,
   type BackendPetition,
-  type BallotMajority,
   type CompassComparison,
   type ConstituencyLean,
   type ConstituencyProfile,
@@ -72,7 +66,6 @@ export function Dashboard({
   >(null);
   const [petitions, setPetitions] = useState<BackendPetition[]>([]);
   const [media, setMedia] = useState<MediaCompassPayload | null>(null);
-  const [majorities, setMajorities] = useState<BallotMajority[]>([]);
   const [leans, setLeans] = useState<Record<number, ConstituencyLean> | null>(null);
   const [helpViewedCount, setHelpViewedCount] = useState(() => getHelpViewedCountGlobal());
 
@@ -90,9 +83,6 @@ export function Dashboard({
       fetchMediaCompass()
         .then((payload) => mounted && setMedia(payload))
         .catch(() => mounted && setMedia(null));
-      fetchBallotMajorities(user.constituencyId)
-        .then((payload) => mounted && setMajorities(payload.majorities))
-        .catch(() => mounted && setMajorities([]));
       fetchConstituencyLeans()
         .then((payload) => {
           if (!mounted) return;
@@ -114,85 +104,9 @@ export function Dashboard({
     [backendBills]
   );
 
-  const personalMp = useMemo(() => {
-    if (!profile) return null;
-    let compared = 0;
-    let matched = 0;
-    for (const record of profile.votingRecord) {
-      if (!record.billId) continue;
-      const mine = storedChoice(record.billId);
-      if (!mine || mine === "abstain") continue;
-      compared += 1;
-      if ((record.vote === "aye" ? "for" : "against") === mine) matched += 1;
-    }
-    return { compared, matched };
-  }, [profile]);
-
   const votableBills = backendBills
     .filter((bill) => storedChoice(bill.id) == null)
     .slice(0, 4);
-
-  // Your stored choices (device-only) against the published civic majorities,
-  // constituency and national, bill by bill.
-  const youVs = useMemo(() => {
-    type Row = {
-      billId: number;
-      billTitle: string;
-      mine: "for" | "against";
-      localMajority: "for" | "against" | null;
-      nationalMajority: "for" | "against" | null;
-    };
-    const rows: Row[] = [];
-    const tally = {
-      local: { compared: 0, matched: 0 },
-      national: { compared: 0, matched: 0 }
-    };
-    for (const majority of majorities) {
-      const mine = storedChoice(majority.billId);
-      if (mine !== "for" && mine !== "against") continue;
-      const callMajority = (slice: { for: number; against: number } | null) =>
-        slice && slice.for !== slice.against ? (slice.for > slice.against ? "for" : "against") : null;
-      const localMajority = callMajority(majority.constituency);
-      const nationalMajority = callMajority(majority.national);
-      if (localMajority) {
-        tally.local.compared += 1;
-        if (localMajority === mine) tally.local.matched += 1;
-      }
-      if (nationalMajority) {
-        tally.national.compared += 1;
-        if (nationalMajority === mine) tally.national.matched += 1;
-      }
-      if (localMajority || nationalMajority) {
-        rows.push({ billId: majority.billId, billTitle: majority.billTitle, mine, localMajority, nationalMajority });
-      }
-    }
-    const percent = (t: { compared: number; matched: number }) =>
-      t.compared ? Math.round((t.matched / t.compared) * 100) : null;
-    return {
-      rows,
-      localPercent: percent(tally.local),
-      localCompared: tally.local.compared,
-      nationalPercent: percent(tally.national),
-      nationalCompared: tally.national.compared,
-      disagreements: rows.filter(
-        (row) =>
-          (row.localMajority ?? row.nationalMajority) != null &&
-          (row.localMajority ?? row.nationalMajority) !== row.mine
-      )
-    };
-  }, [majorities]);
-
-  const mediaExtras =
-    media?.overall != null
-      ? [
-          {
-            key: "media",
-            label: "Media coverage (avg)",
-            color: "#8a4f9e",
-            point: media.overall
-          }
-        ]
-      : [];
 
   if (!user) {
     return (
@@ -232,56 +146,12 @@ export function Dashboard({
         )}
       </section>
 
-      <div className="dashboard-grid">
-        <section
-          className="panel dashboard-card clickable"
-          role="button"
-          tabIndex={0}
-          onClick={() => onGoToTab("mymp")}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") onGoToTab("mymp");
-          }}
-        >
-          <div className="panel-title">
-            <Landmark size={18} />
-            <div>
-              <h3>Your MP</h3>
-            </div>
-          </div>
-          {mp ? (
-            <div className="dashboard-mp">
-              {mp.thumbnailUrl ? (
-                <img src={mp.thumbnailUrl} alt={mp.name} className="rep-photo" />
-              ) : (
-                <div className="rep-photo placeholder">
-                  <UserRound size={22} />
-                </div>
-              )}
-              <div>
-                <strong>{mp.name}</strong>
-                <span
-                  className="party-chip"
-                  style={{ background: mp.partyColour ? `#${mp.partyColour}` : "var(--muted)" }}
-                >
-                  {mp.party ?? "Independent"}
-                </span>
-                <p className="muted">
-                  {personalMp && personalMp.compared > 0
-                    ? `Voted like you on ${personalMp.matched} of ${personalMp.compared} bills`
-                    : profile?.alignment.percent != null
-                      ? `Votes with your constituency ${profile.alignment.percent}% of the time`
-                      : "Vote on bills to compare your positions"}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <p className="muted">Loading your constituency…</p>
-          )}
-          <span className="dashboard-link">
-            Full report <ArrowRight size={14} />
-          </span>
-        </section>
+      <DemocracyHealth
+        you={myCompass ? { x: myCompass.x, y: myCompass.y } : null}
+        onStartTour={onStartTour}
+      />
 
+      <div className="dashboard-grid two">
         <section className="panel dashboard-card">
           <div className="panel-title">
             <CompassIcon size={18} />
@@ -344,102 +214,6 @@ export function Dashboard({
 
       <section className="workspace-section">
         <div className="section-heading">
-          <Scale size={20} />
-          <div>
-            <h2>How well are you represented?</h2>
-            <p>
-              Your questionnaire position against your MP, their party, your constituency, the
-              country, and the media — plus how often you vote with each majority.
-            </p>
-          </div>
-        </div>
-        <div className="dashboard-split">
-          <div className="panel">
-            {profile?.compass ? (
-              <CompassCompare
-                compass={profile.compass}
-                mpName={mp?.name ?? null}
-                constituencyName={user.constituencyName ?? "Your constituency"}
-                you={myCompass ? { x: myCompass.x, y: myCompass.y } : null}
-                extras={mediaExtras}
-              />
-            ) : (
-              <p className="muted">Compass comparison loads once your constituency profile is in.</p>
-            )}
-          </div>
-          <div className="panel agreement-panel">
-            <h3>You vs the majorities</h3>
-            {personalMp && personalMp.compared > 0 && (
-              <div className="proximity-bar">
-                <span>You ↔ your MP</span>
-                <div className="bar">
-                  <div
-                    className="fill"
-                    style={{ width: `${Math.round((personalMp.matched / personalMp.compared) * 100)}%` }}
-                  />
-                </div>
-                <strong>
-                  {Math.round((personalMp.matched / personalMp.compared) * 100)}%
-                  <em className="muted"> · {personalMp.compared} bills</em>
-                </strong>
-              </div>
-            )}
-            {youVs.localPercent != null && (
-              <div className="proximity-bar">
-                <span>You ↔ {user.constituencyName ?? "constituency"} majority</span>
-                <div className="bar">
-                  <div className="fill" style={{ width: `${youVs.localPercent}%` }} />
-                </div>
-                <strong>
-                  {youVs.localPercent}%<em className="muted"> · {youVs.localCompared} bills</em>
-                </strong>
-              </div>
-            )}
-            {youVs.nationalPercent != null && (
-              <div className="proximity-bar">
-                <span>You ↔ country majority</span>
-                <div className="bar">
-                  <div className="fill" style={{ width: `${youVs.nationalPercent}%` }} />
-                </div>
-                <strong>
-                  {youVs.nationalPercent}%<em className="muted"> · {youVs.nationalCompared} bills</em>
-                </strong>
-              </div>
-            )}
-            {youVs.localPercent == null && youVs.nationalPercent == null && (
-              <p className="muted">
-                Vote on a few bills and these comparisons fill in — your choices never leave this
-                device, the maths happens in your browser against published aggregates.
-              </p>
-            )}
-            {youVs.disagreements.length > 0 && (
-              <>
-                <h4>Where you split from the majority</h4>
-                <div className="disagreement-list">
-                  {youVs.disagreements.slice(0, 4).map((row) => (
-                    <button
-                      key={row.billId}
-                      className="disagreement-row"
-                      onClick={() => onOpenBill(row.billId)}
-                    >
-                      <strong>{row.billTitle}</strong>
-                      <span>
-                        You voted {row.mine},{" "}
-                        {row.localMajority
-                          ? `your constituency went ${row.localMajority}`
-                          : `the country went ${row.nationalMajority}`}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="workspace-section">
-        <div className="section-heading">
           <MapPinned size={20} />
           <div>
             <h2>Your local area</h2>
@@ -472,23 +246,6 @@ export function Dashboard({
         </div>
         <div className="panel">
           <PollingSnapshot />
-        </div>
-      </section>
-
-      <section className="workspace-section">
-        <div className="section-heading">
-          <CompassIcon size={20} />
-          <div>
-            <h2>The direction of the country</h2>
-            <p>
-              Everything the platform measures on one compass: the public will from civic votes,
-              the pull of discussion, average media influence, every major party, and the
-              government with the direction its current legislation is heading.
-            </p>
-          </div>
-        </div>
-        <div className="panel">
-          <NationalCompass you={myCompass ? { x: myCompass.x, y: myCompass.y } : null} />
         </div>
       </section>
 

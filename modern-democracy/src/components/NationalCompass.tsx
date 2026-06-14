@@ -7,19 +7,28 @@ import { fetchNationalCompass, type NationalCompassPayload } from "../lib/api";
  * average media influence, the governing party and the direction of its
  * current legislation, and every major party's revealed position.
  */
-export function NationalCompass({ you }: { you: { x: number; y: number } | null }) {
-  const [payload, setPayload] = useState<NationalCompassPayload | null>(null);
+export function NationalCompass({
+  you,
+  payload: payloadProp
+}: {
+  you: { x: number; y: number } | null;
+  /** Pre-fetched payload — when provided the component skips its own fetch. */
+  payload?: NationalCompassPayload | null;
+}) {
+  const [fetched, setFetched] = useState<NationalCompassPayload | null>(null);
   const [failed, setFailed] = useState(false);
+  const payload = payloadProp ?? fetched;
 
   useEffect(() => {
+    if (payloadProp) return;
     let mounted = true;
     fetchNationalCompass()
-      .then((data) => mounted && setPayload(data))
+      .then((data) => mounted && setFetched(data))
       .catch(() => mounted && setFailed(true));
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [payloadProp]);
 
   if (failed) {
     return <p className="muted">The national compass needs the updated backend — start the new API to see it.</p>;
