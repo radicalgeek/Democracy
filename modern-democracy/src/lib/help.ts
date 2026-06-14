@@ -117,6 +117,15 @@ export const HELP_TOPICS: Record<string, HelpTopic> = {
     content: "Bills don't exist in isolation. News coverage, campaigns, and public debate shape how Parliament votes. Seeing news linked to bills helps you understand the broader context and what constituencies care about.",
     relatedTopics: ["bill-process"],
     readTime: 2
+  },
+
+  polling: {
+    id: "polling",
+    title: "Opinion Polls & MRP",
+    shortDesc: "What polls measure — and what they don't",
+    content: "A voting-intention poll asks a sample of ~1,000–2,000 people who they'd vote for. Because it's a sample, every poll has a margin of error (~3 points) and pollsters differ slightly in method ('house effects') — which is why we show a 'poll of polls' average and the spread between pollsters, not one headline number. A poll is a snapshot of opinion, not a vote and not a result. MRP is a modelling technique that turns one big national poll into a projected result for every constituency — useful, but still a model, not a count. We draw on free, openly-licensed sources (BritPolls, Wikipedia) and keep polling separate from the platform's own anonymous ballots.",
+    relatedTopics: ["compass", "constituencies"],
+    readTime: 3
   }
 };
 

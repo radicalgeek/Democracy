@@ -1,7 +1,11 @@
 import type { Sql } from "postgres";
 import { MEDIA_FEEDS } from "./news.js";
+import { POLL_PARTIES, matchPartyCode, pollPartyByCode } from "./polling.js";
 
 const PRIVACY_THRESHOLD = Number(process.env.PRIVACY_THRESHOLD ?? 5);
+
+/** Format a pg date/timestamp (returned as a JS Date) as YYYY-MM-DD. */
+const ymd = (value: unknown) => (value instanceof Date ? value.toISOString() : String(value)).slice(0, 10);
 
 /**
  * Where each news outlet sits on the compass, derived from the mean of its
@@ -334,9 +338,18 @@ export async function nationalCompass(sql: Sql) {
     .filter((vector): vector is { x: number; y: number } => Boolean(vector));
   const legislation = mean(legislationPoints);
 
+  // --- Polling: where the public sits if you weight each party's revealed
+  // compass position by its current voting-intention share. Derived, not a
+  // measured public compass — kept separate from civicWill. ---
+  const polling = await supportWeightedCompass(
+    sql,
+    parties.map((party) => ({ name: party.name, compass: party.compass }))
+  );
+
   return {
     civicWill,
     discussion,
+    polling,
     media: { overall: media.overall, outlets: media.outlets.slice(0, 6) },
     government: governing
       ? {
@@ -382,5 +395,243 @@ export async function mediaArticles(sql: Sql, take = 40) {
       source: (row.source as string) ?? "Unknown source",
       compass: { x: row.x as number, y: row.y as number, label: (row.label as string) ?? "scored" }
     }))
+  };
+}
+
+/** Latest poll-of-polls party shares (one row per party), most recent first. */
+async function latestPollOfPolls(sql: Sql) {
+  return sql`
+    select r.party_code, r.party_label, r.percent::float as percent, p.fieldwork_end
+    from polls p
+    join poll_results r on r.poll_id = p.id
+    where p.is_poll_of_polls
+    order by p.fieldwork_end desc
+    limit ${POLL_PARTIES.length}
+  `;
+}
+
+/**
+ * Support-weighted national compass: each party's revealed-preference compass
+ * position, weighted by its current voting-intention share. The result is a
+ * derived "where the public's party support sits" point, not a measured public
+ * compass — labelled as such in the UI and never folded into civic will.
+ */
+async function supportWeightedCompass(
+  sql: Sql,
+  parties: Array<{ name: string; compass: { x: number; y: number; sample: number } | null }>
+) {
+  const shares = await latestPollOfPolls(sql);
+  if (shares.length === 0) return null;
+  const compassByCode = new Map<string, { x: number; y: number }>();
+  for (const party of parties) {
+    if (!party.compass) continue;
+    const code = matchPartyCode(party.name);
+    if (code) compassByCode.set(code, { x: party.compass.x, y: party.compass.y });
+  }
+  let sumX = 0;
+  let sumY = 0;
+  let weight = 0;
+  let matchedParties = 0;
+  for (const row of shares) {
+    const compass = compassByCode.get(row.party_code as string);
+    const share = row.percent as number;
+    if (!compass || !Number.isFinite(share)) continue;
+    sumX += compass.x * share;
+    sumY += compass.y * share;
+    weight += share;
+    matchedParties += 1;
+  }
+  if (weight === 0 || matchedParties === 0) return null;
+  return {
+    x: Math.round((sumX / weight) * 100) / 100,
+    y: Math.round((sumY / weight) * 100) / 100,
+    sample: matchedParties
+  };
+}
+
+/**
+ * National polling snapshot: the latest poll-of-polls average, the most recent
+ * poll from each pollster, and the per-party spread across those pollsters.
+ * Free-source data (BritPolls CC BY 4.0 + Wikipedia CC BY-SA).
+ */
+export async function pollingSnapshot(sql: Sql) {
+  const [pop] = await sql`
+    select id, fieldwork_end, method, source from polls
+    where is_poll_of_polls order by fieldwork_end desc limit 1
+  `;
+  const pollOfPolls = pop
+    ? {
+        date: ymd(pop.fieldwork_end),
+        method: pop.method as string | null,
+        parties: (
+          await sql`
+            select party_code, party_label, percent::float as percent
+            from poll_results where poll_id = ${pop.id} order by percent desc
+          `
+        ).map((row) => ({
+          code: row.party_code as string,
+          label: row.party_label as string,
+          percent: row.percent as number,
+          colour: pollPartyByCode(row.party_code as string)?.colour ?? null
+        }))
+      }
+    : null;
+
+  // Latest standard poll per pollster, within the recent window so historical
+  // (e.g. Wikipedia-backfilled) rows don't distort the "current" picture.
+  const recent = await sql`
+    select distinct on (p.pollster) p.id, p.pollster, p.fieldwork_end, p.sample_size, p.source
+    from polls p
+    where not p.is_poll_of_polls and p.fieldwork_end >= current_date - make_interval(days => 45)
+    order by p.pollster, p.fieldwork_end desc
+  `;
+  const recentIds = recent.map((row) => row.id as number);
+  const resultsByPoll = new Map<number, Array<{ code: string; percent: number }>>();
+  if (recentIds.length > 0) {
+    const rows = await sql`
+      select poll_id, party_code, percent::float as percent
+      from poll_results where poll_id in ${sql(recentIds)}
+    `;
+    for (const row of rows) {
+      const list = resultsByPoll.get(row.poll_id as number) ?? [];
+      list.push({ code: row.party_code as string, percent: row.percent as number });
+      resultsByPoll.set(row.poll_id as number, list);
+    }
+  }
+
+  const pollsters = recent
+    .map((row) => ({
+      pollster: row.pollster as string,
+      date: ymd(row.fieldwork_end),
+      sampleSize: row.sample_size as number | null,
+      source: row.source as string,
+      parties: (resultsByPoll.get(row.id as number) ?? []).sort((a, b) => b.percent - a.percent)
+    }))
+    .sort((a, b) => (b.date > a.date ? 1 : -1));
+
+  // Per-party spread (min/max) across the latest poll from each pollster.
+  const spread = POLL_PARTIES.filter((party) => party.code !== "oth").map((party) => {
+    const values = pollsters
+      .map((poll) => poll.parties.find((entry) => entry.code === party.code)?.percent)
+      .filter((value): value is number => value != null);
+    return values.length
+      ? {
+          code: party.code,
+          label: party.label,
+          colour: party.colour,
+          min: Math.min(...values),
+          max: Math.max(...values),
+          samples: values.length
+        }
+      : null;
+  });
+
+  return {
+    pollOfPolls,
+    pollsters: pollsters.slice(0, 12),
+    spread: spread.filter(Boolean),
+    attribution: "Source: BritPolls.co.uk (CC BY 4.0) + Wikipedia (CC BY-SA)",
+    generatedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Voting-intention trend: every poll (BritPolls + Wikipedia backfill) averaged
+ * by week, per party. Aggregating all pollsters smooths house effects and gives
+ * an immediate multi-month line rather than waiting for daily poll-of-polls
+ * snapshots to accumulate.
+ */
+export async function pollingTrend(sql: Sql, weeks = 26) {
+  const points = await sql`
+    select date_trunc('week', p.fieldwork_end)::date as date, r.party_code,
+           round(avg(r.percent)::numeric, 1)::float as percent
+    from polls p
+    join poll_results r on r.poll_id = p.id
+    where not p.is_poll_of_polls
+      and p.fieldwork_end >= current_date - make_interval(days => ${weeks * 7})
+    group by date, r.party_code
+    order by date asc
+  `;
+  const byDate = new Map<string, Record<string, number>>();
+  for (const row of points) {
+    const date = ymd(row.date);
+    const entry = byDate.get(date) ?? {};
+    entry[row.party_code as string] = row.percent as number;
+    byDate.set(date, entry);
+  }
+  return {
+    parties: POLL_PARTIES.filter((party) => party.code !== "oth").map((party) => ({
+      code: party.code,
+      label: party.label,
+      colour: party.colour
+    })),
+    points: [...byDate.entries()].map(([date, shares]) => ({ date, ...shares })),
+    attribution: "Source: BritPolls.co.uk (CC BY 4.0)"
+  };
+}
+
+/** Latest net-approval rating for each party leader. */
+export async function leaderApproval(sql: Sql) {
+  const rows = await sql`
+    select distinct on (leader) leader, party_code,
+           approve::float as approve, disapprove::float as disapprove,
+           net::float as net, as_of
+    from leader_approval
+    order by leader, as_of desc
+  `;
+  return {
+    leaders: rows
+      .map((row) => ({
+        leader: row.leader as string,
+        partyCode: row.party_code as string | null,
+        colour: row.party_code ? (pollPartyByCode(row.party_code as string)?.colour ?? null) : null,
+        approve: row.approve as number | null,
+        disapprove: row.disapprove as number | null,
+        net: row.net as number | null,
+        asOf: ymd(row.as_of)
+      }))
+      .sort((a, b) => (b.net ?? -999) - (a.net ?? -999)),
+    attribution: "Source: BritPolls.co.uk (CC BY 4.0)"
+  };
+}
+
+/** Latest MRP projection (one source/release) as projected winner per seat. */
+export async function mrpProjection(sql: Sql, source?: string) {
+  const [latest] = source
+    ? await sql`
+        select source, released_on from mrp_estimates
+        where source = ${source} order by released_on desc limit 1
+      `
+    : await sql`select source, released_on from mrp_estimates order by released_on desc limit 1`;
+  if (!latest) return { source: null, releasedOn: null, seats: [], available: [] };
+
+  const seats = await sql`
+    select constituency_id, constituency_name, party_code, party_label, percent::float as percent
+    from mrp_estimates
+    where source = ${latest.source} and released_on = ${latest.released_on} and projected_winner
+      and constituency_id is not null
+  `;
+  const available = await sql`
+    select source, released_on, count(distinct constituency_name)::int as seats
+    from mrp_estimates group by source, released_on order by released_on desc
+  `;
+
+  return {
+    source: latest.source as string,
+    releasedOn: ymd(latest.released_on),
+    seats: seats.map((row) => ({
+      constituencyId: row.constituency_id as number,
+      constituencyName: row.constituency_name as string,
+      partyCode: row.party_code as string,
+      partyLabel: row.party_label as string,
+      colour: pollPartyByCode(row.party_code as string)?.colour ?? null,
+      percent: row.percent as number
+    })),
+    available: available.map((row) => ({
+      source: row.source as string,
+      releasedOn: row.released_on as string,
+      seats: row.seats as number
+    })),
+    caveat: "Modelled MRP estimate — a projection per seat, not a vote or result."
   };
 }

@@ -25,13 +25,17 @@ import { MiniCompass } from "./MiniCompass";
 import { compassQuadrant } from "../lib/compassLabel";
 import {
   fetchConstituencyElections,
+  fetchLeaderApproval,
   fetchMemberInterests,
   fetchParties,
+  fetchPollingSnapshot,
   fetchRepresentativeDetail,
   fetchRepresentatives,
   type ConstituencyElection,
+  type LeaderApproval,
   type MemberInterests,
   type PartySummary,
+  type PollingSnapshot,
   type RepDetail,
   type RepListMember
 } from "../lib/api";
@@ -40,6 +44,24 @@ const PAGE_SIZE = 24;
 
 function partyColour(colour: string | null | undefined) {
   return colour ? `#${colour.replace(/^#/, "")}` : "var(--muted)";
+}
+
+/** Map a Parliament party name to the polling party code (mirrors the backend). */
+const POLL_CODE_KEYWORDS: Array<[string, string[]]> = [
+  ["lab", ["labour"]],
+  ["con", ["conservative"]],
+  ["ref", ["reform"]],
+  ["ld", ["liberal democrat", "lib dem"]],
+  ["grn", ["green"]],
+  ["snp", ["scottish national", "snp"]]
+];
+function pollCodeForParty(name: string | null): string | null {
+  if (!name) return null;
+  const lower = name.toLowerCase();
+  for (const [code, keywords] of POLL_CODE_KEYWORDS) {
+    if (keywords.some((keyword) => lower.includes(keyword))) return code;
+  }
+  return null;
 }
 
 /** Official public page for a Commons division — ids are the Votes API's own. */
@@ -69,6 +91,8 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
   const [members, setMembers] = useState<RepListMember[]>([]);
   const [total, setTotal] = useState(0);
   const [parties, setParties] = useState<PartySummary[]>([]);
+  const [polling, setPolling] = useState<PollingSnapshot | null>(null);
+  const [leaders, setLeaders] = useState<LeaderApproval | null>(null);
   const [selectedParty, setSelectedParty] = useState<PartySummary | null>(null);
   const [search, setSearch] = useState("");
   const [partyFilter, setPartyFilter] = useState<string | null>(null);
@@ -108,7 +132,17 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
     fetchParties()
       .then((payload) => setParties(payload.parties))
       .catch(() => setParties([]));
+    fetchPollingSnapshot()
+      .then((payload) => setPolling(payload))
+      .catch(() => setPolling(null));
+    fetchLeaderApproval()
+      .then((payload) => setLeaders(payload))
+      .catch(() => setLeaders(null));
   }, []);
+
+  const pollShareByCode = new Map(
+    (polling?.pollOfPolls?.parties ?? []).map((party) => [party.code, party.percent])
+  );
 
   if (selectedId != null) {
     return (
@@ -147,6 +181,13 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
             >
               <strong>{party.abbreviation ?? party.name}</strong>
               <span>{party.seats} seats</span>
+              {(() => {
+                const code = pollCodeForParty(party.name);
+                const share = code ? pollShareByCode.get(code) : undefined;
+                return share != null ? (
+                  <em className="party-poll-share">{share.toFixed(1)}% in the polls</em>
+                ) : null;
+              })()}
               {party.discipline != null && <em>{party.discipline}% discipline</em>}
               {party.compass && (
                 <MiniCompass
@@ -166,6 +207,40 @@ export function RepresentativesPanel({ openMemberId, onOpenBill }: Representativ
           ))}
         </div>
         {selectedParty && <PartyInfluencePanel party={selectedParty} />}
+        {leaders && leaders.leaders.length > 0 && (
+          <div className="leader-approval-strip">
+            <div className="leader-approval-head">
+              <TrendingUp size={15} />
+              <span>Leader net approval</span>
+              <em className="muted">how many more approve than disapprove of each leader</em>
+            </div>
+            <div className="leader-approval-cards">
+              {leaders.leaders.map((leader) => (
+                <div className="leader-approval-card" key={leader.leader}>
+                  <span
+                    className="party-chip"
+                    style={{ background: leader.colour ? `#${leader.colour}` : "var(--muted)" }}
+                  >
+                    {leader.leader}
+                  </span>
+                  {leader.net != null ? (
+                    <strong className={leader.net >= 0 ? "net positive" : "net negative"}>
+                      {leader.net > 0 ? "+" : ""}
+                      {Math.round(leader.net)}
+                    </strong>
+                  ) : (
+                    <strong className="muted">—</strong>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {polling?.attribution && (
+          <p className="muted polling-attribution">
+            Poll figures — {polling.attribution}. A poll is a sample, not a vote.
+          </p>
+        )}
       </section>
 
       <section className="workspace-section">

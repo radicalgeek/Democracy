@@ -11,13 +11,13 @@ import { BillProgress } from "./BillProgress";
 import { Compass } from "./Compass";
 import { ConstituencyInspector } from "./ConstituencyInspector";
 import { DebateSpeakers } from "./DebateSpeakers";
-import { ConstituencyMap, MAP_MODE_META } from "./ConstituencyMap";
+import { ConstituencyMap, MAP_MODE_META, type MrpSeat } from "./ConstituencyMap";
 import { DebatePanel } from "./DebatePanel";
 import { HelpTrigger } from "./HelpTrigger";
 import { NewsLens } from "./NewsLens";
 import { VotePanel } from "./VotePanel";
 
-type MapMode = "vote" | "alignment" | "compass" | "debate";
+type MapMode = "vote" | "alignment" | "compass" | "debate" | "polling";
 
 type BillViewProps = {
   bill: Bill;
@@ -34,6 +34,8 @@ type BillViewProps = {
     number,
     { for: number; against: number; abstain: number; total: number }
   > | null;
+  mrp?: Record<number, MrpSeat> | null;
+  mrpMeta?: { source: string | null; releasedOn: string | null } | null;
   constituencies: Constituency[];
   nationalView: boolean;
   onSetNationalView: (value: boolean) => void;
@@ -59,6 +61,8 @@ export function BillView({
   setSelectedConstituency,
   mapBindings,
   billAggregatesBySeat,
+  mrp,
+  mrpMeta,
   constituencies,
   nationalView,
   onSetNationalView,
@@ -127,7 +131,7 @@ export function BillView({
               <p>How constituencies are voting on this bill.</p>
             </div>
             <div className="segmented">
-              {(["vote", "alignment", "compass", "debate"] as MapMode[]).map((mode) => (
+              {(["vote", "alignment", "compass", "debate", "polling"] as MapMode[]).map((mode) => (
                 <button
                   key={mode}
                   className={mapMode === mode ? "selected" : ""}
@@ -145,6 +149,8 @@ export function BillView({
             onSelect={selectSeatFromMap}
             bindings={mapBindings}
             aggregates={billAggregatesBySeat}
+            mrp={mrp}
+            mrpMeta={mrpMeta}
           />
         </section>
 

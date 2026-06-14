@@ -3,9 +3,11 @@ import { Crosshair, Minus, Plus, RotateCcw } from "lucide-react";
 import type { MapBindings, SeatBinding } from "../lib/api";
 import type { ConstituencyMetric } from "../data/types";
 
-type MapMode = "vote" | "alignment" | "compass" | "debate";
+type MapMode = "vote" | "alignment" | "compass" | "debate" | "polling";
 
 type SeatAggregate = { for: number; against: number; abstain: number; total: number };
+
+export type MrpSeat = { colour: string | null; partyLabel: string; percent: number };
 
 type ConstituencyMapProps = {
   constituencies: ConstituencyMetric[];
@@ -14,6 +16,8 @@ type ConstituencyMapProps = {
   onSelect: (id: string) => void;
   bindings?: MapBindings | null;
   aggregates?: Record<number, SeatAggregate> | null;
+  mrp?: Record<number, MrpSeat> | null;
+  mrpMeta?: { source: string | null; releasedOn: string | null } | null;
   /** Zoom to the selected seat once cartography + bindings are ready (map page). */
   autoFocus?: boolean;
 };
@@ -38,6 +42,11 @@ export const MAP_MODE_META: Record<MapMode, { label: string; description: string
   debate: {
     label: "Debate",
     description: "How active discussion is in each area — darker teal means a busier debate (demo shading)."
+  },
+  polling: {
+    label: "Polling (MRP)",
+    description:
+      "Modelled MRP projection of the likely winning party in each seat, in its official colour. A model, not a vote or result — import an MRP to populate it."
   }
 };
 
@@ -112,8 +121,16 @@ function seatColor(
   id: string,
   mode: MapMode,
   binding: SeatBinding | undefined,
-  aggregates: Record<number, SeatAggregate> | null | undefined
+  aggregates: Record<number, SeatAggregate> | null | undefined,
+  mrp: Record<number, MrpSeat> | null | undefined
 ) {
+  if (mode === "polling") {
+    // MRP is keyed to current constituencies, so only bound seats can be shaded.
+    const seat = binding?.constituency_id ? mrp?.[binding.constituency_id] : undefined;
+    if (seat) return seat.colour ? `#${seat.colour}` : "#c9ced6";
+    return binding?.match_status === "unmatched" ? NO_DATA_UNMATCHED : NO_DATA_MATCHED;
+  }
+
   if (!binding) return colorForLegacySeat(id, mode);
 
   if (mode === "vote") {
@@ -195,7 +212,8 @@ function matchStatusCopy(status: SeatBinding["match_status"]) {
 function modeCaption(
   mode: MapMode,
   bindings: MapBindings | null | undefined,
-  hasAggregates: boolean
+  hasAggregates: boolean,
+  mrpMeta?: { source: string | null; releasedOn: string | null } | null
 ) {
   const base = MAP_MODE_META[mode].description;
   if (!bindings) return `${base} Backend offline — colours are illustrative only.`;
@@ -206,6 +224,11 @@ function modeCaption(
   }
   if (mode === "alignment") {
     return `${base} MP-vs-constituency divergence shading arrives with division-vote import.`;
+  }
+  if (mode === "polling") {
+    return mrpMeta?.source
+      ? `${base} Showing ${mrpMeta.source}, released ${mrpMeta.releasedOn}. Modelled estimate, not a result.`
+      : `${base} No MRP imported yet — admins can POST one to /api/admin/import/mrp.`;
   }
   return base;
 }
@@ -234,11 +257,42 @@ function topParties(bindings: MapBindings | null | undefined, limit = 6) {
 
 function MapLegend({
   mode,
-  bindings
+  bindings,
+  mrp
 }: {
   mode: MapMode;
   bindings: MapBindings | null | undefined;
+  mrp?: Record<number, MrpSeat> | null;
 }) {
+  if (mode === "polling") {
+    const byParty = new Map<string, string | null>();
+    for (const seat of Object.values(mrp ?? {})) {
+      if (!byParty.has(seat.partyLabel)) byParty.set(seat.partyLabel, seat.colour);
+    }
+    const parties = [...byParty.entries()];
+    if (parties.length === 0) {
+      return (
+        <div className="legend-row">
+          <span>
+            <i className="swatch" style={{ background: NO_DATA_MATCHED }} /> No MRP imported yet
+          </span>
+        </div>
+      );
+    }
+    return (
+      <div className="legend-row">
+        {parties.map(([label, colour]) => (
+          <span key={label}>
+            <i className="swatch" style={{ background: colour ? `#${colour}` : "#c9ced6" }} /> {label}
+          </span>
+        ))}
+        <span>
+          <i className="swatch" style={{ background: NO_DATA_MATCHED }} /> Not in this MRP
+        </span>
+      </div>
+    );
+  }
+
   if (mode === "vote") {
     return (
       <div className="legend-row">
@@ -324,6 +378,8 @@ export function ConstituencyMap({
   onSelect,
   bindings,
   aggregates,
+  mrp,
+  mrpMeta,
   autoFocus = false
 }: ConstituencyMapProps) {
   const selected = constituencies.find((item) => item.id === selectedId) ?? constituencies[0];
@@ -541,7 +597,7 @@ export function ConstituencyMap({
     seats.forEach((seat) => {
       const id = seat.id || seat.getAttribute("name") || "Unknown";
       const binding = bindings?.bySvgId[id];
-      seat.style.fill = seatColor(id, mode, binding, aggregates);
+      seat.style.fill = seatColor(id, mode, binding, aggregates, mrp);
       // original 2015 cartography: black hairline seat borders; the selected
       // seat gets a heavier teal outline so the selection is visible.
       const isSelected = id === legacySeat;
@@ -576,7 +632,7 @@ export function ConstituencyMap({
     });
 
     return () => cleanup.forEach((dispose) => dispose());
-  }, [aggregates, bindings, legacySeat, mode, onSelect, svgMarkup, view]);
+  }, [aggregates, bindings, legacySeat, mode, mrp, onSelect, svgMarkup, view]);
 
   return (
     <div className="map-frame">
@@ -656,8 +712,8 @@ export function ConstituencyMap({
           ))}
         </svg>
       )}
-      <p className="map-caption">{modeCaption(mode, bindings, Boolean(aggregates && Object.keys(aggregates).length > 0))}</p>
-      <MapLegend mode={mode} bindings={bindings} />
+      <p className="map-caption">{modeCaption(mode, bindings, Boolean(aggregates && Object.keys(aggregates).length > 0), mrpMeta)}</p>
+      <MapLegend mode={mode} bindings={bindings} mrp={mrp} />
     </div>
   );
 }
