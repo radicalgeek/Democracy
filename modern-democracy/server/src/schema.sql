@@ -609,6 +609,31 @@ alter table news_sources add column if not exists factual_reliability numeric(5,
 alter table news_sources add column if not exists reliability_sample integer not null default 0;
 
 -- Recurring narratives shaping the conversation, refreshed each run.
+-- Per-MP ideological position, computed to be more genuinely ideological than a
+-- raw revealed-preference axis: rebellions and free/split votes are weighted up
+-- (they reveal conscience, not whip), whipped bloc votes down, blended with the
+-- compass of media coverage the MP is quoted in. The economic (x) axis is then
+-- oriented ("anchored") so the two largest parties sit in their conventional
+-- left/right order — resolving the inherent sign ambiguity of a votes-derived
+-- axis. Refreshed each worker cycle. y (authoritarian/libertarian) unflipped.
+create table if not exists member_ideology (
+  member_id integer primary key,
+  x numeric(6,2) not null,
+  y numeric(6,2) not null,
+  sample integer not null default 0,
+  has_media boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+-- Small key/value store. Holds econ_flip (+1/-1): the global orientation applied
+-- to every scorer-derived economic-x so the whole compass is internally
+-- consistent with the anchored party order.
+create table if not exists app_meta (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists media_narratives (
   id bigserial primary key,
   narrative text not null,

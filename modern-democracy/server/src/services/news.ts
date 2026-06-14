@@ -1,6 +1,7 @@
 import type { Sql } from "postgres";
 import { sha256 } from "../lib/crypto.js";
 import { heuristicCompass, llmModelName, runLlmJson, storeAnalysis } from "./ai.js";
+import { econFlip } from "./orientation.js";
 
 /**
  * Publisher-provided politics RSS feeds. Deliberately spread across the
@@ -289,6 +290,7 @@ export async function newsForSubject(
       `;
   if (rows.length === 0) return [];
 
+  const flip = await econFlip(sql);
   const analyses = await sql`
     select distinct on (subject_id) subject_id, output, model, confidence
     from ai_analyses
@@ -309,7 +311,7 @@ export async function newsForSubject(
       publishedAt: row.published_at,
       summary: row.summary,
       compass: output
-        ? { x: output.x ?? 0, y: output.y ?? 0, label: output.label ?? "unclassified", rationale: output.rationale ?? "", model: analysis?.model, confidence: analysis?.confidence }
+        ? { x: flip * (output.x ?? 0), y: output.y ?? 0, label: output.label ?? "unclassified", rationale: output.rationale ?? "", model: analysis?.model, confidence: analysis?.confidence }
         : null
     };
   });

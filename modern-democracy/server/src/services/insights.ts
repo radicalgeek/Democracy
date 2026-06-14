@@ -1,6 +1,7 @@
 import type { Sql } from "postgres";
 import { MEDIA_FEEDS } from "./news.js";
 import { POLL_PARTIES, matchPartyCode, pollPartyByCode } from "./polling.js";
+import { econFlip } from "./orientation.js";
 
 const PRIVACY_THRESHOLD = Number(process.env.PRIVACY_THRESHOLD ?? 5);
 
@@ -15,6 +16,7 @@ const ymd = (value: unknown) => (value instanceof Date ? value.toISOString() : S
  * overall.
  */
 export async function mediaCompass(sql: Sql) {
+  const flip = await econFlip(sql);
   const outlets = await sql`
     with latest as (
       select distinct on (subject_id) subject_id,
@@ -59,13 +61,15 @@ export async function mediaCompass(sql: Sql) {
   );
   const configuredOutlets = MEDIA_FEEDS.map((feed) => {
     const scored = scoredByName.get(feed.name);
-    return scored ?? { name: feed.name, x: null, y: null, sample: 0 };
+    return scored
+      ? { ...scored, x: flip * scored.x }
+      : { name: feed.name, x: null, y: null, sample: 0 };
   });
   const extraScored = outlets
     .filter((row) => !MEDIA_FEEDS.some((feed) => feed.name === row.name))
     .map((row) => ({
       name: row.name as string,
-      x: row.x as number,
+      x: flip * (row.x as number),
       y: row.y as number,
       sample: row.sample as number
     }));
@@ -74,7 +78,7 @@ export async function mediaCompass(sql: Sql) {
     outlets: [...configuredOutlets, ...extraScored],
     overall:
       overall && (overall.sample as number) > 0
-        ? { x: overall.x as number, y: overall.y as number, sample: overall.sample as number }
+        ? { x: flip * (overall.x as number), y: overall.y as number, sample: overall.sample as number }
         : null
   };
 }
@@ -127,6 +131,7 @@ export async function ballotMajorities(sql: Sql, constituencyId: number | null) 
  * compassComparison), plus total participation. Powers map shading.
  */
 export async function constituencyLeans(sql: Sql) {
+  const flip = await econFlip(sql);
   const scoredBills = await sql`
     select distinct on (a.subject_id) (a.subject_id)::int as bill_id,
            (a.output->>'x')::float as x, (a.output->>'y')::float as y
@@ -176,7 +181,7 @@ export async function constituencyLeans(sql: Sql) {
       lean:
         entry.sample > 0
           ? {
-              x: Math.round((entry.x / entry.sample) * 100) / 100,
+              x: flip * (Math.round((entry.x / entry.sample) * 100) / 100),
               y: Math.round((entry.y / entry.sample) * 100) / 100,
               sample: entry.sample
             }
@@ -346,9 +351,15 @@ export async function nationalCompass(sql: Sql) {
     parties.map((party) => ({ name: party.name, compass: party.compass }))
   );
 
+  // Orient the bill-derived economic-x to the anchored axis. Parties, government,
+  // polling and media already come from anchored/flipped sources, so only the
+  // raw bill-vector aggregates (civic will, discussion, legislation) flip here.
+  const flip = await econFlip(sql);
+  const fx = <T extends { x: number } | null>(v: T): T => (v ? ({ ...v, x: flip * v.x } as T) : v);
+
   return {
-    civicWill,
-    discussion,
+    civicWill: fx(civicWill),
+    discussion: fx(discussion),
     polling,
     media: { overall: media.overall, outlets: media.outlets.slice(0, 6) },
     government: governing
@@ -360,7 +371,7 @@ export async function nationalCompass(sql: Sql) {
             seats: governing.seats,
             compass: governing.compass
           },
-          legislation
+          legislation: fx(legislation)
         }
       : null,
     parties: major,
@@ -370,6 +381,7 @@ export async function nationalCompass(sql: Sql) {
 
 /** Latest compass-scored articles across all outlets, for the media page. */
 export async function mediaArticles(sql: Sql, take = 40) {
+  const flip = await econFlip(sql);
   const articles = await sql`
     select n.id, n.title, n.url, n.published_at, s.name as source,
            c.x, c.y, c.label
@@ -393,7 +405,7 @@ export async function mediaArticles(sql: Sql, take = 40) {
       url: row.url as string,
       publishedAt: row.published_at as string | null,
       source: (row.source as string) ?? "Unknown source",
-      compass: { x: row.x as number, y: row.y as number, label: (row.label as string) ?? "scored" }
+      compass: { x: flip * (row.x as number), y: row.y as number, label: (row.label as string) ?? "scored" }
     }))
   };
 }
@@ -578,6 +590,7 @@ export async function pollingTrend(sql: Sql, weeks = 26) {
 export async function partyPopularity(sql: Sql, partyId: number, weeks = 26) {
   const [party] = await sql`select id, name, abbreviation, background_colour from parties where id = ${partyId}`;
   if (!party) return null;
+  const flip = await econFlip(sql);
   const code = matchPartyCode(party.name as string);
 
   const trend = code
@@ -613,7 +626,7 @@ export async function partyPopularity(sql: Sql, partyId: number, weeks = 26) {
       url: e.url as string,
       source: e.source as string | null,
       factualLabel: e.factual_label as string | null,
-      bias: e.bias as number | null
+      bias: e.bias != null ? flip * (e.bias as number) : null
     })),
     note: "Poll movement and coverage shown together for context — correlation, not proof of cause."
   };

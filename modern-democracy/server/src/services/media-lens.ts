@@ -1,4 +1,5 @@
 import type { Sql } from "postgres";
+import { econFlip } from "./orientation.js";
 
 /**
  * Media lens: turns scored coverage into a view of media influence on our
@@ -323,6 +324,7 @@ function flagReasons(row: {
 
 /** Payload for the redesigned media-influence view. */
 export async function mediaInfluence(sql: Sql) {
+  const flip = await econFlip(sql);
   const outlets = await sql`
     with latest as (
       select distinct on (subject_id) subject_id,
@@ -409,7 +411,7 @@ export async function mediaInfluence(sql: Sql) {
       const own = ownershipFor(o.name as string);
       return {
         name: o.name as string,
-        x: o.x as number,
+        x: flip * (o.x as number),
         y: o.y as number,
         sample: o.sample as number,
         reliability: o.reliability as number | null,
@@ -417,7 +419,7 @@ export async function mediaInfluence(sql: Sql) {
         owner: own.owner,
         ownerType: own.type,
         sensational: (st?.sensational as number) ?? null,
-        bias: (st?.bias as number) ?? null,
+        bias: st?.bias != null ? flip * (st.bias as number) : null,
         labels: {
           corroborated: (st?.corroborated as number) ?? 0,
           contested: (st?.contested as number) ?? 0,
@@ -432,15 +434,15 @@ export async function mediaInfluence(sql: Sql) {
       url: r.url as string,
       source: (r.source as string) ?? "Unknown source",
       publishedAt: r.published_at as string | null,
-      bias: r.bias as number | null,
+      bias: r.bias != null ? flip * (r.bias as number) : null,
       sensational: r.sensational as number | null,
       factualLabel: r.factual_label as string | null,
-      reasons: flagReasons(r as never)
+      reasons: flagReasons({ ...r, bias: r.bias != null ? flip * (r.bias as number) : null } as never)
     })),
     narratives: narratives.map((n) => ({
       narrative: n.narrative as string,
       summary: n.summary as string,
-      lean: n.x != null && n.y != null ? { x: n.x as number, y: n.y as number } : null,
+      lean: n.x != null && n.y != null ? { x: flip * (n.x as number), y: n.y as number } : null,
       factualLabel: n.factual_label as string | null,
       outlets: (n.outlets as string[]) ?? [],
       articleCount: n.article_count as number
@@ -464,15 +466,15 @@ type NewsRow = {
   corroborating_outlets: number | null;
 };
 
-function shapeNews(rows: readonly NewsRow[]) {
+function shapeNews(rows: readonly NewsRow[], flip: number) {
   return rows.map((r) => ({
     id: r.id,
     title: r.title,
     url: r.url,
     source: r.source ?? "Unknown source",
     publishedAt: r.published_at,
-    compass: r.x != null && r.y != null ? { x: r.x, y: r.y } : null,
-    bias: r.bias,
+    compass: r.x != null && r.y != null ? { x: flip * r.x, y: r.y } : null,
+    bias: r.bias != null ? flip * r.bias : null,
     factualLabel: r.factual_label,
     factualScore: r.factual_score,
     corroboratingOutlets: r.corroborating_outlets ?? 0
@@ -493,7 +495,7 @@ export async function newsForMember(sql: Sql, memberId: number, limit = 12) {
     where l.member_id = ${memberId}
     order by n.published_at desc nulls last limit ${limit}
   `;
-  return shapeNews(rows as unknown as NewsRow[]);
+  return shapeNews(rows as unknown as NewsRow[], await econFlip(sql));
 }
 
 /** Recent news mentioning a party. */
@@ -510,5 +512,5 @@ export async function newsForParty(sql: Sql, partyId: number, limit = 14) {
     where l.party_id = ${partyId}
     order by n.published_at desc nulls last limit ${limit}
   `;
-  return shapeNews(rows as unknown as NewsRow[]);
+  return shapeNews(rows as unknown as NewsRow[], await econFlip(sql));
 }

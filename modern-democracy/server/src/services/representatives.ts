@@ -1,6 +1,7 @@
 import type { Sql } from "postgres";
 import { memberConduct, partyConduct } from "./conduct.js";
 import { newsForMember } from "./media-lens.js";
+import { partyIdeology } from "./ideology.js";
 
 const MEMBERS_API = "https://members-api.parliament.uk/api";
 const CACHE_TTL_MS = 7 * 24 * 3600 * 1000;
@@ -26,33 +27,16 @@ export async function listRepresentatives(
   const skip = options.skip ?? 0;
   const search = options.search ? `%${options.search.toLowerCase()}%` : null;
   const rows = await sql`
-    with scored as (
-      select distinct on (a.subject_id) (a.subject_id)::int as bill_id,
-             (a.output->>'x')::float as x, (a.output->>'y')::float as y
-      from ai_analyses a
-      where a.subject_type = 'bill' and a.kind = 'compass' and a.output->>'x' is not null
-      order by a.subject_id, a.id desc
-    ),
-    member_compass as (
-      select dv.member_id,
-             round(avg((case when dv.vote = 'aye' then 1 else -1 end) * s.x)::numeric, 2)::float as x,
-             round(avg((case when dv.vote = 'aye' then 1 else -1 end) * s.y)::numeric, 2)::float as y,
-             count(*)::int as sample
-      from division_votes dv
-      join divisions d on d.id = dv.division_id
-      join scored s on s.bill_id = d.bill_id
-      group by dv.member_id
-    )
     select r.id, r.name, r.gender, r.thumbnail_url,
            p.name as party, p.abbreviation as party_abbreviation, p.background_colour as party_colour,
            c.id as constituency_id, c.name as constituency,
            (select count(*)::int from division_votes dv where dv.member_id = r.id) as division_votes,
-           mc.x as compass_x, mc.y as compass_y, mc.sample as compass_sample,
+           mi.x as compass_x, mi.y as compass_y, mi.sample as compass_sample,
            count(*) over ()::int as total
     from representatives r
     left join parties p on p.id = r.party_id
     left join constituencies c on c.id = r.constituency_id
-    left join member_compass mc on mc.member_id = r.id
+    left join member_ideology mi on mi.member_id = r.id
     where (${search}::text is null or lower(r.name) like ${search} or lower(c.name) like ${search})
       and (${options.party ?? null}::text is null or p.name = ${options.party ?? null})
     order by r.name
@@ -100,7 +84,7 @@ export async function partySummaries(sql: Sql) {
   `;
   const disciplineByParty = new Map(discipline.map((row) => [row.party_id as number, row]));
 
-  const compass = await partyCompassPositions(sql);
+  const compass = await partyIdeology(sql);
 
   return Promise.all(
     parties.map(async (party) => {
@@ -252,27 +236,13 @@ export async function representativeDetail(sql: Sql, memberId: number) {
   `;
   const rebellions = record.filter((row) => row.party_majority && row.vote !== row.party_majority);
 
-  // Personal compass from votes on compass-scored bills.
-  const bills = await compassScoredBills(sql);
-  const compassPoints = record
-    .filter((row) => row.bill_id && bills.has(row.bill_id as number))
-    .map((row) => {
-      const bill = bills.get(row.bill_id as number)!;
-      const sign = row.vote === "aye" ? 1 : -1;
-      return { x: sign * bill.x, y: sign * bill.y };
-    });
-  const compass =
-    compassPoints.length > 0
-      ? {
-          x: Math.round((compassPoints.reduce((s, p) => s + p.x, 0) / compassPoints.length) * 100) / 100,
-          y: Math.round((compassPoints.reduce((s, p) => s + p.y, 0) / compassPoints.length) * 100) / 100,
-          sample: compassPoints.length
-        }
-      : null;
-
-  // Party position as a proxy when the MP has no personal scored votes yet —
-  // the client labels which one it is showing.
-  const partyPositions = await partyCompassPositions(sql);
+  // Anchored ideology position (rebellions + free votes + quoted media), with
+  // the party position as a proxy when an MP has no personal signal yet.
+  const [mi] = await sql`
+    select x::float as x, y::float as y, sample from member_ideology where member_id = ${memberId}
+  `;
+  const compass = mi ? { x: mi.x as number, y: mi.y as number, sample: mi.sample as number } : null;
+  const partyPositions = await partyIdeology(sql);
   const partyCompass = member.party_id
     ? partyPositions.get(member.party_id as number) ?? null
     : null;

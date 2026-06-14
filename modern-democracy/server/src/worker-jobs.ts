@@ -5,6 +5,7 @@ import { rebuildSeatBindings } from "./services/mapping.js";
 import { importDivisions } from "./services/divisions.js";
 import { importNews } from "./services/news.js";
 import { refreshMediaLens } from "./services/media-lens.js";
+import { refreshIdeology } from "./services/ideology.js";
 import { analyzePetitions, importPetitions } from "./services/petitions.js";
 import { computeEngagementStatsForUser } from "./services/learning.js";
 import { importCivicData } from "./services/civic-data.js";
@@ -39,12 +40,14 @@ export async function runFullImport() {
   const postCompass = await compassDebatePosts(sql);
   const news = await importNews(sql);
   const mediaLens = await refreshMediaLens(sql);
+  const ideology = await refreshIdeology(sql);
   const polling = await importPolling(sql);
   return {
     civicData,
     postCompass,
     polling,
     mediaLens,
+    ideology,
     constituencies,
     bills,
     texts,
