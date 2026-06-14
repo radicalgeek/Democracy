@@ -19,7 +19,7 @@ spec:
         kubernetes.io/arch: arm64
       containers:
         - name: api
-          image: ghcr.io/radicalgeek/democracy-server:88137fa9504c-media-lens-20260614
+          image: ghcr.io/radicalgeek/democracy-server:434156f838ae-news-cap-20260614
           imagePullPolicy: Always
           env:
             - name: PORT
@@ -62,7 +62,7 @@ spec:
         kubernetes.io/arch: arm64
       containers:
         - name: worker
-          image: ghcr.io/radicalgeek/democracy-server:88137fa9504c-media-lens-20260614
+          image: ghcr.io/radicalgeek/democracy-server:434156f838ae-news-cap-20260614
           imagePullPolicy: Always
           command: ["node", "dist/worker.js"]
           env:
