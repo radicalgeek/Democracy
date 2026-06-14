@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { Compass } from "./Compass";
 import { LocalAreaMap } from "./LocalAreaMap";
-import { MediaInfluence } from "./MediaInfluence";
 import { MediaMetrics } from "./MediaMetrics";
 import { DemocracyHealth } from "./DemocracyHealth";
 import { PollingSnapshot } from "./PollingSnapshot";
@@ -255,16 +254,17 @@ export function Dashboard({
           <div>
             <h2>Media influence on our democracy</h2>
             <p>
-              Where outlets sit, how reliable their coverage is, and the narratives shaping the
-              conversation — corroboration-led, with contested and single-source stories flagged.
+              The headline signals — information quality, ownership concentration, sensationalism, and
+              how far the media's centre of gravity sits from the public.
             </p>
           </div>
         </div>
         <div className="panel">
           <MediaMetrics compact />
-        </div>
-        <div className="panel">
-          <MediaInfluence />
+          <button className="ghost media-more-link" onClick={() => onGoToTab("media")}>
+            Full media analysis — outlets, flagged stories, narratives, share of voice{" "}
+            <ArrowRight size={14} />
+          </button>
         </div>
       </section>
 

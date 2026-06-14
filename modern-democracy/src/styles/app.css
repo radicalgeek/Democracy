@@ -5546,6 +5546,7 @@ button.ghost {
 .mm-stack-seg { height: 100%; }
 .mm-spark { display: flex; flex-direction: column; gap: 4px; }
 .mm-spark-svg { width: 100%; height: auto; max-height: 70px; }
+.media-more-link { margin-top: 14px; display: inline-flex; align-items: center; gap: 6px; }
 
 /* --- Coverage tone block (MP / party) --- */
 .coverage-tone { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
