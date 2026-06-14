@@ -233,6 +233,20 @@ export async function checkpointAllBills() {
   return { published };
 }
 
+/**
+ * Recompute all DERIVED analytics from whatever is currently in the database,
+ * WITHOUT re-fetching external sources. Cheap (DB-only), so it runs on a short
+ * interval to keep cached aggregates — media reliability/narratives, the
+ * anchored ideology positions, engagement — current as data changes, rather
+ * than only on the slow 6-hourly external import.
+ */
+export async function recomputeDerived() {
+  const mediaLens = await refreshMediaLens(sql);
+  const ideology = await refreshIdeology(sql);
+  const engagement = await computeAllEngagementStats();
+  return { mediaLens, ideology, engagement };
+}
+
 /** Compute daily engagement stats for all users (nightly cron job). */
 export async function computeAllEngagementStats() {
   const users = await sql`select id from users order by id`;

@@ -2,12 +2,14 @@ import { ensureSchema, sql, waitForDatabase } from "./db.js";
 import { seedDemoCommunity } from "./services/demo-community.js";
 import {
   checkpointAllBills,
+  recomputeDerived,
   runFullImport,
   seedDemoBallots,
   seedDivisionBallots
 } from "./worker-jobs.js";
 
 const IMPORT_INTERVAL_MS = Number(process.env.IMPORT_INTERVAL_MS ?? 6 * 60 * 60 * 1000);
+const DERIVE_INTERVAL_MS = Number(process.env.DERIVE_INTERVAL_MS ?? 15 * 60 * 1000);
 const CHECKPOINT_INTERVAL_MS = Number(process.env.CHECKPOINT_INTERVAL_MS ?? 60 * 1000);
 const DEMO_SEED = (process.env.DEMO_SEED ?? "false").toLowerCase() === "true";
 const DEMO_COMMUNITY_SEED = (process.env.DEMO_COMMUNITY_SEED ?? "false").toLowerCase() === "true";
@@ -61,6 +63,17 @@ async function main() {
       console.error("[worker] periodic import failed:", error);
     }
   }, IMPORT_INTERVAL_MS);
+
+  // Recompute derived analytics from current data far more often than the heavy
+  // external import, so cached aggregates stay current as data changes.
+  setInterval(async () => {
+    try {
+      const summary = await recomputeDerived();
+      console.log("[worker] derived recompute:", JSON.stringify(summary));
+    } catch (error) {
+      console.error("[worker] derived recompute failed:", error);
+    }
+  }, DERIVE_INTERVAL_MS);
 
   console.log("[worker] running. checkpoint interval", CHECKPOINT_INTERVAL_MS, "ms");
 }

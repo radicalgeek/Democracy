@@ -93,19 +93,20 @@ export async function refreshIdeology(sql: Sql) {
   const reps = await sql`select id, party_id from representatives`;
   const partyOf = new Map(reps.map((r) => [r.id as number, r.party_id as number | null]));
 
-  const memberPos = new Map<number, { x: number; y: number; sample: number; hasMedia: boolean }>();
+  // Raw per-member position (pre-orientation): weighted votes + media blend.
+  const rawMP = new Map<number, { x: number; y: number; w: number; hasMedia: boolean }>();
   for (const r of reps) {
     const id = r.id as number;
     const e = acc.get(id);
     const m = mediaByMember.get(id);
     let x: number | null = null;
     let y: number | null = null;
-    let sample = 0;
+    let w = 0;
     let hasMedia = false;
     if (e && e.w > 0) {
       x = e.x / e.w;
       y = e.y / e.w;
-      sample = Math.round(e.w);
+      w = e.w;
     }
     if (m && m.n >= 2) {
       hasMedia = true;
@@ -117,33 +118,87 @@ export async function refreshIdeology(sql: Sql) {
         y = (1 - MEDIA_BLEND) * (y as number) + MEDIA_BLEND * m.y;
       }
     }
-    if (x != null && y != null) memberPos.set(id, { x, y, sample, hasMedia });
+    if (x != null && y != null) rawMP.set(id, { x, y, w, hasMedia });
   }
 
-  // Anchor: orient x so Conservatives sit right of Labour.
-  const partySum = new Map<number, { x: number; n: number }>();
-  for (const [mid, pos] of memberPos) {
+  // Party raw means + weighted sample (how much real signal the party has).
+  const partyRaw = new Map<number, { x: number; y: number; n: number; w: number }>();
+  for (const [mid, p] of rawMP) {
     const pid = partyOf.get(mid);
     if (pid == null) continue;
-    const s = partySum.get(pid) ?? { x: 0, n: 0 };
-    s.x += pos.x;
+    const s = partyRaw.get(pid) ?? { x: 0, y: 0, n: 0, w: 0 };
+    s.x += p.x;
+    s.y += p.y;
     s.n += 1;
-    partySum.set(pid, s);
+    s.w += p.w;
+    partyRaw.set(pid, s);
   }
+  const partyRawMean = new Map(
+    [...partyRaw].map(([pid, s]) => [pid, { x: s.n ? s.x / s.n : 0, y: s.n ? s.y / s.n : 0, w: s.w }])
+  );
+
+  // Orient x so Conservatives sit right of Labour (resolves the sign ambiguity).
   const [conP] = await sql`select id from parties where name = 'Conservative'`;
   const [labP] = await sql`select id from parties where name = 'Labour'`;
   let flip = 1;
   if (conP && labP) {
-    const c = partySum.get(conP.id as number);
-    const l = partySum.get(labP.id as number);
-    if (c && l && c.n && l.n && c.x / c.n < l.x / l.n) flip = -1;
+    const c = partyRawMean.get(conP.id as number);
+    const l = partyRawMean.get(labP.id as number);
+    if (c && l && c.x < l.x) flip = -1;
+  }
+
+  // Party display = conventional reference blended with the oriented voting
+  // record, weighted by how much real data the party has. Small parties (few
+  // scored votes) fall back to their established placement instead of noise.
+  const partyRows = await sql`select id, name from parties`;
+  const partyPos = new Map<number, { x: number; y: number }>();
+  for (const pr of partyRows) {
+    const pid = pr.id as number;
+    const ref = referenceFor(pr.name as string);
+    const raw = partyRawMean.get(pid);
+    const oriented = raw ? { x: flip * raw.x, y: raw.y } : null;
+    const conf = raw ? Math.min(1, raw.w / PARTY_FULL) : 0;
+    if (ref && oriented) partyPos.set(pid, { x: conf * oriented.x + (1 - conf) * ref.x, y: conf * oriented.y + (1 - conf) * ref.y });
+    else if (ref) partyPos.set(pid, ref);
+    else if (oriented) partyPos.set(pid, oriented);
+    else partyPos.set(pid, { x: 0, y: 0 });
+  }
+
+  // Each MP = their party's position plus their personal deviation (rebellions /
+  // free votes / coverage), scaled by how much personal signal they have.
+  const finalMP = new Map<number, { x: number; y: number; sample: number; hasMedia: boolean }>();
+  for (const r of reps) {
+    const id = r.id as number;
+    const pid = partyOf.get(id);
+    const base = pid != null ? partyPos.get(pid) ?? null : null;
+    const raw = rawMP.get(id);
+    if (!base && !raw) continue;
+    if (!base && raw) {
+      finalMP.set(id, { x: round2(flip * raw.x), y: round2(raw.y), sample: Math.round(raw.w), hasMedia: raw.hasMedia });
+      continue;
+    }
+    let x = base!.x;
+    let y = base!.y;
+    let sample = 0;
+    let hasMedia = false;
+    if (raw) {
+      const partyMean = pid != null ? partyRawMean.get(pid) : null;
+      const oPartyX = partyMean ? flip * partyMean.x : flip * raw.x;
+      const oPartyY = partyMean ? partyMean.y : raw.y;
+      const mpConf = Math.min(1, raw.w / MP_FULL);
+      x = base!.x + mpConf * (flip * raw.x - oPartyX);
+      y = base!.y + mpConf * (raw.y - oPartyY);
+      sample = Math.round(raw.w);
+      hasMedia = raw.hasMedia;
+    }
+    finalMP.set(id, { x: round2(x), y: round2(y), sample, hasMedia });
   }
 
   await sql`delete from member_ideology`;
-  for (const [mid, pos] of memberPos) {
+  for (const [mid, p] of finalMP) {
     await sql`
       insert into member_ideology (member_id, x, y, sample, has_media)
-      values (${mid}, ${Math.round(flip * pos.x * 100) / 100}, ${Math.round(pos.y * 100) / 100}, ${pos.sample}, ${pos.hasMedia})
+      values (${mid}, ${p.x}, ${p.y}, ${p.sample}, ${p.hasMedia})
       on conflict (member_id) do update set
         x = excluded.x, y = excluded.y, sample = excluded.sample, has_media = excluded.has_media, updated_at = now()
     `;
@@ -152,7 +207,38 @@ export async function refreshIdeology(sql: Sql) {
     insert into app_meta (key, value) values ('econ_flip', ${String(flip)})
     on conflict (key) do update set value = excluded.value, updated_at = now()
   `;
-  return { members: memberPos.size, flip };
+  return { members: finalMP.size, flip };
+}
+
+const round2 = (v: number) => Math.round(v * 100) / 100;
+
+const PARTY_FULL = 150; // weighted-vote units for the data to fully override the reference
+const MP_FULL = 12; // personal weighted-vote units for an MP to fully express their deviation
+
+/**
+ * Conventional reference placement per party (economic x, social y; ±10). Used
+ * only as a PRIOR — the voting record overrides it as scored-vote evidence
+ * accumulates. Labelled as a reference, not a measurement.
+ */
+const PARTY_REFERENCE: Array<{ match: string[]; x: number; y: number }> = [
+  { match: ["conservative"], x: 5, y: 3 },
+  { match: ["labour"], x: -4, y: -1 },
+  { match: ["liberal democrat"], x: -2, y: -4 },
+  { match: ["green"], x: -6, y: -5 },
+  { match: ["reform"], x: 7, y: 6 },
+  { match: ["scottish national", "snp"], x: -4, y: -3 },
+  { match: ["plaid"], x: -5, y: -4 },
+  { match: ["democratic unionist", "dup"], x: 6, y: 6 },
+  { match: ["sinn"], x: -7, y: -2 },
+  { match: ["social democratic and labour", "sdlp"], x: -3, y: -1 },
+  { match: ["alliance"], x: 0, y: -2 },
+  { match: ["ulster unionist", "uup"], x: 3, y: 3 },
+  { match: ["traditional unionist", "tuv"], x: 6, y: 7 }
+];
+function referenceFor(name: string): { x: number; y: number } | null {
+  const lower = name.toLowerCase();
+  const hit = PARTY_REFERENCE.find((p) => p.match.some((m) => lower.includes(m)));
+  return hit ? { x: hit.x, y: hit.y } : null;
 }
 
 /** Party ideology = mean of its members' anchored positions. */
