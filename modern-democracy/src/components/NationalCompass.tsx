@@ -157,35 +157,35 @@ export function NationalCompass({
         <div className="compass-legend-row">
           <span className="dot" style={{ background: "#147b8e" }} />
           <span className="legend-label">The public will</span>
-          <span className="muted">{formatPoint(payload.civicWill)} · how people vote here</span>
+          <span className="muted">how people vote here</span>
         </div>
         <div className="compass-legend-row">
           <span className="dot ring" />
           <span className="legend-label">Public discussion</span>
-          <span className="muted">{formatPoint(payload.discussion)} · the debate</span>
+          <span className="muted">the debate</span>
         </div>
         <div className="compass-legend-row">
           <span className="dot cross" style={{ color: "#c97a1b" }} />
           <span className="legend-label">National polling</span>
-          <span className="muted">{formatPoint(payload.polling)} · voting intention, weighted</span>
+          <span className="muted">voting intention, weighted</span>
         </div>
         <div className="compass-legend-row">
           <span className="dot diamond" style={{ background: "#8a4f9e" }} />
           <span className="legend-label">Media influence</span>
-          <span className="muted">{formatPoint(payload.media.overall)} · coverage average</span>
+          <span className="muted">coverage average</span>
         </div>
         {government && (
           <div className="compass-legend-row">
             <span className="dot" style={{ background: partyColour(government.party.colour), boxShadow: "0 0 0 2px #13232a inset" }} />
             <span className="legend-label">Government ({government.party.abbreviation ?? government.party.name})</span>
-            <span className="muted">{formatPoint(government.party.compass)} · arrow = where its bills point</span>
+            <span className="muted">arrow = where its bills point</span>
           </div>
         )}
         {youPlaced && you && (
           <div className="compass-legend-row">
             <span className="dot" style={{ background: "#bf443e" }} />
             <span className="legend-label">You</span>
-            <span className="muted">{formatPoint(you)} · your position</span>
+            <span className="muted">your questionnaire position</span>
           </div>
         )}
         <p className="muted national-compass-note">
