@@ -1,4 +1,6 @@
 import type { Sql } from "postgres";
+import { memberConduct, partyConduct } from "./conduct.js";
+import { newsForMember } from "./media-lens.js";
 
 const MEMBERS_API = "https://members-api.parliament.uk/api";
 const CACHE_TTL_MS = 7 * 24 * 3600 * 1000;
@@ -100,20 +102,23 @@ export async function partySummaries(sql: Sql) {
 
   const compass = await partyCompassPositions(sql);
 
-  return parties.map((party) => {
-    const d = disciplineByParty.get(party.id as number);
-    return {
-      id: party.id,
-      name: party.name,
-      abbreviation: party.abbreviation,
-      colour: party.background_colour,
-      seats: party.seats,
-      discipline: d && (d.votes as number) > 0
-        ? Math.round(((d.with_party as number) / (d.votes as number)) * 100)
-        : null,
-      compass: compass.get(party.id as number) ?? null
-    };
-  });
+  return Promise.all(
+    parties.map(async (party) => {
+      const d = disciplineByParty.get(party.id as number);
+      return {
+        id: party.id,
+        name: party.name,
+        abbreviation: party.abbreviation,
+        colour: party.background_colour,
+        seats: party.seats,
+        discipline: d && (d.votes as number) > 0
+          ? Math.round(((d.with_party as number) / (d.votes as number)) * 100)
+          : null,
+        compass: compass.get(party.id as number) ?? null,
+        conduct: await partyConduct(sql, party.id as number)
+      };
+    })
+  );
 }
 
 async function compassScoredBills(sql: Sql) {
@@ -272,7 +277,12 @@ export async function representativeDetail(sql: Sql, memberId: number) {
     ? partyPositions.get(member.party_id as number) ?? null
     : null;
 
+  const conduct = await memberConduct(sql, memberId);
+  const news = await newsForMember(sql, memberId);
+
   return {
+    conduct,
+    news,
     member: {
       id: member.id,
       name: member.name,

@@ -10,6 +10,7 @@ import {
   HandCoins,
   Landmark,
   Loader2,
+  Newspaper,
   ReceiptText,
   Scale,
   ScrollText,
@@ -22,18 +23,23 @@ import {
 } from "lucide-react";
 import { Compass } from "./Compass";
 import { MiniCompass } from "./MiniCompass";
+import { NewsMentions } from "./NewsMentions";
+import { PartyPopularity } from "./PartyPopularity";
+import { ConductPanel } from "./ConductPanel";
 import { compassQuadrant } from "../lib/compassLabel";
 import {
   fetchConstituencyElections,
   fetchLeaderApproval,
   fetchMemberInterests,
   fetchParties,
+  fetchPartyNews,
   fetchPollingSnapshot,
   fetchRepresentativeDetail,
   fetchRepresentatives,
   type ConstituencyElection,
   type LeaderApproval,
   type MemberInterests,
+  type NewsMention,
   type PartySummary,
   type PollingSnapshot,
   type RepDetail,
@@ -384,7 +390,7 @@ function RepresentativeDetail({
     );
   }
 
-  const { member, stats, latestElection, biography, votingRecord, compass, partyCompass } = detail;
+  const { member, stats, latestElection, biography, votingRecord, compass, partyCompass, conduct, news } = detail;
   const candidates = (latestElection?.candidates ?? [])
     .slice()
     .sort((a, b) => b.votes - a.votes)
@@ -450,6 +456,22 @@ function RepresentativeDetail({
         interests={interests}
         interestsFailed={interestsFailed}
       />
+
+      <div className="petition-grid">
+        <section className="panel">
+          <ConductPanel conduct={conduct} subject={member.name} />
+        </section>
+        <section className="panel">
+          <h3>
+            <Newspaper size={16} /> In the news
+          </h3>
+          <p className="muted rep-news-note">
+            Recent coverage mentioning {member.name}, tagged by factual reliability. Flags help you
+            weigh hostile or single-source stories — they never affect the accountability score.
+          </p>
+          <NewsMentions items={news} emptyText="No recent coverage linked to this MP yet." />
+        </section>
+      </div>
 
       <div className="petition-grid">
         <section className="panel">
@@ -1064,6 +1086,18 @@ function InfluenceSummary({
 }
 
 function PartyInfluencePanel({ party }: { party: PartySummary }) {
+  const [news, setNews] = useState<NewsMention[] | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    setNews(null);
+    fetchPartyNews(party.id)
+      .then((payload) => mounted && setNews(payload.news))
+      .catch(() => mounted && setNews([]));
+    return () => {
+      mounted = false;
+    };
+  }, [party.id]);
+
   return (
     <div className="party-influence panel" style={{ borderTopColor: partyColour(party.colour) }}>
       <div className="party-influence-title">
@@ -1077,6 +1111,26 @@ function PartyInfluencePanel({ party }: { party: PartySummary }) {
         <span className="party-chip" style={{ background: partyColour(party.colour) }}>
           {party.abbreviation ?? party.name}
         </span>
+      </div>
+
+      <ConductPanel conduct={party.conduct} subject={party.name} />
+
+      <div className="party-popularity-block">
+        <h4>
+          <TrendingUp size={15} /> Popularity &amp; the news around it
+        </h4>
+        <PartyPopularity partyId={party.id} colour={partyColour(party.colour)} />
+      </div>
+
+      <div className="party-news-block">
+        <h4>
+          <Newspaper size={15} /> In the news
+        </h4>
+        {news ? (
+          <NewsMentions items={news} emptyText="No recent coverage linked to this party yet." />
+        ) : (
+          <p className="muted">Loading coverage…</p>
+        )}
       </div>
       <div className="party-influence-grid">
         <div>

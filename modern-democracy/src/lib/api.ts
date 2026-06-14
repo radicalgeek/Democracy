@@ -671,6 +671,31 @@ export type RepListMember = {
   compass_sample: number | null;
 };
 
+export type ConductScore = {
+  score: number;
+  participation: number;
+  transparency: number;
+  method: string;
+  components: Array<{ label: string; value: number; note: string }>;
+  attendanceVotes?: number;
+  peakVotes?: number;
+  registerOnRecord?: boolean;
+  members?: number;
+};
+
+export type NewsMention = {
+  id: number;
+  title: string;
+  url: string;
+  source: string;
+  publishedAt: string | null;
+  compass: { x: number; y: number } | null;
+  bias: number | null;
+  factualLabel: string | null;
+  factualScore: number | null;
+  corroboratingOutlets: number;
+};
+
 export type PartySummary = {
   id: number;
   name: string;
@@ -679,9 +704,12 @@ export type PartySummary = {
   seats: number;
   discipline: number | null;
   compass: { x: number; y: number; sample: number } | null;
+  conduct: ConductScore;
 };
 
 export type RepDetail = {
+  conduct: ConductScore;
+  news: NewsMention[];
   member: {
     id: number;
     name: string;
@@ -861,6 +889,53 @@ export type MediaArticle = {
 
 export function fetchMediaArticles(take = 40) {
   return getJson<{ articles: MediaArticle[] }>(`/api/insights/media-articles?take=${take}`);
+}
+
+export type MediaInfluence = {
+  overall: { x: number; y: number; sample: number } | null;
+  outlets: Array<{
+    name: string;
+    x: number;
+    y: number;
+    sample: number;
+    reliability: number | null;
+    reliabilitySample: number;
+  }>;
+  narratives: Array<{
+    narrative: string;
+    summary: string;
+    lean: { x: number; y: number } | null;
+    factualLabel: string | null;
+    outlets: string[];
+    articleCount: number;
+  }>;
+  counts: {
+    articles: number;
+    corroborated: number;
+    single_source: number;
+    contested: number;
+    avg_sensational: number;
+  };
+  note: string;
+};
+
+export function fetchMediaInfluence() {
+  return getJson<MediaInfluence>("/api/insights/media-influence");
+}
+
+export function fetchPartyNews(partyId: number) {
+  return getJson<{ news: NewsMention[] }>(`/api/parties/${partyId}/news`);
+}
+
+export type PartyPopularity = {
+  party: { id: number; name: string; abbreviation: string | null; colour: string | null; code: string | null };
+  trend: Array<{ date: string; percent: number }>;
+  events: Array<{ date: string; title: string; url: string; source: string | null; factualLabel: string | null; bias: number | null }>;
+  note: string;
+};
+
+export function fetchPartyPopularity(partyId: number) {
+  return getJson<PartyPopularity>(`/api/insights/party-popularity?partyId=${partyId}`);
 }
 
 export type BallotMajority = {

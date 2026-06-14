@@ -1,6 +1,6 @@
 import type { Sql } from "postgres";
 import { sha256 } from "../lib/crypto.js";
-import { llmModelName, runLlmJson, storeAnalysis } from "./ai.js";
+import { heuristicCompass, llmModelName, runLlmJson, storeAnalysis } from "./ai.js";
 
 /**
  * Publisher-provided politics RSS feeds. Deliberately spread across the
@@ -57,6 +57,8 @@ function decodeEntities(value: string) {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCharCode(parseInt(code, 16)))
     .replace(/<[^>]+>/g, "")
     .trim();
 }
@@ -225,23 +227,36 @@ async function scoreNewNewsItems(sql: Sql, itemIds: number[], batchSize = 8) {
       'You score UK political news coverage on the political compass based on the framing of each headline and summary. x: economic, -10 left to +10 right. y: -10 libertarian to +10 authoritarian. Respond with JSON only: an array [{"index": number, "x": number, "y": number, "label": string, "rationale": string}] with one entry per numbered article.',
       user
     );
-    if (!Array.isArray(result)) continue;
-    for (const entry of result as Array<Record<string, unknown>>) {
-      const item = batch[Number(entry.index)];
-      if (!item || typeof entry.x !== "number" || typeof entry.y !== "number") continue;
+    const byIndex = new Map<number, Record<string, unknown>>();
+    if (Array.isArray(result)) {
+      for (const entry of result as Array<Record<string, unknown>>) {
+        if (typeof entry.index === "number") byIndex.set(entry.index, entry);
+      }
+    }
+    // Score every article in the batch: use the LLM entry where present, else a
+    // low-confidence lexicon estimate. Never leave an article unscored — that is
+    // what left most outlets blank when the proxy was unreachable.
+    for (let i = 0; i < batch.length; i += 1) {
+      const item = batch[i];
+      const entry = byIndex.get(i);
+      const text = `${item.title}\n${item.summary ?? ""}`;
+      const hasLlm = entry && typeof entry.x === "number" && typeof entry.y === "number";
+      const output = hasLlm
+        ? {
+            x: entry!.x as number,
+            y: entry!.y as number,
+            label: (entry!.label as string) ?? "unclassified",
+            rationale: (entry!.rationale as string) ?? ""
+          }
+        : heuristicCompass(text);
       await storeAnalysis(sql, {
         subjectType: "news_item",
         subjectId: String(item.id),
         kind: "compass",
-        text: `${item.title}\n${item.summary ?? ""}`,
-        output: {
-          x: entry.x,
-          y: entry.y,
-          label: (entry.label as string) ?? "unclassified",
-          rationale: (entry.rationale as string) ?? ""
-        },
-        model: llmModelName(),
-        confidence: 0.6
+        text,
+        output,
+        model: hasLlm ? llmModelName() : "heuristic-lexicon-v0",
+        confidence: hasLlm ? 0.6 : 0.25
       });
       scored += 1;
     }

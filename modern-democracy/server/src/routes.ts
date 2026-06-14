@@ -38,11 +38,13 @@ import {
   mediaCompass,
   mrpProjection,
   nationalCompass,
+  partyPopularity,
   pollingSnapshot,
   pollingTrend
 } from "./services/insights.js";
 import { importMrp } from "./services/polling.js";
 import { billStats } from "./services/bills-stats.js";
+import { mediaInfluence, newsForParty } from "./services/media-lens.js";
 import { moderateAndStorePost, publicBanCount } from "./services/moderation.js";
 import { runFullImport } from "./worker-jobs.js";
 import { getUserEngagementStats, computeEngagementStatsForUser } from "./services/learning.js";
@@ -351,6 +353,11 @@ export async function registerRoutes(app: FastifyInstance) {
     return { parties: await partySummaries(sql) };
   });
 
+  app.get("/api/parties/:id/news", async (request) => {
+    const partyId = Number((request.params as { id: string }).id);
+    return { news: await newsForParty(sql, partyId) };
+  });
+
   app.get("/api/constituencies/:id/elections", async (request) => {
     const constituencyId = Number((request.params as { id: string }).id);
     return { elections: await constituencyElections(sql, constituencyId) };
@@ -358,6 +365,16 @@ export async function registerRoutes(app: FastifyInstance) {
 
   app.get("/api/insights/media", async () => {
     return mediaCompass(sql);
+  });
+
+  app.get("/api/insights/media-influence", async () => {
+    return mediaInfluence(sql);
+  });
+
+  app.get("/api/insights/party-popularity", async (request, reply) => {
+    const partyId = Number((request.query as { partyId?: string }).partyId);
+    if (!Number.isFinite(partyId)) return reply.code(400).send({ error: "partyId required" });
+    return partyPopularity(sql, partyId);
   });
 
   app.get("/api/insights/national-compass", async () => {

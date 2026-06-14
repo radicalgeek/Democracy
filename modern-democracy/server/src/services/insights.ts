@@ -570,6 +570,55 @@ export async function pollingTrend(sql: Sql, weeks = 26) {
   };
 }
 
+/**
+ * A party's popularity over time (weekly poll average) with the news events
+ * around it plotted — so you can see how coverage tracks support. News events
+ * are descriptive context, never an integrity judgement.
+ */
+export async function partyPopularity(sql: Sql, partyId: number, weeks = 26) {
+  const [party] = await sql`select id, name, abbreviation, background_colour from parties where id = ${partyId}`;
+  if (!party) return null;
+  const code = matchPartyCode(party.name as string);
+
+  const trend = code
+    ? await sql`
+        select to_char(date_trunc('week', p.fieldwork_end)::date, 'YYYY-MM-DD') as date,
+               round(avg(r.percent)::numeric, 1)::float as percent
+        from polls p
+        join poll_results r on r.poll_id = p.id
+        where r.party_code = ${code} and not p.is_poll_of_polls
+          and p.fieldwork_end >= current_date - make_interval(days => ${weeks * 7})
+        group by 1 order by 1
+      `
+    : [];
+
+  const events = await sql`
+    select to_char(n.published_at::date, 'YYYY-MM-DD') as date, n.title, n.url, s.name as source,
+           na.factual_label, na.bias::float as bias
+    from news_party_links l
+    join news_items n on n.id = l.news_item_id
+    left join news_sources s on s.id = n.source_id
+    left join news_assessments na on na.news_item_id = n.id
+    where l.party_id = ${partyId} and n.published_at is not null
+      and n.published_at >= current_date - make_interval(days => ${weeks * 7})
+    order by n.published_at desc limit 12
+  `;
+
+  return {
+    party: { id: party.id, name: party.name, abbreviation: party.abbreviation, colour: party.background_colour, code },
+    trend: trend.map((r) => ({ date: r.date as string, percent: r.percent as number })),
+    events: events.map((e) => ({
+      date: e.date as string,
+      title: e.title as string,
+      url: e.url as string,
+      source: e.source as string | null,
+      factualLabel: e.factual_label as string | null,
+      bias: e.bias as number | null
+    })),
+    note: "Poll movement and coverage shown together for context — correlation, not proof of cause."
+  };
+}
+
 /** Latest net-approval rating for each party leader. */
 export async function leaderApproval(sql: Sql) {
   const rows = await sql`

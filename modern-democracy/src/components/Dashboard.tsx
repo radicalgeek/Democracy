@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Compass } from "./Compass";
 import { LocalAreaMap } from "./LocalAreaMap";
-import { MediaLandscape } from "./MediaLandscape";
+import { MediaInfluence } from "./MediaInfluence";
 import { DemocracyHealth } from "./DemocracyHealth";
 import { PollingSnapshot } from "./PollingSnapshot";
 import { storedMyCompass } from "./Onboarding";
@@ -248,23 +248,21 @@ export function Dashboard({
         </div>
       </section>
 
-      {media && media.outlets.length > 0 && (
-        <section className="workspace-section">
-          <div className="section-heading">
-            <Newspaper size={20} />
-            <div>
-              <h2>Media influence</h2>
-              <p>
-                Every ingested article is compass-scored — this is where each outlet's recent
-                politics coverage sits.
-              </p>
-            </div>
+      <section className="workspace-section">
+        <div className="section-heading">
+          <Newspaper size={20} />
+          <div>
+            <h2>Media influence on our democracy</h2>
+            <p>
+              Where outlets sit, how reliable their coverage is, and the narratives shaping the
+              conversation — corroboration-led, with contested and single-source stories flagged.
+            </p>
           </div>
-          <div className="panel">
-            <MediaLandscape media={media} />
-          </div>
-        </section>
-      )}
+        </div>
+        <div className="panel">
+          <MediaInfluence />
+        </div>
+      </section>
 
       <section className="workspace-section">
         <div className="section-heading">

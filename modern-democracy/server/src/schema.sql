@@ -569,3 +569,54 @@ create table if not exists mrp_estimates (
 );
 create index if not exists mrp_constituency_idx on mrp_estimates (constituency_id);
 create index if not exists mrp_release_idx on mrp_estimates (source, released_on desc);
+
+-- News linked to the MPs and parties it mentions, plus a per-article media
+-- assessment: editorial lean (bias of the framing), factual framing, a
+-- sensationalism estimate, and cross-outlet corroboration. Factual reliability
+-- blends framing + corroboration + the outlet's observed track record.
+-- IMPORTANT: integrity/conduct scores NEVER use any of this — they are built
+-- only from verifiable conduct (voting, declared interests, official records),
+-- so hostile or coordinated coverage can never drive a person's score.
+create table if not exists news_member_links (
+  news_item_id bigint not null references news_items(id),
+  member_id integer not null,
+  primary key (news_item_id, member_id)
+);
+create index if not exists news_member_idx on news_member_links (member_id);
+
+create table if not exists news_party_links (
+  news_item_id bigint not null references news_items(id),
+  party_id integer not null references parties(id),
+  primary key (news_item_id, party_id)
+);
+create index if not exists news_party_idx on news_party_links (party_id);
+
+create table if not exists news_assessments (
+  news_item_id bigint primary key references news_items(id),
+  bias numeric(5,2),            -- editorial lean of the framing, -10 left .. +10 right
+  framing text,                 -- 'fact' | 'allegation' | 'opinion' | 'mixed'
+  sensational numeric(4,2),     -- 0 measured .. 1 sensational
+  corroborating_outlets int not null default 0,
+  factual_score numeric(5,2),   -- 0..100 blended reliability
+  factual_label text,           -- 'well-corroborated' | 'contested' | 'single-source' | 'opinion'
+  model text,
+  confidence real,
+  generated_at timestamptz not null default now()
+);
+
+-- Observed factual track record per outlet, aggregated from its assessments.
+alter table news_sources add column if not exists factual_reliability numeric(5,2);
+alter table news_sources add column if not exists reliability_sample integer not null default 0;
+
+-- Recurring narratives shaping the conversation, refreshed each run.
+create table if not exists media_narratives (
+  id bigserial primary key,
+  narrative text not null,
+  summary text not null,
+  lean_x numeric(5,2),
+  lean_y numeric(5,2),
+  factual_label text,
+  outlets text[] not null default array[]::text[],
+  article_count int not null default 0,
+  generated_at timestamptz not null default now()
+);
