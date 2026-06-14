@@ -16,6 +16,45 @@ function reliabilityTone(r: number | null) {
   return "good";
 }
 
+function severityColour(reasons: string[]) {
+  return reasons.some((r) => /single source|uncorroborated|heavy/.test(r)) ? "#bf443e" : "#c9922c";
+}
+
+/** Compass scatter of flagged stories — where concerning coverage clusters. */
+function FlaggedScatter({ flagged }: { flagged: MediaInfluenceData["flagged"] }) {
+  const points = flagged.filter((f) => f.compass);
+  const size = 300;
+  const pad = 24;
+  const mid = size / 2;
+  const plot = size - pad * 2;
+  const place = (x: number, y: number) => ({ cx: mid + (x / 10) * (plot / 2), cy: mid - (y / 10) * (plot / 2) });
+  return (
+    <div className="flagged-scatter">
+      <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Flagged stories on the political compass">
+        <rect className="compass-plot-area" x={pad} y={pad} width={plot} height={plot} rx="8" />
+        <line x1={mid} y1={pad} x2={mid} y2={size - pad} />
+        <line x1={pad} y1={mid} x2={size - pad} y2={mid} />
+        <text x={mid} y={pad - 8} textAnchor="middle">Authoritarian</text>
+        <text x={mid} y={size - 6} textAnchor="middle">Libertarian</text>
+        <text x={pad - 4} y={mid + 4} textAnchor="end">Left</text>
+        <text x={size - pad + 4} y={mid + 4}>Right</text>
+        {points.map((f) => {
+          const { cx, cy } = place(f.compass!.x, f.compass!.y);
+          const r = 4 + Math.min(4, (f.sensational ?? 0) * 5);
+          return (
+            <circle key={f.id} cx={cx} cy={cy} r={r} fill={severityColour(f.reasons)} opacity={0.7}>
+              <title>{decode(f.title)} — {f.reasons.join(", ")}</title>
+            </circle>
+          );
+        })}
+      </svg>
+      <p className="muted media-plot-note">
+        {points.length} flagged stories placed by framing; dot size grows with sensational language.
+      </p>
+    </div>
+  );
+}
+
 /** Decode numeric HTML entities left in some feed titles. */
 function decode(text: string) {
   return text
@@ -111,26 +150,32 @@ export function MediaInfluence({ detailed = false }: { detailed?: boolean }) {
         <div className="flagged-coverage">
           <h4><AlertTriangle size={15} /> Stories worth a closer read</h4>
           <p className="muted">
-            Flagged for scrutiny — heavy framing, sensational language, single-source or
-            uncorroborated claims. A prompt to read carefully, not a verdict that a story is false.
+            Where flagged coverage sits on the compass, coloured by concern — sensational or contested
+            (amber), single-source / uncorroborated / heavy framing (red). A prompt to read carefully,
+            not a verdict that a story is false.
           </p>
-          <div className="flagged-list">
-            {shownFlagged.map((f) => (
-              <a className="flagged-story" href={f.url} target="_blank" rel="noreferrer" key={f.id}>
-                <div className="flagged-copy">
-                  <strong>{decode(f.title)}</strong>
-                  <span className="muted">
-                    {f.source}
-                    {f.publishedAt && ` · ${new Date(f.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
-                  </span>
-                </div>
-                <div className="flag-reasons">
-                  {f.reasons.map((r) => (
-                    <span className="flag-pill" key={r}>{r}</span>
-                  ))}
-                </div>
-              </a>
-            ))}
+          <div className="flagged-layout">
+            <FlaggedScatter flagged={shownFlagged} />
+            <div className="flagged-cards">
+              {shownFlagged.map((f) => (
+                <a className="flagged-card" href={f.url} target="_blank" rel="noreferrer" key={f.id}>
+                  <span className="flag-dot" style={{ background: severityColour(f.reasons) }} />
+                  <div className="flagged-copy">
+                    <strong>{decode(f.title)}</strong>
+                    <span className="muted">
+                      {f.source}
+                      {f.publishedAt && ` · ${new Date(f.publishedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
+                      {f.compass && ` · lean (${f.compass.x.toFixed(1)}, ${f.compass.y.toFixed(1)})`}
+                    </span>
+                    <div className="flag-reasons">
+                      {f.reasons.map((r) => (
+                        <span className="flag-pill" key={r}>{r}</span>
+                      ))}
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       )}

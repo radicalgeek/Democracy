@@ -5495,6 +5495,32 @@ button.ghost {
   background: rgba(191,68,62,0.13); color: var(--red); white-space: nowrap;
 }
 
+/* Flagged coverage: compass scatter + compact cards */
+.flagged-layout {
+  display: grid; grid-template-columns: minmax(240px, 300px) 1fr; gap: 18px; align-items: start;
+}
+.flagged-scatter svg { width: 100%; height: auto; }
+.flagged-scatter svg .compass-plot-area { fill: var(--bg); stroke: var(--line); }
+.flagged-scatter svg line { stroke: var(--line); }
+.flagged-scatter svg text { font-size: 9px; fill: var(--muted); }
+.flagged-cards {
+  display: flex; flex-direction: column; gap: 7px; max-height: 360px; overflow-y: auto; padding-right: 4px;
+}
+.flagged-card {
+  display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px;
+  border: 1px solid var(--line); border-radius: 9px; text-decoration: none; color: var(--ink);
+}
+.flagged-card:hover { border-color: var(--gold); }
+.flag-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.flagged-card .flagged-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.flagged-card .flagged-copy strong { font-size: 13.5px; font-weight: 600; }
+.flagged-card .flagged-copy span { font-size: 12px; }
+.flagged-card .flag-reasons { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-start; }
+
+@media (max-width: 880px) {
+  .flagged-layout { grid-template-columns: 1fr; }
+}
+
 /* --- News mentions (MP / party) --- */
 .news-mentions { display: flex; flex-direction: column; gap: 7px; }
 .news-mention {

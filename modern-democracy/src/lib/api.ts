@@ -915,6 +915,7 @@ export type MediaInfluence = {
     bias: number | null;
     sensational: number | null;
     factualLabel: string | null;
+    compass: { x: number; y: number } | null;
     reasons: string[];
   }>;
   narratives: Array<{

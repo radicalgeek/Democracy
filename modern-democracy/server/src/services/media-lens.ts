@@ -388,7 +388,13 @@ export async function mediaInfluence(sql: Sql) {
   const flaggedRows = await sql`
     select n.id, n.title, n.url, n.published_at, s.name as source,
            na.bias::float as bias, na.framing, na.sensational::float as sensational,
-           na.factual_label, na.corroborating_outlets
+           na.factual_label, na.corroborating_outlets,
+           (select (a.output->>'x')::float from ai_analyses a
+              where a.subject_type='news_item' and a.kind='compass' and a.subject_id=n.id::text
+              order by a.id desc limit 1) as cx,
+           (select (a.output->>'y')::float from ai_analyses a
+              where a.subject_type='news_item' and a.kind='compass' and a.subject_id=n.id::text
+              order by a.id desc limit 1) as cy
     from news_items n
     join news_assessments na on na.news_item_id = n.id
     left join news_sources s on s.id = n.source_id
@@ -437,6 +443,7 @@ export async function mediaInfluence(sql: Sql) {
       bias: r.bias != null ? flip * (r.bias as number) : null,
       sensational: r.sensational as number | null,
       factualLabel: r.factual_label as string | null,
+      compass: r.cx != null && r.cy != null ? { x: flip * (r.cx as number), y: r.cy as number } : null,
       reasons: flagReasons({ ...r, bias: r.bias != null ? flip * (r.bias as number) : null } as never)
     })),
     narratives: narratives.map((n) => ({
