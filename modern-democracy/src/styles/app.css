@@ -810,8 +810,10 @@ h3 {
 }
 
 .news-compass {
-  min-height: 420px;
-  position: relative;
+  aspect-ratio: 1;
+  align-self: start;
+  position: sticky;
+  top: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background:
