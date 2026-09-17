@@ -95,3 +95,64 @@ jobs:
             ghcr.io/radicalgeek/${{ matrix.name }}:${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,scope=${{ matrix.name }},mode=max
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 130
+    environment:
+      name: release
+      url: https://test.radicalgeek.co.uk
+    steps:
+      - name: Trigger the in-cluster release
+        id: trigger
+        env:
+          GITLAB_URL: ${{ vars.HOOFER_GITLAB_URL }}
+          GITLAB_PROJECT_ID: ${{ vars.HOOFER_GITLAB_PROJECT_ID }}
+          GITLAB_TRIGGER_TOKEN: ${{ secrets.HOOFER_GITLAB_TRIGGER_TOKEN }}
+        run: |
+          set -euo pipefail
+          response=$(curl --fail --silent --show-error \
+            --request POST \
+            --form "token=${GITLAB_TRIGGER_TOKEN}" \
+            --form ref=main \
+            --form "variables[DEPLOY_PROJECT]=democracy" \
+            --form "variables[DEPLOY_SHA]=${GITHUB_SHA}" \
+            "${GITLAB_URL}/api/v4/projects/${GITLAB_PROJECT_ID}/trigger/pipeline")
+          pipeline_id=$(printf '%s' "$response" | jq -r '.id')
+          test "$pipeline_id" != null
+          echo "pipeline_id=$pipeline_id" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the in-cluster release
+        env:
+          GITLAB_URL: ${{ vars.HOOFER_GITLAB_URL }}
+          GITLAB_PROJECT_ID: ${{ vars.HOOFER_GITLAB_PROJECT_ID }}
+          GITLAB_STATUS_TOKEN: ${{ secrets.HOOFER_GITLAB_STATUS_TOKEN }}
+          PIPELINE_ID: ${{ steps.trigger.outputs.pipeline_id }}
+        run: |
+          set -euo pipefail
+          for _ in $(seq 1 480); do
+            status=$(curl --fail --silent --show-error \
+              --header "PRIVATE-TOKEN: ${GITLAB_STATUS_TOKEN}" \
+              "${GITLAB_URL}/api/v4/projects/${GITLAB_PROJECT_ID}/pipelines/${PIPELINE_ID}" |
+              jq -r '.status')
+            case "$status" in
+              success)
+                exit 0
+                ;;
+              failed|canceled|skipped)
+                echo "In-cluster release finished with status: $status" >&2
+                exit 1
+                ;;
+              created|waiting_for_resource|preparing|pending|running|scheduled)
+                sleep 15
+                ;;
+              *)
+                echo "Unexpected in-cluster release status: $status" >&2
+                exit 1
+                ;;
+            esac
+          done
+          echo "Timed out waiting for the in-cluster release." >&2
+          exit 1
