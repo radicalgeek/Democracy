@@ -81,6 +81,7 @@ See [docs/modernization-plan.md](docs/modernization-plan.md) for a staged plan.
 - [docs/full-product-implementation-plan.md](docs/full-product-implementation-plan.md): full launchable product implementation plan, including UI, maps, AI, moderation, anonymous voting integrity, and Democracy.News.
 - [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md): handoff for another AI to understand direction, current implementation, gaps, and next steps.
 - [AGENTS.md](AGENTS.md): working instructions for future agents in this repo.
+- [docs/test-telemetry.md](docs/test-telemetry.md): push-left check telemetry, relay credentials, and local replay.
 
 ## Modern App Prototype
 
