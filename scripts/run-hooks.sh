@@ -5,6 +5,14 @@ phase="${1:-pre-commit}"
 root="$(git rev-parse --show-toplevel)"
 cd "$root"
 
+# Python.org's macOS Python may lack a populated OpenSSL trust store. Use the
+# installed Homebrew CA bundle only when the caller has not selected one.
+if [ "$(uname -s)" = Darwin ] && [ -z "${SSL_CERT_FILE+x}" ] && \
+  [ -r /opt/homebrew/etc/openssl@3/cert.pem ]; then
+  SSL_CERT_FILE=/opt/homebrew/etc/openssl@3/cert.pem
+  export SSL_CERT_FILE
+fi
+
 git diff --check
 git diff --check --cached
 

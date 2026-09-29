@@ -48,6 +48,10 @@ credential, as either an environment variable or a file:
 | `pre-merge` | `DEMOCRACY_TELEMETRY_PRE_MERGE_TOKEN` | `DEMOCRACY_TELEMETRY_PRE_MERGE_TOKEN_FILE` |
 | `pre-push` | `DEMOCRACY_TELEMETRY_PRE_PUSH_TOKEN` | `DEMOCRACY_TELEMETRY_PRE_PUSH_TOKEN_FILE` |
 
+On macOS, the hook uses Homebrew's CA bundle if `SSL_CERT_FILE` is unset and
+that bundle exists. An explicit `SSL_CERT_FILE` takes precedence; Linux keeps
+its normal certificate trust configuration.
+
 The hook ignores ambient `CI_TEST_TELEMETRY_TOKEN` and
 `CI_PUSHGATEWAY_URL`. It makes no network request unless both the relay URL
 and a credential for the current stage are present. Otherwise it writes
