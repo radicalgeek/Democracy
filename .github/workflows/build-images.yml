@@ -19,6 +19,7 @@ permissions:
 jobs:
   check:
     name: Check and build review
+    if: github.event_name != 'push'
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -57,9 +58,24 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
+  test-receipt:
+    name: Verify local pre-push checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify exact commit receipt
+        env:
+          CI_TEST_TELEMETRY_REMOTE_TOKEN: ${{ secrets.CI_TEST_TELEMETRY_REMOTE_TOKEN }}
+        run: |
+          python3 scripts/ci/verify_ci_test_receipt.py \
+            --project democracy \
+            --sha "$GITHUB_SHA"
+
   build:
-    if: github.event_name != 'pull_request'
-    needs: check
+    if: ${{ always() && github.event_name != 'pull_request' && ((needs.check.result == 'success' && needs['test-receipt'].result == 'skipped') || (needs.check.result == 'skipped' && needs['test-receipt'].result == 'success')) }}
+    needs: [check, test-receipt]
     runs-on: ubuntu-24.04-arm
     strategy:
       matrix:
@@ -156,3 +172,10 @@ jobs:
           done
           echo "Timed out waiting for the in-cluster release." >&2
           exit 1
+
+      - name: Smoke test deployed site and API
+        run: |
+          curl --fail --silent --show-error --max-time 15 \
+            https://test.radicalgeek.co.uk/ --output /dev/null
+          curl --fail --silent --show-error --max-time 15 \
+            https://test.radicalgeek.co.uk/api/health | jq -e '.ok == true'

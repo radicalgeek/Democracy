@@ -51,6 +51,17 @@ case "$phase" in
   *) echo "unknown hook phase: $phase" >&2; exit 2 ;;
 esac
 
+if [ "$phase" = pre-push ]; then
+  if [ "$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)" != "${DEMOCRACY_DEFAULT_BRANCH:-master}" ]; then
+    echo "pre-push must run on the default branch" >&2
+    exit 1
+  fi
+  if [ -n "$(git status --porcelain=v1 --untracked-files=no --ignore-submodules=none)" ]; then
+    echo "pre-push requires a clean tracked worktree at HEAD" >&2
+    exit 1
+  fi
+fi
+
 if [ -n "$stage_token" ] && [ -n "$stage_token_file" ]; then
   echo "test telemetry: use one credential source per hook stage" >&2
   stage_token=""
@@ -112,19 +123,32 @@ run_gate() {
   return "$status"
 }
 
+gate_status=0
+run_all_gate() {
+  if run_gate "$@"; then
+    :
+  else
+    result=$?
+    if [ "$gate_status" -eq 0 ]; then
+      gate_status=$result
+    fi
+  fi
+}
+
 case "$phase" in
   pre-commit)
-    run_gate frontend_typecheck static npm --prefix modern-democracy run lint
-    run_gate server_typecheck static npm --prefix modern-democracy/server run lint
+    run_all_gate frontend_typecheck static npm --prefix modern-democracy run lint
+    run_all_gate server_typecheck static npm --prefix modern-democracy/server run lint
     ;;
   pre-merge|pre-push)
-    run_gate frontend_typecheck static npm --prefix modern-democracy run lint
-    run_gate frontend_build build npm --prefix modern-democracy run build
-    run_gate server_typecheck static npm --prefix modern-democracy/server run lint
-    run_gate server_build build npm --prefix modern-democracy/server run build
-    run_gate frontend_audit security npm --prefix modern-democracy audit --omit=dev --audit-level=moderate
-    run_gate server_audit security npm --prefix modern-democracy/server audit --omit=dev --audit-level=moderate
+    run_all_gate frontend_typecheck static npm --prefix modern-democracy run lint
+    run_all_gate frontend_build build npm --prefix modern-democracy run build
+    run_all_gate server_typecheck static npm --prefix modern-democracy/server run lint
+    run_all_gate server_build build npm --prefix modern-democracy/server run build
+    run_all_gate frontend_audit security npm --prefix modern-democracy audit --omit=dev --audit-level=moderate
+    run_all_gate server_audit security npm --prefix modern-democracy/server audit --omit=dev --audit-level=moderate
     ;;
 esac
 
+[ "$gate_status" -eq 0 ] || exit "$gate_status"
 printf '%s\n' "push-left gate passed: $phase"

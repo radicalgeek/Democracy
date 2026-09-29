@@ -3,7 +3,7 @@
 Democracy's Git hooks run the delivery gates before a remote push. The hook at
 `scripts/run-hooks.sh` publishes each executed check with the vendored AxiaCraft
 publisher `scripts/ci/publish_test_telemetry.py`, copied from source commit
-`f1047173454b35d5c9d248e877deb82bc7b425e3`. Its SHA-256 is recorded in
+`410b860cf4a44f7a1d328733743c3b202d210806`. Its SHA-256 is recorded in
 `scripts/ci/publish_test_telemetry.sha256` and verified on each hook run. The
 publisher uses Python 3.12+ and the standard library.
 
@@ -11,7 +11,7 @@ publisher uses Python 3.12+ and the standard library.
 | --- | --- | --- |
 | Developer pre-commit | Frontend and server TypeScript lint | `frontend_typecheck`, `server_typecheck` |
 | Merge-agent pre-merge | Existing frontend and server lint/build, plus the npm security audits already required in GitHub CI | `frontend_typecheck`, `frontend_build`, `server_typecheck`, `server_build`, `frontend_audit`, `server_audit` |
-| PM pre-push | Same gates on the reviewed integration commit | Same suites under a separate hook stage |
+| PM pre-push | All six gates on a clean, reviewed default-branch HEAD | Same suites under a separate hook stage, each attested to the exact commit |
 
 These are command outcomes. The modern app currently has no executable unit,
 integration, browser or mobile test runner and produces no JUnit XML. The
@@ -28,12 +28,18 @@ saved in ignored `test-results/hook-telemetry/`, including the tested commit
 or staged tree SHA and worktree path. These identifiers never become metric
 labels. Pushgateway groups include `project=democracy`, `job=check`,
 `suite`, `ref` and `hook_stage`; one stage cannot overwrite another.
+All six pre-merge and pre-push checks run even if an earlier check fails, so
+each suite reports its own result. The push remains blocked if any check fails.
+The publisher only sends an attestation header when a pre-push result is sent
+with a stage credential from a clean default-branch checkout and an explicit
+SHA matching HEAD.
+The Git pre-push hook also rejects any ref update other than that tested
+default-branch HEAD.
 
 ## Relay credentials and offline spool
 
-Set `DEMOCRACY_TEST_TELEMETRY_RELAY_URL` to the authorised HTTPS relay after
-the Democracy project and stage tokens are provisioned. The intended URL is
-`https://ci-telemetry.radicalgeek.co.uk`. Give each role only its own
+Set `DEMOCRACY_TEST_TELEMETRY_RELAY_URL` to the authorised HTTPS relay. The URL is
+`https://grafana.radicalgeek.co.uk/ci-telemetry`. Give each role only its own
 credential, as either an environment variable or a file:
 
 | Stage | Environment variable | Token file variable |
@@ -67,6 +73,13 @@ python3 scripts/ci/publish_test_telemetry.py flush \
 The relay rejects superseded snapshots with HTTP 409. Flush discards those
 records and retains transport or authorisation failures for investigation.
 
-The GitHub workflow still performs its own checks before image build and
-in-cluster deployment. It does not publish telemetry while the authenticated
-relay is being provisioned.
+## Hosted release gate
+
+On a `master` push, GitHub Actions reads the exact `GITHUB_SHA` receipt from the
+relay with the `CI_TEST_TELEMETRY_REMOTE_TOKEN` repository secret. The receipt
+must confirm all six expected pre-push suites passed for that SHA. A missing,
+failing, expired or unverifiable receipt prevents image build and deployment.
+The workflow keeps image builds, the in-cluster release, and site/API smoke
+tests. Pull requests and manual runs still execute the hosted lint, build and
+security audit checks. The receipt endpoint must be deployed before merging
+this workflow change; until then, a default-branch push will fail closed.

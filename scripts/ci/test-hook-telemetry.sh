@@ -10,7 +10,7 @@ mkdir -p "$scratch/bin"
 cat >"$scratch/bin/npm" <<'FAKE'
 #!/usr/bin/env sh
 case "$*" in
-  "--prefix modern-democracy run lint"|"--prefix modern-democracy/server run lint") exit 0 ;;
+  "--prefix modern-democracy run lint"|"--prefix modern-democracy/server run lint"|"--prefix modern-democracy/server run build"|"--prefix modern-democracy audit --omit=dev --audit-level=moderate"|"--prefix modern-democracy/server audit --omit=dev --audit-level=moderate") exit 0 ;;
   "--prefix modern-democracy run build") exit 17 ;;
   *) echo "unexpected npm command: $*" >&2; exit 99 ;;
 esac
@@ -47,7 +47,10 @@ for item in records["pre-commit"]:
     assert item["group"]["hook_stage"] == "pre_commit"
     assert item["summary"]["git"]["tested_sha"] == item["summary"]["git"]["index_tree_sha"]
 merge_suites = {item["group"]["suite"] for item in records["pre-merge"]}
-assert merge_suites == {"frontend_typecheck", "frontend_build"}, merge_suites
+assert merge_suites == {
+    "frontend_typecheck", "frontend_build", "server_typecheck", "server_build",
+    "frontend_audit", "server_audit",
+}, merge_suites
 build = next(item for item in records["pre-merge"] if item["group"]["suite"] == "frontend_build")
 assert build["summary"]["command_exit_code"] == 17
 assert build["group"]["hook_stage"] == "pre_merge"

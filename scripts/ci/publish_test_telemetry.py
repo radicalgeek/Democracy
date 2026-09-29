@@ -31,6 +31,7 @@ MAX_SPOOL_ITEMS = 100
 MAX_SPOOL_BYTES = 1024 * 1024
 VERSION = "1.0.0"
 KEY_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_.-]{0,63}$")
+SHA_PATTERN = re.compile(r"^[0-9a-fA-F]{40}$")
 RETRY_TAGS = {"flakyFailure", "flakyError", "rerunFailure", "rerunError"}
 OUTCOMES = ("passed", "failed", "error", "skipped")
 HOOK_STAGES = ("pre_commit", "pre_merge", "pre_push", "remote_ci")
@@ -142,7 +143,12 @@ def parse_reports(paths: Sequence[Path]) -> Result:
             else:
                 result.passed += 1
             retry_value = case.get("rerun") or case.get("retries") or ""
-            if child_tags & RETRY_TAGS or retry_value.lower() not in {"", "0", "false", "no"}:
+            if child_tags & RETRY_TAGS or retry_value.lower() not in {
+                "",
+                "0",
+                "false",
+                "no",
+            }:
                 result.retried += 1
             duration = _finite_duration(case.get("time"), path)
             if duration is not None:
@@ -184,7 +190,13 @@ def detect_ci_context() -> dict[str, str]:
             "commit_sha": env.get("BUILD_SOURCEVERSION", ""),
             "branch": env.get("BUILD_SOURCEBRANCHNAME", ""),
         }
-    return {"provider": "other", "run_id": "", "run_url": "", "commit_sha": "", "branch": ""}
+    return {
+        "provider": "other",
+        "run_id": "",
+        "run_url": "",
+        "commit_sha": "",
+        "branch": "",
+    }
 
 
 def git_provenance(tested_sha: str | None, worktree: str | None) -> dict[str, str]:
@@ -203,6 +215,49 @@ def git_provenance(tested_sha: str | None, worktree: str | None) -> dict[str, st
         "index_tree_sha": git_value("write-tree"),
         "worktree": worktree or git_value("rev-parse", "--show-toplevel"),
     }
+
+
+def verified_attestation_sha(
+    tested_sha: str | None,
+    worktree: str | None,
+    hook_stage: str,
+    ref: str,
+    authenticated: bool,
+) -> str | None:
+    """Attest only an explicitly tested, clean HEAD on the default-branch pre-push gate."""
+    if hook_stage != "pre_push" or ref != "default" or not authenticated:
+        return None
+    if not tested_sha or not SHA_PATTERN.fullmatch(tested_sha):
+        return None
+    try:
+        checkout = worktree or os.getcwd()
+        head_sha = subprocess.check_output(
+            ["git", "-C", checkout, "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=2,
+        ).strip()
+        tracked_changes = subprocess.check_output(
+            [
+                "git",
+                "-C",
+                checkout,
+                "status",
+                "--porcelain=v1",
+                "--untracked-files=no",
+                "--ignore-submodules=none",
+            ],
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return None
+    if not SHA_PATTERN.fullmatch(head_sha) or head_sha.lower() != tested_sha.lower():
+        return None
+    if tracked_changes:
+        return None
+    return head_sha.lower()
 
 
 def _metric(name: str, value: float, labels: dict[str, str] | None = None) -> str:
@@ -274,7 +329,9 @@ def render_metrics(
     for outcome in OUTCOMES:
         lines.append(
             _metric(
-                "ci_test_cases_by_outcome", getattr(result, outcome), {**labels, "outcome": outcome}
+                "ci_test_cases_by_outcome",
+                getattr(result, outcome),
+                {**labels, "outcome": outcome},
             )
         )
     lines.extend(
@@ -282,7 +339,11 @@ def render_metrics(
             "# TYPE ci_test_retried_cases gauge\n",
             _metric("ci_test_retried_cases", result.retried, labels),
             "# TYPE ci_test_case_duration_seconds_sum gauge\n",
-            _metric("ci_test_case_duration_seconds_sum", round(result.duration_seconds, 6), labels),
+            _metric(
+                "ci_test_case_duration_seconds_sum",
+                round(result.duration_seconds, 6),
+                labels,
+            ),
             "# TYPE ci_test_timed_cases gauge\n",
             _metric("ci_test_timed_cases", result.timed_cases, labels),
         ]
@@ -291,14 +352,24 @@ def render_metrics(
 
 
 def gateway_group_url(
-    base: str, project: str, job: str, suite: str, ref: str, hook_stage: str | None = "remote_ci"
+    base: str,
+    project: str,
+    job: str,
+    suite: str,
+    ref: str,
+    hook_stage: str | None = "remote_ci",
 ) -> str:
     parsed = urllib.parse.urlparse(base)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise ValueError("gateway URL must be an HTTP(S) URL")
     if parsed.username or parsed.password or parsed.query or parsed.fragment:
         raise ValueError("gateway URL must not contain credentials, query, or fragment")
-    for key, value in {"project": project, "job": job, "suite": suite, "ref": ref}.items():
+    for key, value in {
+        "project": project,
+        "job": job,
+        "suite": suite,
+        "ref": ref,
+    }.items():
         if not KEY_PATTERN.fullmatch(value):
             raise ValueError(f"{key} must be a configured identifier of at most 64 characters")
     if ref not in {"default", "other", "tag"}:
@@ -337,6 +408,7 @@ def gateway_request(
     token_env: str | None,
     token_file: str | None = None,
     observed_at_ns: int | None = None,
+    attested_sha: str | None = None,
 ) -> None:
     headers = {"User-Agent": "axiacraft-test-telemetry/1"}
     if body is not None:
@@ -345,6 +417,12 @@ def gateway_request(
         headers["X-CI-Telemetry-Observed-At-Ns"] = str(observed_at_ns)
     if token_env and token_file:
         raise ValueError("choose either bearer token environment variable or file")
+    if attested_sha:
+        if method != "PUT" or not (token_env or token_file):
+            raise ValueError("tested SHA attestation requires an authenticated PUT")
+        if not SHA_PATTERN.fullmatch(attested_sha):
+            raise ValueError("tested SHA attestation must be a full commit SHA")
+        headers["X-CI-Tested-Sha"] = attested_sha.lower()
     parsed = urllib.parse.urlparse(url)
     if (token_env or token_file) and not (
         parsed.scheme == "https"
@@ -378,7 +456,11 @@ def gateway_request(
 
 
 def spool_record(
-    directory: str, group: dict[str, str], body: bytes, summary: dict[str, object]
+    directory: str,
+    group: dict[str, str],
+    body: bytes,
+    summary: dict[str, object],
+    attested_sha: str | None = None,
 ) -> Path:
     folder = Path(directory)
     folder.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -387,7 +469,14 @@ def spool_record(
     records = list(folder.glob("*.json"))
     if len(records) >= MAX_SPOOL_ITEMS:
         raise ValueError("telemetry spool is full (100 records)")
-    payload = json.dumps({"group": group, "metrics": body.decode("utf-8"), "summary": summary})
+    payload = json.dumps(
+        {
+            "group": group,
+            "metrics": body.decode("utf-8"),
+            "summary": summary,
+            "attested_sha": attested_sha,
+        }
+    )
     if len(payload.encode("utf-8")) > MAX_SPOOL_BYTES:
         raise ValueError("telemetry spool record exceeds 1 MiB")
     descriptor, path = tempfile.mkstemp(
@@ -423,6 +512,7 @@ def flush_spool(args: argparse.Namespace) -> int:
         group = record["group"]
         body = record["metrics"].encode("utf-8")
         observed_at_ns = int(record["summary"]["observed_at_ns"])
+        attested_sha = record.get("attested_sha")
         url = gateway_group_url(
             args.gateway_url,
             group["project"],
@@ -433,7 +523,13 @@ def flush_spool(args: argparse.Namespace) -> int:
         )
         try:
             gateway_request(
-                url, "PUT", body, args.bearer_token_env, args.bearer_token_file, observed_at_ns
+                url,
+                "PUT",
+                body,
+                args.bearer_token_env,
+                args.bearer_token_file,
+                observed_at_ns,
+                attested_sha,
             )
             flushed += 1
         except StaleTelemetry:
@@ -483,6 +579,14 @@ def publish(args: argparse.Namespace) -> int:
         "ci": context,
         "git": git_provenance(args.tested_sha or context["commit_sha"], args.worktree),
     }
+    attested_sha = verified_attestation_sha(
+        args.tested_sha,
+        args.worktree,
+        args.hook_stage,
+        ref,
+        bool(args.bearer_token_env or args.bearer_token_file),
+    )
+    summary["attested_sha"] = attested_sha
     if args.summary_output:
         Path(args.summary_output).write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     metrics = render_metrics(
@@ -508,10 +612,21 @@ def publish(args: argparse.Namespace) -> int:
     if args.gateway_url:
         try:
             url = gateway_group_url(
-                args.gateway_url, args.project, args.job, args.suite, ref, args.hook_stage
+                args.gateway_url,
+                args.project,
+                args.job,
+                args.suite,
+                ref,
+                args.hook_stage,
             )
             gateway_request(
-                url, "PUT", metrics, args.bearer_token_env, args.bearer_token_file, observed_at_ns
+                url,
+                "PUT",
+                metrics,
+                args.bearer_token_env,
+                args.bearer_token_file,
+                observed_at_ns,
+                attested_sha,
             )
         except StaleTelemetry:
             delivery = "superseded"
@@ -522,13 +637,14 @@ def publish(args: argparse.Namespace) -> int:
         except (OSError, RuntimeError, ValueError) as exc:
             if not args.spool_dir:
                 raise
-            path = spool_record(args.spool_dir, group, metrics, summary)
+            path = spool_record(args.spool_dir, group, metrics, summary, attested_sha)
             delivery = "spooled"
             print(
-                f"test telemetry: delivery unavailable ({exc}); spooled to {path}", file=sys.stderr
+                f"test telemetry: delivery unavailable ({exc}); spooled to {path}",
+                file=sys.stderr,
             )
     elif args.spool_dir:
-        path = spool_record(args.spool_dir, group, metrics, summary)
+        path = spool_record(args.spool_dir, group, metrics, summary, attested_sha)
         delivery = "spooled"
         print(f"test telemetry: spooled to {path}")
     else:
@@ -589,10 +705,13 @@ def build_parser() -> argparse.ArgumentParser:
             )
             command.add_argument("--command-only", action="store_true")
             command.add_argument(
-                "--intent", choices=("verification", "expected_failure"), default="verification"
+                "--intent",
+                choices=("verification", "expected_failure"),
+                default="verification",
             )
             command.add_argument(
-                "--summary-output", help="write run metadata and result to a JSON artifact"
+                "--summary-output",
+                help="write run metadata and result to a JSON artifact",
             )
             command.add_argument("--test-exit-code", type=int)
         if action == "run":
@@ -608,7 +727,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.action == "flush":
         try:
             return flush_spool(args)
-        except (OSError, RuntimeError, ValueError, KeyError, json.JSONDecodeError) as exc:
+        except (
+            OSError,
+            RuntimeError,
+            ValueError,
+            KeyError,
+            json.JSONDecodeError,
+        ) as exc:
             print(f"test telemetry flush failed: {exc}", file=sys.stderr)
             return 2
     if args.action != "delete":
@@ -624,7 +749,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.action == "delete":
             ref = args.ref or detect_ref(args.default_branch)
             url = gateway_group_url(
-                args.gateway_url, args.project, args.job, args.suite, ref, args.hook_stage
+                args.gateway_url,
+                args.project,
+                args.job,
+                args.suite,
+                ref,
+                args.hook_stage,
             )
             gateway_request(url, "DELETE", None, args.bearer_token_env, args.bearer_token_file)
             print(f"test telemetry: deleted {args.project}/{args.suite} grouping")

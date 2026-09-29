@@ -5,4 +5,14 @@ if [ "$(git config --worktree --bool axiacraft.pushAuthorized 2>/dev/null || tru
   echo "remote publication is restricted to the PM checkout after review approval" >&2
   exit 1
 fi
+
+head_sha="$(git rev-parse HEAD)"
+default_ref="refs/heads/${DEMOCRACY_DEFAULT_BRANCH:-master}"
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -n "$local_ref" ] || continue
+  if [ "$local_ref" != "$default_ref" ] || [ "$remote_ref" != "$default_ref" ] || [ "$local_sha" != "$head_sha" ]; then
+    echo "pre-push only authorises the tested default-branch HEAD" >&2
+    exit 1
+  fi
+done
 exec scripts/run-hooks.sh pre-push
