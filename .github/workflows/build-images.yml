@@ -113,7 +113,7 @@ jobs:
           cache-to: type=gha,scope=${{ matrix.name }},mode=max
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.build.result == 'success' }}
     needs: build
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 130
