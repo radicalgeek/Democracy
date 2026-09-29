@@ -20,7 +20,7 @@ publisher="$root/scripts/ci/publish_test_telemetry.py"
 publisher_digest="$root/scripts/ci/publish_test_telemetry.sha256"
 spool_root="${DEMOCRACY_TELEMETRY_SPOOL_ROOT:-${XDG_STATE_HOME:-$HOME/.local/state}/democracy-test-telemetry}"
 spool_dir="$spool_root/$phase"
-relay_url="${DEMOCRACY_TEST_TELEMETRY_RELAY_URL:-}"
+relay_url="${DEMOCRACY_TEST_TELEMETRY_RELAY_URL-https://grafana.radicalgeek.co.uk/ci-telemetry}"
 telemetry_ready=false
 
 if command -v python3 >/dev/null 2>&1 && python3 - "$publisher" "$publisher_digest" <<'PY'
@@ -43,21 +43,50 @@ fi
 case "$phase" in
   pre-commit)
     hook_stage=pre_commit
+    stage_token_set="${DEMOCRACY_TELEMETRY_PRE_COMMIT_TOKEN+x}"
+    stage_token_file_set="${DEMOCRACY_TELEMETRY_PRE_COMMIT_TOKEN_FILE+x}"
     stage_token="${DEMOCRACY_TELEMETRY_PRE_COMMIT_TOKEN:-}"
     stage_token_file="${DEMOCRACY_TELEMETRY_PRE_COMMIT_TOKEN_FILE:-}"
     ;;
   pre-merge)
     hook_stage=pre_merge
+    stage_token_set="${DEMOCRACY_TELEMETRY_PRE_MERGE_TOKEN+x}"
+    stage_token_file_set="${DEMOCRACY_TELEMETRY_PRE_MERGE_TOKEN_FILE+x}"
     stage_token="${DEMOCRACY_TELEMETRY_PRE_MERGE_TOKEN:-}"
     stage_token_file="${DEMOCRACY_TELEMETRY_PRE_MERGE_TOKEN_FILE:-}"
     ;;
   pre-push)
     hook_stage=pre_push
+    stage_token_set="${DEMOCRACY_TELEMETRY_PRE_PUSH_TOKEN+x}"
+    stage_token_file_set="${DEMOCRACY_TELEMETRY_PRE_PUSH_TOKEN_FILE+x}"
     stage_token="${DEMOCRACY_TELEMETRY_PRE_PUSH_TOKEN:-}"
     stage_token_file="${DEMOCRACY_TELEMETRY_PRE_PUSH_TOKEN_FILE:-}"
     ;;
   *) echo "unknown hook phase: $phase" >&2; exit 2 ;;
 esac
+
+if [ -z "$stage_token_set" ] && [ -z "$stage_token_file_set" ]; then
+  default_token_file="${XDG_CONFIG_HOME:-$HOME/.config}/axiacraft/test-telemetry/democracy/$hook_stage.token"
+  if [ -e "$default_token_file" ] || [ -L "$default_token_file" ]; then
+    if python3 - "$default_token_file" <<'PY'
+import os
+from pathlib import Path
+import stat
+import sys
+
+mode = Path(sys.argv[1]).lstat()
+if not stat.S_ISREG(mode.st_mode) or mode.st_uid != os.geteuid():
+    raise SystemExit(1)
+if stat.S_IMODE(mode.st_mode) != 0o600:
+    raise SystemExit(1)
+PY
+    then
+      stage_token_file="$default_token_file"
+    else
+      echo "test telemetry: default $hook_stage token file must be owned by this user and mode 0600" >&2
+    fi
+  fi
+fi
 
 if [ "$phase" = pre-push ]; then
   if [ "$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)" != "${DEMOCRACY_DEFAULT_BRANCH:-master}" ]; then

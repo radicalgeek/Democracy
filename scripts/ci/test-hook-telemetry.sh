@@ -18,10 +18,12 @@ FAKE
 chmod +x "$scratch/bin/npm"
 
 PATH="$scratch/bin:$PATH" DEMOCRACY_TELEMETRY_SPOOL_ROOT="$scratch/spool" \
+  DEMOCRACY_TEST_TELEMETRY_RELAY_URL= DEMOCRACY_TELEMETRY_PRE_COMMIT_TOKEN_FILE= \
   CI_PUSHGATEWAY_URL="http://127.0.0.1:9" CI_TEST_TELEMETRY_TOKEN="unused-test-token" \
   scripts/run-hooks.sh pre-commit
 
 if PATH="$scratch/bin:$PATH" DEMOCRACY_TELEMETRY_SPOOL_ROOT="$scratch/spool" \
+  DEMOCRACY_TEST_TELEMETRY_RELAY_URL= DEMOCRACY_TELEMETRY_PRE_MERGE_TOKEN_FILE= \
   scripts/run-hooks.sh pre-merge; then
   echo 'expected the failing frontend build gate to retain its exit status' >&2
   exit 1

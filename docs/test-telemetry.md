@@ -38,9 +38,13 @@ default-branch HEAD.
 
 ## Relay credentials and offline spool
 
-Set `DEMOCRACY_TEST_TELEMETRY_RELAY_URL` to the authorised HTTPS relay. The URL is
-`https://grafana.radicalgeek.co.uk/ci-telemetry`. Give each role only its own
-credential, as either an environment variable or a file:
+The hook uses `https://grafana.radicalgeek.co.uk/ci-telemetry` by default.
+Each stage reads its own token from
+`~/.config/axiacraft/test-telemetry/democracy/<hook_stage>.token` when present.
+These files must be regular files owned by the current user with mode `0600`.
+An explicit `DEMOCRACY_TEST_TELEMETRY_RELAY_URL` or stage credential setting
+takes precedence; an explicitly empty setting disables that default. Give
+each role only its own credential:
 
 | Stage | Environment variable | Token file variable |
 | --- | --- | --- |
